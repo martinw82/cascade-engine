@@ -1,0 +1,266 @@
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
+import * as schema from './schema';
+
+// Create SQLite database
+const sqlite = new Database('./cascade.db');
+
+// Enable WAL mode for better concurrency
+sqlite.pragma('journal_mode = WAL');
+
+// Create Drizzle instance
+export const db = drizzle(sqlite, { schema });
+
+// Run migrations (in a real app, you'd use proper migrations)
+// For now, we'll create tables manually
+function initializeDatabase() {
+  // Create providers table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS providers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      base_url TEXT NOT NULL,
+      api_key TEXT NOT NULL,
+      status TEXT DEFAULT 'ready',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Create models table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS models (
+      id TEXT PRIMARY KEY,
+      provider_id TEXT NOT NULL,
+      model_id TEXT NOT NULL,
+      context_window INTEGER NOT NULL,
+      rpm_limit INTEGER NOT NULL,
+      tpm_limit INTEGER NOT NULL,
+      daily_quota INTEGER NOT NULL,
+      is_free BOOLEAN DEFAULT 1,
+      cost_per_token REAL DEFAULT 0,
+      status TEXT DEFAULT 'ready',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Create cascade_rules table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS cascade_rules (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      priority INTEGER NOT NULL,
+      trigger_type TEXT NOT NULL, -- 'task_type', 'keyword', 'header', 'custom'
+      trigger_value TEXT NOT NULL,
+      provider_order TEXT NOT NULL, -- JSON array of provider IDs
+      enabled BOOLEAN DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Create auth_keys table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS auth_keys (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      key_value TEXT NOT NULL UNIQUE,
+      allowed_ips TEXT, -- JSON array of allowed IP addresses
+      permissions TEXT DEFAULT '["read","write"]', -- JSON array of permissions
+      enabled BOOLEAN DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Create request_logs table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS request_logs (
+      id TEXT PRIMARY KEY,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      provider_id TEXT,
+      model_id TEXT,
+      task_type TEXT,
+      tokens_used INTEGER DEFAULT 0,
+      response_time_ms INTEGER,
+      status TEXT, -- 'success', 'error', 'rate_limit'
+      error_message TEXT,
+      cost_saved REAL DEFAULT 0,
+      client_ip TEXT,
+      user_agent TEXT
+    );
+  `);
+
+  // Insert default data
+  initializeDefaultData();
+}
+
+function initializeDefaultData() {
+  // Check if we already have data
+  const providerCount = sqlite.prepare('SELECT COUNT(*) as count FROM providers').get() as { count: number };
+  if (providerCount.count > 0) return;
+
+  // Insert default providers
+  const providers = [
+    {
+      id: 'nvidia-nim',
+      name: 'NVIDIA NIM',
+      base_url: 'https://api.nvidia.com/v1',
+      api_key: process.env.NVIDIA_API_KEY || '',
+      status: 'ready'
+    },
+    {
+      id: 'groq',
+      name: 'Groq',
+      base_url: 'https://api.groq.com/openai/v1',
+      api_key: process.env.GROQ_API_KEY || '',
+      status: 'ready'
+    },
+    {
+      id: 'openrouter',
+      name: 'OpenRouter',
+      base_url: 'https://openrouter.ai/api/v1',
+      api_key: process.env.OPENROUTER_API_KEY || '',
+      status: 'ready'
+    }
+  ];
+
+  const insertProvider = sqlite.prepare(`
+    INSERT INTO providers (id, name, base_url, api_key, status)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  for (const provider of providers) {
+    insertProvider.run(provider.id, provider.name, provider.base_url, provider.api_key, provider.status);
+  }
+
+  // Insert default models
+  const models = [
+    {
+      id: 'llama-3.1-70b',
+      provider_id: 'nvidia-nim',
+      model_id: 'llama-3.1-70b',
+      context_window: 128000,
+      rpm_limit: 40,
+      tpm_limit: 10000,
+      daily_quota: 1000,
+      is_free: 1,
+      cost_per_token: 0,
+      status: 'ready'
+    },
+    {
+      id: 'llama-3.1-8b-instant',
+      provider_id: 'groq',
+      model_id: 'llama-3.1-8b-instant',
+      context_window: 128000,
+      rpm_limit: 30,
+      tpm_limit: 10000,
+      daily_quota: 1000,
+      is_free: 1,
+      cost_per_token: 0,
+      status: 'ready'
+    },
+    {
+      id: 'gemini-1.5-flash',
+      provider_id: 'openrouter',
+      model_id: 'gemini-1.5-flash',
+      context_window: 1000000,
+      rpm_limit: 50,
+      tpm_limit: 10000,
+      daily_quota: 1000,
+      is_free: 1,
+      cost_per_token: 0,
+      status: 'ready'
+    }
+  ];
+
+  const insertModel = sqlite.prepare(`
+    INSERT INTO models (id, provider_id, model_id, context_window, rpm_limit, tpm_limit, daily_quota, is_free, cost_per_token, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  for (const model of models) {
+    insertModel.run(
+      model.id,
+      model.provider_id,
+      model.model_id,
+      model.context_window,
+      model.rpm_limit,
+      model.tpm_limit,
+      model.daily_quota,
+      model.is_free,
+      model.cost_per_token,
+      model.status
+    );
+  }
+
+  // Insert default cascade rules
+  const cascadeRules = [
+    {
+      id: 'coding-rule',
+      name: 'Coding Tasks',
+      priority: 1,
+      trigger_type: 'keyword',
+      trigger_value: 'code|program|function|debug|programming',
+      provider_order: JSON.stringify(['groq', 'nvidia-nim', 'openrouter']),
+      enabled: 1
+    },
+    {
+      id: 'summarization-rule',
+      name: 'Summarization Tasks',
+      priority: 2,
+      trigger_type: 'keyword',
+      trigger_value: 'summarize|extract|analyze|document|summary',
+      provider_order: JSON.stringify(['openrouter', 'nvidia-nim', 'groq']),
+      enabled: 1
+    },
+    {
+      id: 'default-rule',
+      name: 'Default Fallback',
+      priority: 99,
+      trigger_type: 'task_type',
+      trigger_value: 'general',
+      provider_order: JSON.stringify(['nvidia-nim', 'groq', 'openrouter']),
+      enabled: 1
+    }
+  ];
+
+  const insertRule = sqlite.prepare(`
+    INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, provider_order, enabled)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  for (const rule of cascadeRules) {
+    insertRule.run(
+      rule.id,
+      rule.name,
+      rule.priority,
+      rule.trigger_type,
+      rule.trigger_value,
+      rule.provider_order,
+      rule.enabled
+    );
+  }
+
+  // Insert default auth key
+  const insertAuthKey = sqlite.prepare(`
+    INSERT INTO auth_keys (id, name, key_value, allowed_ips, permissions, enabled)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+
+  insertAuthKey.run(
+    'default-key',
+    'Default Access Key',
+    'cascade-master-default-key-2026',
+    JSON.stringify(['127.0.0.1', '::1']),
+    JSON.stringify(['read', 'write', 'admin']),
+    1
+  );
+}
+
+// Initialize database on import
+initializeDatabase();
+
+export default db;

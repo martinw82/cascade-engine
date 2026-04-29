@@ -4,6 +4,7 @@ import sensiblePlugin from '@fastify/sensible';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { cascadeRoutes } from './routes/api/cascade';
+import { authenticateRequest } from './middleware/auth';
 
 // Initialize Fastify server
 const fastify: FastifyInstance = Fastify({
@@ -36,6 +37,9 @@ fastify.get('/health', async (request, reply) => {
 
 // Register API routes
 fastify.register(async (fastify) => {
+  // Apply authentication to cascade routes
+  fastify.addHook('preHandler', authenticateRequest);
+
   fastify.post('/api/cascade', cascadeRoutes.POST);
   fastify.get('/api/cascade', cascadeRoutes.GET);
 }, { prefix: '' });
