@@ -205,6 +205,7 @@ function initializeDefaultData() {
       trigger_type: 'keyword',
       trigger_value: 'code|program|function|debug|programming',
       provider_order: JSON.stringify(['groq', 'nvidia-nim', 'openrouter']),
+      word_limit: 5,
       enabled: 1
     },
     {
@@ -214,6 +215,7 @@ function initializeDefaultData() {
       trigger_type: 'keyword',
       trigger_value: 'summarize|extract|analyze|document|summary',
       provider_order: JSON.stringify(['openrouter', 'nvidia-nim', 'groq']),
+      word_limit: 5,
       enabled: 1
     },
     {
@@ -223,13 +225,14 @@ function initializeDefaultData() {
       trigger_type: 'task_type',
       trigger_value: 'general',
       provider_order: JSON.stringify(['nvidia-nim', 'groq', 'openrouter']),
+      word_limit: 5,
       enabled: 1
     }
   ];
 
   const insertRule = sqlite.prepare(`
-    INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, provider_order, enabled)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, provider_order, word_limit, enabled)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const rule of cascadeRules) {
@@ -240,6 +243,7 @@ function initializeDefaultData() {
       rule.trigger_type,
       rule.trigger_value,
       rule.provider_order,
+      rule.word_limit,
       rule.enabled
     );
   }

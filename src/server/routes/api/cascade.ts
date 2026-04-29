@@ -45,6 +45,7 @@ interface CascadeRule {
   triggerType: 'task_type' | 'keyword' | 'header' | 'custom';
   triggerValue: string;
   providerOrder: string[];
+  wordLimit: number;
   enabled: boolean;
 }
 
@@ -115,6 +116,7 @@ class CascadeEngine {
         triggerType: r.triggerType as CascadeRule['triggerType'],
         triggerValue: r.triggerValue,
         providerOrder: JSON.parse(r.providerOrder),
+        wordLimit: r.wordLimit || 5,
         enabled: Boolean(r.enabled)
       })).sort((a, b) => a.priority - b.priority);
 
@@ -162,6 +164,7 @@ class CascadeEngine {
         triggerType: 'task_type',
         triggerValue: 'general',
         providerOrder: ['nvidia-nim'],
+        wordLimit: 5,
         enabled: true
       }
     ];
@@ -214,9 +217,10 @@ class CascadeEngine {
       // Check keyword matches
       if (rule.triggerType === 'keyword') {
         const firstMessage = request.messages?.[0]?.content || '';
-        const firstFiveWords = firstMessage.split(' ').slice(0, 5).join(' ').toLowerCase();
+        const wordLimit = rule.wordLimit || 5;
+        const firstWords = firstMessage.split(' ').slice(0, wordLimit).join(' ').toLowerCase();
         const keywords = rule.triggerValue.split('|');
-        if (keywords.some(keyword => firstFiveWords.includes(keyword.trim()))) {
+        if (keywords.some(keyword => firstWords.includes(keyword.trim()))) {
           return rule;
         }
       }

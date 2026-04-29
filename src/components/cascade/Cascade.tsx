@@ -9,6 +9,7 @@ interface CascadeRule {
   triggerType: 'task_type' | 'keyword' | 'header' | 'custom';
   triggerValue: string;
   providerOrder: string[]; // Array of provider IDs
+  wordLimit: number;
   enabled: boolean;
   createdAt: string;
 }
@@ -29,6 +30,7 @@ export function Cascade() {
     triggerType: 'keyword' as CascadeRule['triggerType'],
     triggerValue: '',
     providerOrder: [] as string[],
+    wordLimit: 5,
     enabled: true
   });
 
@@ -48,6 +50,7 @@ export function Cascade() {
         triggerType: 'keyword',
         triggerValue: 'code|program|function|debug|programming',
         providerOrder: ['groq', 'nvidia-nim', 'openrouter'],
+        wordLimit: 5,
         enabled: true,
         createdAt: new Date().toISOString()
       },
@@ -58,6 +61,7 @@ export function Cascade() {
         triggerType: 'keyword',
         triggerValue: 'summarize|extract|analyze|document|summary',
         providerOrder: ['openrouter', 'nvidia-nim', 'groq'],
+        wordLimit: 5,
         enabled: true,
         createdAt: new Date().toISOString()
       },
@@ -68,6 +72,7 @@ export function Cascade() {
         triggerType: 'task_type',
         triggerValue: 'general',
         providerOrder: ['nvidia-nim', 'groq', 'openrouter'],
+        wordLimit: 5,
         enabled: true,
         createdAt: new Date().toISOString()
       }
@@ -81,6 +86,7 @@ export function Cascade() {
       triggerType: 'keyword',
       triggerValue: '',
       providerOrder: [],
+      wordLimit: 5,
       enabled: true
     });
     setIsAdding(false);
@@ -119,6 +125,7 @@ export function Cascade() {
       triggerType: rule.triggerType,
       triggerValue: rule.triggerValue,
       providerOrder: rule.providerOrder,
+      wordLimit: rule.wordLimit,
       enabled: rule.enabled
     });
     setEditingId(rule.id);
@@ -248,6 +255,25 @@ export function Cascade() {
                   required
                 />
               </div>
+              {formData.triggerType === 'keyword' && (
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Word Limit
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.wordLimit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, wordLimit: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                    max="20"
+                    required
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    Number of words from the start of the message to check for keywords (default: 5)
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -377,6 +403,11 @@ export function Cascade() {
                     <code className="bg-neutral-900 px-2 py-1 rounded text-xs">
                       {rule.triggerValue}
                     </code>
+                    {rule.triggerType === 'keyword' && (
+                      <span className="text-neutral-500 text-xs ml-2">
+                        (first {rule.wordLimit} words)
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div>
