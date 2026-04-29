@@ -1,0 +1,29 @@
+[Unit]
+Description=Cascade Master API Gateway
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=%USER%
+WorkingDirectory=%INSTALL_DIR%
+ExecStart=/usr/bin/bun %INSTALL_DIR%/src/server/index.ts
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PORT=3001
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+# Security settings
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=%INSTALL_DIR%
+PrivateTmp=true
+
+# Resource limits
+MemoryLimit=512M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target

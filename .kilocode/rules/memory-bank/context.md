@@ -105,4 +105,5 @@ export async function GET() {
 |------|---------|
 | Initial | Template created with base setup |
 | 2026-04-29 AM | Implemented Cascade Master API gateway with Fastify server, cascade engine with task-aware routing, and basic dashboard UI |
-| 2026-04-29 PM | Added complete management UI (Providers, Models, Cascade Rules, Analytics, Security), SQLite persistence, authentication system, and enhanced cascade engine with queuing |
+| 2026-04-29 PM | Added complete management UI (Providers, Models, Cascade Rules, Analytics, Security), SQLite persistence, authentication system, enhanced cascade engine with queuing, and configurable keyword word limits |
+| 2026-04-29 CLI | Created one-click installation script, CLI binary, systemd service, PM2 config, comprehensive README, and plugin integration guides for Kilo CLI and other tools |

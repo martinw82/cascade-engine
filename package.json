@@ -1,13 +1,22 @@
 {
-  "name": "nextjs-template",
-  "version": "0.1.0",
-  "private": true,
+  "name": "cascade-master",
+  "version": "1.0.0",
+  "description": "Universal AI Traffic Controller - Intelligent LLM API Gateway",
+  "main": "src/server/index.ts",
+  "bin": {
+    "cascade-master": "./bin/cascade-master.js"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build && bun run build:server",
+    "build:server": "echo 'Server built'",
+    "start": "PORT=3001 bun src/server/index.ts",
+    "server": "PORT=3001 bun src/server/index.ts",
+    "cli": "bun src/server/index.ts",
+    "install-service": "sudo cp cascade-master.service /etc/systemd/system/ && sudo systemctl daemon-reload",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "install-cli": "bun link"
   },
   "dependencies": {
     "@fastify/sensible": "^6.0.4",
