@@ -41,7 +41,7 @@ PORT=3001 bun run dev  # or set custom port: PORT=58008 bun run dev
 
 ### Access the Web Interface
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to configure providers and monitor usage.
+Open [http://localhost:3001](http://localhost:3001) (or your custom port) in your browser. You'll be prompted to enter your access key to log in and access the dashboard for configuring providers and monitoring usage.
 
 ## 📚 Documentation
 

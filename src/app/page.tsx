@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dashboard } from '../components/cascade/Dashboard';
 import { Providers } from '../components/cascade/Providers';
 import { Models } from '../components/cascade/Models';
@@ -12,6 +13,16 @@ type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const tabs = [
     { id: 'dashboard' as TabType, label: 'Dashboard', icon: '📊' },
@@ -32,9 +43,17 @@ export default function Home() {
               Universal AI Traffic Controller - Maximize free-tier LLM usage
             </p>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-neutral-400">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span>Server Online</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-neutral-400">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span>Server Online</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
 
