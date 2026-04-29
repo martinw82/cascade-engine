@@ -6,7 +6,7 @@ import * as schema from './schema';
 const sqlite = new Database('./cascade.db');
 
 // Enable WAL mode for better concurrency
-sqlite.pragma('journal_mode = WAL');
+sqlite.exec("PRAGMA journal_mode = WAL");
 
 // Create Drizzle instance
 export const db = drizzle(sqlite, { schema });
