@@ -47,7 +47,7 @@ Key files to update if you want to change the default:
 
 For a test server, simply set the `PORT` environment variable when running: `PORT=3002 bun run server` (or whatever port you want). The docs and examples also reference 3001, but those are just examples.
 
-**User:** ok I tried I dont think it worked look --> root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# PORT=58008 bun run server
+**User:** ok I tried I dont think it worked look --> root@[REDACTED_HOSTNAME]:~/cascade-engine# PORT=58008 bun run server
 $ PORT=3001 bun src/server/index.ts
 
 **Assistant:** The port didn't change because the `package.json` script hardcodes `PORT=3001`, overriding your environment variable. The main issue is that Bun doesn't support `better-sqlite3` (a native Node.js module), causing the crash.
@@ -58,7 +58,7 @@ To run on a different port and fix this:
 
 Update the `server` script in `package.json` to `PORT=${PORT:-3001} bun src/server/index.ts` if you want to keep using Bun and make the port configurable via env var.
 
-**User:** root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# PORT=58008 node src/server/index.ts
+**User:** root@[REDACTED_HOSTNAME]:~/cascade-engine# PORT=58008 node src/server/index.ts
 node:internal/modules/esm/resolve:275
 throw new ERR_MODULE_NOT_FOUND(
 ^
@@ -69,7 +69,7 @@ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/root/cascade-engine/src/serve
 
 Run `PORT=58008 bun run server` after updating the package.json script as suggested.
 
-**User:** From https://github.com/martinw82/cascade-engine
+**User:** From https://github.com/[REDACTED_USERNAME]/cascade-engine
 * branch main -> FETCH_HEAD
 54ac341..0eaa68f main -> origin/main
 Updating 54ac341..0eaa68f
@@ -101,7 +101,7 @@ Run `bun update` to automatically update to the latest compatible versions, whic
 
 **User:** how do i sync github files to server files? i have them on another box I downloaded from github
 
-**Assistant:** The git repo is already configured with the correct remote URL (https://github.com/martinw82/cascade-engine.git) and is up to date with GitHub. To sync future updates from GitHub to the server files, run:
+**Assistant:** The git repo is already configured with the correct remote URL (https://github.com/[REDACTED_USERNAME]/cascade-engine.git) and is up to date with GitHub. To sync future updates from GitHub to the server files, run:
 
 ```
 git pull origin main
@@ -121,13 +121,13 @@ git pull origin main
 
 This will pull the latest changes from GitHub to that box. If there are any merge conflicts or if the local repo isn't set up properly, you may need to resolve them or re-clone the repo.
 
-**User:** root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# git pull origin main
+**User:** root@[REDACTED_HOSTNAME]:~/cascade-engine# git pull origin main
 remote: Enumerating objects: 11, done.
 remote: Counting objects: 100% (11/11), done.
 remote: Compressing objects: 100% (7/7), done.
 remote: Total 18 (delta 4), reused 18 (delta 4), pack-reused 0 (from 0)
 Unpacking objects: 18/18, 2.88 KiB | 421.00 KiB/s, done.
-From https://github.com/martinw82/cascade-engine
+From https://github.com/[REDACTED_USERNAME]/cascade-engine
 * branch main -> FETCH_HEAD
 0eaa68f..78462ac main -> origin/main
 Updating 0eaa68f..78462ac
@@ -137,7 +137,7 @@ src/server/lib/db.ts | 2 +-
 
 **Assistant:** The pull succeeded. Now try running `PORT=58008 bun run server` again—the pragma issue in db.ts has been fixed.
 
-**User:** root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# PORT=58008 bun run server
+**User:** root@[REDACTED_HOSTNAME]:~/cascade-engine# PORT=58008 bun run server
 $ PORT=${PORT:-3001} bun src/server/index.ts
 Failed to initialize caches: 101 | return mapResultRow(fields, row, joinsNotNullableMap);
 102 |   }
@@ -156,7 +156,7 @@ at then (/root/cascade-engine/node_modules/drizzle-orm/query-promise.js:21:17)
 
 Update the db.ts import from 'drizzle-orm/better-sqlite3' to 'drizzle-orm/bun-sqlite'.
 
-**User:** root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# PORT=58008 bun run server
+**User:** root@[REDACTED_HOSTNAME]:~/cascade-engine# PORT=58008 bun run server
 $ PORT=${PORT:-3001} bun src/server/index.ts
 4 |
 5 | // Create SQLite database
@@ -169,20 +169,20 @@ TypeError: sqlite.pragma is not a function. (In 'sqlite.pragma("journal_mode = W
 
 **Assistant:** The pragma call needs to be changed to use exec instead. Update line 9 in db.ts from `sqlite.pragma('journal_mode = WAL');` to `sqlite.exec("PRAGMA journal_mode = WAL");`.
 
-**User:** root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# git pull origin main
+**User:** root@[REDACTED_HOSTNAME]:~/cascade-engine# git pull origin main
 remote: Enumerating objects: 25, done.
 remote: Counting objects: 100% (25/25), done.
 remote: Compressing objects: 100% (7/7), done.
 remote: Total 18 (delta 4), reused 18 (delta 4), pack-reused 0 (from 0)
 Unpacking objects: 18/18, 2.88 KiB | 421.00 KiB/s, done.
-From https://github.com/martinw82/cascade-engine
+From https://github.com/[REDACTED_USERNAME]/cascade-engine
 * branch main -> FETCH_HEAD
 0eaa68f..78462ac main -> origin/main
 Updating 0eaa68f..78462ac
 Fast-forward
 src/server/lib/db.ts | 2 +-
 1 file changed, 1 insertion(+), 1 deletion(-)
-root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# PORT=58008 bun run server
+root@[REDACTED_HOSTNAME]:~/cascade-engine# PORT=58008 bun run server
 $ PORT=${PORT:-3001} bun src/server/index.ts
 Failed to initialize caches: SQLiteError: table cascade_rules has no column named word_limit
 errno: 1,
@@ -199,7 +199,7 @@ try {
 }
 ```
 
-**User:** root@iZ8psbxkkkbkbcvn3rh2meZ:~/cascade-engine# PORT=58008 bun run server
+**User:** root@[REDACTED_HOSTNAME]:~/cascade-engine# PORT=58008 bun run server
 $ PORT=${PORT:-3001} bun src/server/index.ts
 Failed to initialize caches: 101 | return mapResultRow(fields, row, joinsNotNullableMap);
 102 |   }
