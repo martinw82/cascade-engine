@@ -13,6 +13,7 @@
     "start": "PORT=3001 bun src/server/index.ts",
     "server": "PORT=3001 bun src/server/index.ts",
     "cli": "bun src/server/index.ts",
+    "test": "./test.sh",
     "install-service": "sudo cp cascade-master.service /etc/systemd/system/ && sudo systemctl daemon-reload",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

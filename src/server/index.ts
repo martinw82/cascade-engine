@@ -5,6 +5,10 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { cascadeRoutes } from './routes/api/cascade';
 import { authenticateRequest } from './middleware/auth';
+import { validateRequest } from './middleware/validation';
+import { db } from './lib/db';
+import { eq } from 'drizzle-orm';
+import { requestLogs, providers, models, cascadeRules, authKeys } from './lib/schema';
 
 // Initialize Fastify server
 const fastify: FastifyInstance = Fastify({
@@ -32,15 +36,85 @@ try {
 
 // Health check endpoint
 fastify.get('/health', async (request, reply) => {
-  reply.send({ status: 'ok', timestamp: new Date().toISOString() });
+  const uptime = process.uptime();
+  const memoryUsage = process.memoryUsage();
+
+  reply.send({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(uptime),
+    version: process.version,
+    platform: process.platform,
+    memory: {
+      used: Math.round(memoryUsage.heapUsed / 1024 / 1024), // MB
+      total: Math.round(memoryUsage.heapTotal / 1024 / 1024), // MB
+      external: Math.round(memoryUsage.external / 1024 / 1024), // MB
+    },
+    database: 'sqlite', // Could add connection check
+    providers: 'configured', // Could add provider health checks
+  });
+});
+
+// Metrics endpoint
+fastify.get('/api/metrics', async (request, reply) => {
+  try {
+    // Get request counts from database
+    const totalRequests = await db.$count(requestLogs);
+    const todayRequests = await db.$count(requestLogs, eq(requestLogs.timestamp, new Date().toISOString().split('T')[0]));
+    const errorCount = await db.$count(requestLogs, eq(requestLogs.status, 'error'));
+
+    // Calculate success rate
+    const successRate = totalRequests > 0 ? ((totalRequests - errorCount) / totalRequests * 100).toFixed(1) : '100.0';
+
+    reply.send({
+      total_requests: totalRequests,
+      today_requests: todayRequests,
+      success_rate: `${successRate}%`,
+      error_count: errorCount,
+      uptime_seconds: Math.floor(process.uptime()),
+      memory_mb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024)
+    });
+  } catch (error) {
+    reply.code(500).send({ error: 'Failed to fetch metrics' });
+  }
+});
+
+// Configuration backup endpoint
+fastify.get('/api/config/backup', async (request, reply) => {
+  try {
+    const [providers, models, rules, authKeys] = await Promise.all([
+      db.select().from(providers),
+      db.select().from(models),
+      db.select().from(cascadeRules),
+      db.select().from(authKeys)
+    ]);
+
+    const backup = {
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      providers,
+      models,
+      cascadeRules: rules,
+      authKeys: authKeys.map(key => ({ ...key, keyValue: '[REDACTED]' })) // Don't export actual keys
+    };
+
+    reply.header('Content-Disposition', `attachment; filename="cascade-backup-${new Date().toISOString().split('T')[0]}.json"`);
+    reply.send(backup);
+  } catch (error) {
+    reply.code(500).send({ error: 'Failed to create backup' });
+  }
 });
 
 // Register API routes
 fastify.register(async (fastify) => {
-  // Apply authentication to cascade routes
+  // Apply authentication and validation to cascade routes
   fastify.addHook('preHandler', authenticateRequest);
 
-  fastify.post('/api/cascade', cascadeRoutes.POST);
+  // POST route gets additional validation
+  fastify.post('/api/cascade', {
+    preHandler: [validateRequest]
+  }, cascadeRoutes.POST);
+
   fastify.get('/api/cascade', cascadeRoutes.GET);
 }, { prefix: '' });
 
