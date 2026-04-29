@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+// @ts-ignore
 import { Database } from 'bun:sqlite';
 import * as schema from './schema';
 
@@ -55,11 +56,19 @@ function initializeDatabase() {
       trigger_type TEXT NOT NULL, -- 'task_type', 'keyword', 'header', 'custom'
       trigger_value TEXT NOT NULL,
       provider_order TEXT NOT NULL, -- JSON array of provider IDs
+      word_limit INTEGER DEFAULT 5,
       enabled BOOLEAN DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Add word_limit column if it doesn't exist (for existing databases)
+  try {
+    sqlite.exec(`ALTER TABLE cascade_rules ADD COLUMN word_limit INTEGER DEFAULT 5;`);
+  } catch (e) {
+    // Column might already exist, ignore
+  }
 
   // Create auth_keys table
   sqlite.exec(`

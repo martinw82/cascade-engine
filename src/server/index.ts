@@ -82,7 +82,7 @@ fastify.get('/api/metrics', async (request, reply) => {
 // Configuration backup endpoint
 fastify.get('/api/config/backup', async (request, reply) => {
   try {
-    const [providers, models, rules, authKeys] = await Promise.all([
+    const [providersData, modelsData, rulesData, authKeysData] = await Promise.all([
       db.select().from(providers),
       db.select().from(models),
       db.select().from(cascadeRules),
@@ -92,10 +92,10 @@ fastify.get('/api/config/backup', async (request, reply) => {
     const backup = {
       timestamp: new Date().toISOString(),
       version: '1.0.0',
-      providers,
-      models,
-      cascadeRules: rules,
-      authKeys: authKeys.map(key => ({ ...key, keyValue: '[REDACTED]' })) // Don't export actual keys
+      providers: providersData,
+      models: modelsData,
+      cascadeRules: rulesData,
+      authKeys: authKeysData.map((key: any) => ({ ...key, keyValue: '[REDACTED]' })) // Don't export actual keys
     };
 
     reply.header('Content-Disposition', `attachment; filename="cascade-backup-${new Date().toISOString().split('T')[0]}.json"`);

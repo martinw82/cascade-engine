@@ -20,8 +20,46 @@ interface Provider {
 }
 
 export function Cascade() {
-  const [rules, setRules] = useState<CascadeRule[]>([]);
-  const [providers, setProviders] = useState<Provider[]>([]);
+  const [rules, setRules] = useState<CascadeRule[]>([
+    {
+      id: 'coding-rule',
+      name: 'Coding Tasks',
+      priority: 1,
+      triggerType: 'keyword',
+      triggerValue: 'code|program|function|debug|programming',
+      providerOrder: ['groq', 'nvidia-nim', 'openrouter'],
+      wordLimit: 5,
+      enabled: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'summarization-rule',
+      name: 'Summarization Tasks',
+      priority: 2,
+      triggerType: 'keyword',
+      triggerValue: 'summarize|extract|analyze|document|summary',
+      providerOrder: ['openrouter', 'nvidia-nim', 'groq'],
+      wordLimit: 5,
+      enabled: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'default-rule',
+      name: 'Default Fallback',
+      priority: 99,
+      triggerType: 'task_type',
+      triggerValue: 'general',
+      providerOrder: ['nvidia-nim', 'groq', 'openrouter'],
+      wordLimit: 5,
+      enabled: true,
+      createdAt: new Date().toISOString()
+    }
+  ]);
+  const [providers, setProviders] = useState<Provider[]>([
+    { id: 'nvidia-nim', name: 'NVIDIA NIM' },
+    { id: 'groq', name: 'Groq' },
+    { id: 'openrouter', name: 'OpenRouter' }
+  ]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -34,50 +72,7 @@ export function Cascade() {
     enabled: true
   });
 
-  // Mock data for now (will be replaced with API calls)
-  useEffect(() => {
-    setProviders([
-      { id: 'nvidia-nim', name: 'NVIDIA NIM' },
-      { id: 'groq', name: 'Groq' },
-      { id: 'openrouter', name: 'OpenRouter' }
-    ]);
-
-    setRules([
-      {
-        id: 'coding-rule',
-        name: 'Coding Tasks',
-        priority: 1,
-        triggerType: 'keyword',
-        triggerValue: 'code|program|function|debug|programming',
-        providerOrder: ['groq', 'nvidia-nim', 'openrouter'],
-        wordLimit: 5,
-        enabled: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'summarization-rule',
-        name: 'Summarization Tasks',
-        priority: 2,
-        triggerType: 'keyword',
-        triggerValue: 'summarize|extract|analyze|document|summary',
-        providerOrder: ['openrouter', 'nvidia-nim', 'groq'],
-        wordLimit: 5,
-        enabled: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'default-rule',
-        name: 'Default Fallback',
-        priority: 99,
-        triggerType: 'task_type',
-        triggerValue: 'general',
-        providerOrder: ['nvidia-nim', 'groq', 'openrouter'],
-        wordLimit: 5,
-        enabled: true,
-        createdAt: new Date().toISOString()
-      }
-    ]);
-  }, []);
+  // Mock data initialized in useState above (will be replaced with API calls)
 
   const resetForm = () => {
     setFormData({
