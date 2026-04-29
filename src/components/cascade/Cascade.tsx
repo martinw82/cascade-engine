@@ -212,6 +212,9 @@ export function Cascade() {
                   min="1"
                   required
                 />
+                <p className="text-xs text-neutral-500 mt-1">
+                  Lower numbers = higher priority. General fallback should have highest number (lowest priority).
+                </p>
               </div>
             </div>
 

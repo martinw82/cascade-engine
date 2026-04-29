@@ -200,32 +200,35 @@ class CascadeEngine {
 
 
 
-  // Detect task type and match against cascade rules
+  // Detect task type and match against cascade rules (respects priority order)
   private detectTaskType(request: CascadeRequest): CascadeRule | null {
-    // First check explicit task type
-    if (request.taskType) {
-      const rule = this.rulesCache.find(r =>
-        r.triggerType === 'task_type' && r.triggerValue === request.taskType
-      );
-      if (rule) return rule;
-    }
+    // Rules are already sorted by priority (lowest number = highest priority)
+    // Check each rule in priority order until we find a match
 
-    // Check first 5 words of the first message for keywords
-    const firstMessage = request.messages?.[0]?.content || '';
-    const firstFiveWords = firstMessage.split(' ').slice(0, 5).join(' ').toLowerCase();
-
-    // Check keyword-based rules
     for (const rule of this.rulesCache) {
+      // Check explicit task type match (highest priority)
+      if (request.taskType && rule.triggerType === 'task_type' && rule.triggerValue === request.taskType) {
+        return rule;
+      }
+
+      // Check keyword matches
       if (rule.triggerType === 'keyword') {
+        const firstMessage = request.messages?.[0]?.content || '';
+        const firstFiveWords = firstMessage.split(' ').slice(0, 5).join(' ').toLowerCase();
         const keywords = rule.triggerValue.split('|');
         if (keywords.some(keyword => firstFiveWords.includes(keyword.trim()))) {
           return rule;
         }
       }
+
+      // Check task type matches (including 'general')
+      if (!request.taskType && rule.triggerType === 'task_type' && rule.triggerValue === 'general') {
+        return rule;
+      }
     }
 
-    // Return default rule
-    return this.rulesCache.find(r => r.triggerType === 'task_type' && r.triggerValue === 'general') || null;
+    // No rule matched
+    return null;
   }
 
   // Select provider based on cascade rule and availability
