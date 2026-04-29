@@ -49,7 +49,7 @@ interface CascadeRule {
   enabled: boolean;
 }
 
-class CascadeEngine {
+export class CascadeEngine {
   private globalConcurrency: number = 3;
   private activeRequests: number = 0;
   private requestQueue: Array<{
