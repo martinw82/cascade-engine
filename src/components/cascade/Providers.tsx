@@ -1,0 +1,247 @@
+'use client';
+
+import { useState } from 'react';
+
+interface Provider {
+  id: string;
+  name: string;
+  baseURL: string;
+  apiKey: string;
+  status: 'ready' | 'cooldown' | 'errored';
+  created: string;
+}
+
+export function Providers() {
+  const [providers, setProviders] = useState<Provider[]>([
+    {
+      id: '1',
+      name: 'NVIDIA NIM',
+      baseURL: 'https://api.nvidia.com/v1',
+      apiKey: process.env.NVIDIA_API_KEY || '',
+      status: 'ready',
+      created: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Groq',
+      baseURL: 'https://api.groq.com/openai/v1',
+      apiKey: process.env.GROQ_API_KEY || '',
+      status: 'ready',
+      created: new Date().toISOString()
+    }
+  ]);
+
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    baseURL: '',
+    apiKey: ''
+  });
+
+  const resetForm = () => {
+    setFormData({ name: '', baseURL: '', apiKey: '' });
+    setIsAdding(false);
+    setEditingId(null);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editingId) {
+      // Update existing provider
+      setProviders(prev =>
+        prev.map(p =>
+          p.id === editingId
+            ? { ...p, ...formData }
+            : p
+        )
+      );
+    } else {
+      // Add new provider
+      const newProvider: Provider = {
+        id: Date.now().toString(),
+        ...formData,
+        status: 'ready',
+        created: new Date().toISOString()
+      };
+      setProviders(prev => [...prev, newProvider]);
+    }
+
+    resetForm();
+  };
+
+  const handleEdit = (provider: Provider) => {
+    setFormData({
+      name: provider.name,
+      baseURL: provider.baseURL,
+      apiKey: provider.apiKey
+    });
+    setEditingId(provider.id);
+    setIsAdding(true);
+  };
+
+  const handleDelete = (id: string) => {
+    setProviders(prev => prev.filter(p => p.id !== id));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ready': return 'text-green-400 bg-green-900/20';
+      case 'cooldown': return 'text-yellow-400 bg-yellow-900/20';
+      case 'errored': return 'text-red-400 bg-red-900/20';
+      default: return 'text-neutral-400 bg-neutral-900/20';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Provider Management</h2>
+          <p className="text-neutral-400 mt-1">
+            Configure LLM providers with their base URLs and API keys
+          </p>
+        </div>
+        <button
+          onClick={() => setIsAdding(!isAdding)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+        >
+          {isAdding ? 'Cancel' : '+ Add Provider'}
+        </button>
+      </div>
+
+      {/* Add/Edit Form */}
+      {isAdding && (
+        <div className="bg-neutral-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">
+            {editingId ? 'Edit Provider' : 'Add New Provider'}
+          </h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Provider Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., OpenAI, Anthropic"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Base URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.baseURL}
+                  onChange={(e) => setFormData(prev => ({ ...prev, baseURL: e.target.value }))}
+                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://api.example.com/v1"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-2">
+                API Key
+              </label>
+              <input
+                type="password"
+                value={formData.apiKey}
+                onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
+                className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="sk-..."
+                required
+              />
+            </div>
+            <div className="flex space-x-3">
+              <button
+                type="submit"
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-md transition-colors"
+              >
+                {editingId ? 'Update Provider' : 'Add Provider'}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Providers List */}
+      <div className="grid gap-4">
+        {providers.map((provider) => (
+          <div key={provider.id} className="bg-neutral-800 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <h3 className="text-lg font-semibold">{provider.name}</h3>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(provider.status)}`}>
+                  {provider.status.toUpperCase()}
+                </span>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEdit(provider)}
+                  className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-sm rounded transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(provider.id)}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-500 text-sm rounded transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-neutral-400">Base URL:</span>
+                <div className="text-neutral-200 font-mono bg-neutral-900 px-2 py-1 rounded mt-1">
+                  {provider.baseURL}
+                </div>
+              </div>
+              <div>
+                <span className="text-neutral-400">API Key:</span>
+                <div className="text-neutral-200 font-mono bg-neutral-900 px-2 py-1 rounded mt-1">
+                  {provider.apiKey ? '••••••••••••••••' : 'Not set'}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 text-xs text-neutral-500">
+              Created: {new Date(provider.created).toLocaleDateString()}
+            </div>
+          </div>
+        ))}
+
+        {providers.length === 0 && (
+          <div className="bg-neutral-800 rounded-lg p-8 text-center">
+            <div className="text-4xl mb-4">🔧</div>
+            <h3 className="text-lg font-semibold mb-2">No Providers Configured</h3>
+            <p className="text-neutral-400 mb-4">
+              Add your first LLM provider to start using Cascade Master
+            </p>
+            <button
+              onClick={() => setIsAdding(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+            >
+              Add Provider
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

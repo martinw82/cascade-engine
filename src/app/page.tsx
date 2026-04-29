@@ -1,62 +1,63 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Dashboard } from '../components/cascade/Dashboard';
+import { Providers } from '../components/cascade/Providers';
+import { Models } from '../components/cascade/Models';
+import { Analytics } from '../components/cascade/Analytics';
+
+type TabType = 'dashboard' | 'providers' | 'models' | 'analytics';
+
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+
+  const tabs = [
+    { id: 'dashboard' as TabType, label: 'Dashboard', icon: '📊' },
+    { id: 'providers' as TabType, label: 'Providers', icon: '🔧' },
+    { id: 'models' as TabType, label: 'Models', icon: '🤖' },
+    { id: 'analytics' as TabType, label: 'Analytics', icon: '📈' },
+  ];
+
   return (
-    <main className="min-h-screen bg-neutral-900 text-neutral-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Cascade Master</h1>
-        <p className="mb-8">
-          Universal AI Traffic Controller - Maximize free-tier LLM usage through
-          intelligent routing and real-time monitoring.
-        </p>
-        
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="bg-neutral-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">API Gateway Status</h2>
-            <div id="api-status" className="space-y-2">
-              <div className="flex justify-between">
-                <span>Server:</span>
-                <span id="server-status" className="text-green-400">Online</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Port:</span>
-                <span id="port-status">3000</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Uptime:</span>
-                <span id="uptime">00:00:00</span>
-              </div>
-            </div>
+    <main className="min-h-screen bg-neutral-900 text-neutral-100">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Cascade Master</h1>
+            <p className="text-neutral-400 mt-1">
+              Universal AI Traffic Controller - Maximize free-tier LLM usage
+            </p>
           </div>
-          
-          <div className="bg-neutral-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
-            <div id="quick-stats" className="space-y-2">
-              <div className="flex justify-between">
-                <span>Requests Today:</span>
-                <span id="requests-today">0</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Success Rate:</span>
-                <span id="success-rate">100%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Estimated Savings:</span>
-                <span id="estimated-savings">$0.00</span>
-              </div>
-            </div>
+          <div className="flex items-center space-x-2 text-sm text-neutral-400">
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <span>Server Online</span>
           </div>
         </div>
-        
-        <div className="mt-8 bg-neutral-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Live Log Feed</h2>
-          <div id="log-feed" className="h-64 overflow-y-auto bg-neutral-900 rounded p-4 mb-4">
-            <div className="text-neutral-400 text-sm">Waiting for requests...</div>
-          </div>
-          <button 
-            id="clear-logs"
-            className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-sm rounded"
-          >
-            Clear Logs
-          </button>
+
+        {/* Navigation Tabs */}
+        <div className="flex space-x-1 mb-8 bg-neutral-800 p-1 rounded-lg">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-neutral-700 text-white'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-700/50'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div className="tab-content">
+          {activeTab === 'dashboard' && <Dashboard />}
+          {activeTab === 'providers' && <Providers />}
+          {activeTab === 'models' && <Models />}
+          {activeTab === 'analytics' && <Analytics />}
         </div>
       </div>
     </main>
