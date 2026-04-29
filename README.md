@@ -43,6 +43,12 @@ bun run start
 
 Open [http://localhost:3001](http://localhost:3001) in your browser to configure providers and monitor usage.
 
+## 📚 Documentation
+
+- **[Complete User Guide & Tutorial](USER_GUIDE.md)** - Step-by-step setup, advanced configuration, and troubleshooting
+- **[Session Development Log](SESSION_LOG.md)** - Complete development history and technical implementation details
+- **[Plugin Integration Guide](CASCADE_PLUGIN.md)** - Integration with Kilo CLI and other tools
+
 ## 🛠️ Integration Options
 
 ### Option 1: Simple API Override (Recommended)
@@ -242,6 +248,30 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Happy cascading! 🎯**
+## 📖 Documentation Overview
 
-For support, open an issue on GitHub or join our Discord community.
+Cascade Master includes comprehensive documentation:
+
+### 📚 [Complete User Guide](USER_GUIDE.md)
+- Step-by-step installation and setup
+- Basic and advanced configuration tutorials
+- Production deployment guides
+- Troubleshooting and optimization tips
+- API reference and integration examples
+
+### 📋 [Development Session Log](SESSION_LOG.md)
+- Complete development history
+- Technical implementation details
+- Architecture decisions and rationale
+- Testing and validation results
+- Future enhancement roadmap
+
+### 🔌 [Plugin Integration Guide](CASCADE_PLUGIN.md)
+- Integration with Kilo CLI and other tools
+- Simple API override methods
+- Advanced plugin development
+- Deployment and distribution options
+
+**🎯 You're now a Cascade Master expert!**
+
+For support, check the documentation first, then open an issue on GitHub or join our Discord community.
