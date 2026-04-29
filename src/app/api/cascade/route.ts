@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CascadeEngine } from '../../../server/routes/api/cascade';
+import { CascadeEngine } from '../../../../server/routes/api/cascade';
 
 // Initialize cascade engine (this will be shared across requests)
 const cascadeEngine = new CascadeEngine();

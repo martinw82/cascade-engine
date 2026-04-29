@@ -22,21 +22,21 @@
 
 ```bash
 # Download and run the installer
-curl -fsSL https://raw.githubusercontent.com/your-repo/cascade-master/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/your-repo/cascade-engine/main/install.sh | bash
 ```
 
 **Or install manually:**
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/cascade-master.git
-cd cascade-master
+git clone https://github.com/your-repo/cascade-engine.git
+cd cascade-engine
 
 # Install dependencies
 bun install  # or npm install
 
-# Start the server
-bun run start
+# Start the integrated application (UI + API)
+PORT=3001 bun run dev  # or set custom port: PORT=58008 bun run dev
 ```
 
 ### Access the Web Interface

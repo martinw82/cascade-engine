@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '../../../server/lib/db';
-import { providers, models, cascadeRules, authKeys } from '../../../server/lib/schema';
+import { db } from '../../../../server/lib/db';
+import { providers, models, cascadeRules, authKeys } from '../../../../server/lib/schema';
 
 export async function GET() {
   try {

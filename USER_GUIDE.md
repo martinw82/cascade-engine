@@ -37,8 +37,8 @@ cd cascade-master
 # Install dependencies
 bun install  # or npm install
 
-# Start the server
-bun run start
+# Start the integrated application (UI + API)
+PORT=3001 bun run dev  # or set custom port: PORT=58008 bun run dev
 ```
 
 ### Option 3: Docker Installation
