@@ -43,6 +43,8 @@ PORT=3001 bun run dev  # or set custom port: PORT=58008 bun run dev
 
 Open [http://localhost:3001](http://localhost:3001) (or your custom port) in your browser. You'll be prompted to enter your access key to log in and access the dashboard for configuring providers and monitoring usage.
 
+**For low-resource deployments:** Use the prebuilt standalone UI package (`cascade-deploy.tar.gz`) for instant startup without building. Run the UI on your desired port (e.g., 58008) and the API on port 3001—the UI will automatically fetch metrics from the API on port 3001.
+
 ## 📚 Documentation
 
 - **[Complete User Guide & Tutorial](USER_GUIDE.md)** - Step-by-step setup, advanced configuration, and troubleshooting
