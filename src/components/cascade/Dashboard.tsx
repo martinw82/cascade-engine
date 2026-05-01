@@ -53,12 +53,34 @@ export function Dashboard() {
   };
 
   useEffect(() => {
-    // Simulate activity every 5-15 seconds
-    const interval = setInterval(() => {
-      if (Math.random() < 0.3) { // 30% chance every interval
-        simulateActivity();
+    const fetchMetrics = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/metrics');
+        if (response.ok) {
+        const data = await response.json();
+        const uptimeSeconds = data.uptime_seconds || 0;
+        const hours = Math.floor(uptimeSeconds / 3600);
+        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+        const seconds = Math.floor(uptimeSeconds % 60);
+        const uptime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        setStats({
+          requestsToday: data.today_requests || 0,
+          successRate: parseFloat(data.success_rate.replace('%', '')) || 95,
+          estimatedSavings: 0, // Could calculate from logs if available
+          uptime
+        });
+        }
+      } catch (error) {
+        console.error('Failed to fetch metrics:', error);
       }
-    }, 5000 + Math.random() * 10000);
+    };
+
+    // Fetch initial metrics
+    fetchMetrics();
+
+    // Fetch metrics every 30 seconds
+    const interval = setInterval(fetchMetrics, 30000);
 
     return () => clearInterval(interval);
   }, []);
