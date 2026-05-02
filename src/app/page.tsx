@@ -7,8 +7,9 @@ import { Models } from '../components/cascade/Models';
 import { Cascade } from '../components/cascade/Cascade';
 import { Analytics } from '../components/cascade/Analytics';
 import { Auth } from '../components/cascade/Auth';
+import { Test } from '../components/cascade/Test';
 
-type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth';
+type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -22,6 +23,7 @@ export default function Home() {
     { id: 'cascade' as TabType, label: 'Cascade', icon: '🔀' },
     { id: 'analytics' as TabType, label: 'Analytics', icon: '📈' },
     { id: 'auth' as TabType, label: 'Security', icon: '🔐' },
+    { id: 'test' as TabType, label: 'Test', icon: '🧪' },
   ];
 
   return (
@@ -66,6 +68,7 @@ export default function Home() {
           {activeTab === 'cascade' && <Cascade />}
           {activeTab === 'analytics' && <Analytics />}
           {activeTab === 'auth' && <Auth />}
+          {activeTab === 'test' && <Test />}
         </div>
       </div>
     </main>

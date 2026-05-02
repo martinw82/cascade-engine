@@ -175,7 +175,13 @@ fastify.post('/api/providers', async (request, reply) => {
 fastify.get('/api/models', async (request, reply) => {
   try {
     const result = await db.select().from(models);
-    return reply.send(result);
+    const mapped = result.map(m => ({
+      id: m.id,
+      name: m.modelId,
+      providerId: m.providerId,
+      modelId: m.modelId
+    }));
+    return reply.send(mapped);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to fetch models' });
   }
