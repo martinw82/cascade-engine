@@ -130,31 +130,22 @@ fastify.get('/api/providers', async (request, reply) => {
 fastify.post('/api/providers', async (request, reply) => {
   try {
     const data = request.body as any;
-    const providerData = {
-      id: data.id,
-      name: data.name,
-      baseUrl: data.base_url,
-      apiKey: data.api_key,
-      status: data.status,
-      createdAt: data.created_at
-    };
 
     // Check if provider exists
     const existing = await db.select().from(providers).where(eq(providers.id, data.id)).limit(1);
 
-    let result;
-    if (existing.length > 0) {
-      // Update existing
-      result = await db.update(providers).set({
-        name: data.name,
-        baseUrl: data.base_url,
-        apiKey: data.api_key,
-        status: data.status
-      }).where(eq(providers.id, data.id)).returning();
-    } else {
-      // Insert new
-      result = await db.insert(providers).values(providerData).returning();
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Provider not found' });
     }
+
+    // Update existing (allows partial updates)
+    const updateData: any = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.base_url !== undefined) updateData.baseUrl = data.base_url;
+    if (data.api_key !== undefined) updateData.apiKey = data.api_key;
+    if (data.status !== undefined) updateData.status = data.status;
+
+    const result = await db.update(providers).set(updateData).where(eq(providers.id, data.id)).returning();
 
     const mapped = {
       id: result[0].id,
@@ -166,8 +157,8 @@ fastify.post('/api/providers', async (request, reply) => {
     };
     return reply.send(mapped);
   } catch (error) {
-    console.error('Provider save error:', error);
-    return reply.code(500).send({ error: 'Failed to save provider' });
+    console.error('Provider update error:', error);
+    return reply.code(500).send({ error: 'Failed to update provider' });
   }
 });
 

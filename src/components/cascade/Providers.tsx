@@ -43,6 +43,26 @@ export function Providers() {
     setEditingId(null);
   };
 
+  const handleReset = async (id: string) => {
+    try {
+      await fetch(`http://localhost:3001/api/providers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          status: 'ready'
+        }),
+      });
+      // Update local state
+      setProviders(prev => prev.map(p => p.id === id ? { ...p, status: 'ready' } : p));
+    } catch (error) {
+      console.error('Failed to reset provider:', error);
+      alert('Failed to reset provider');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -204,6 +224,12 @@ export function Providers() {
                   className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-sm rounded transition-colors"
                 >
                   Edit
+                </button>
+                <button
+                  onClick={() => handleReset(provider.id)}
+                  className="px-3 py-1 bg-green-600 hover:bg-green-500 text-sm rounded transition-colors"
+                >
+                  Reset
                 </button>
                 <button
                   onClick={() => handleDelete(provider.id)}
