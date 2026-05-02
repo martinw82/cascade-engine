@@ -275,6 +275,8 @@ export class CascadeEngine {
       temperature: 0.7
     };
 
+    console.log(`Making API call to ${provider.name}: ${url} with model ${modelName}`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -284,15 +286,20 @@ export class CascadeEngine {
       body: JSON.stringify(body)
     });
 
+    console.log(`API response status: ${response.status}`);
+
     if (!response.ok) {
       const errorData = await response.text();
+      console.log(`API error details: ${errorData}`);
       const error: any = new Error(`API call failed: ${response.status} ${response.statusText}`);
       error.statusCode = response.status;
       error.details = errorData;
       throw error;
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log(`API call successful for ${provider.name}`);
+    return result;
   }
 
   // Update provider usage stats
@@ -359,6 +366,8 @@ export class CascadeEngine {
 
       return response;
     } catch (error: any) {
+      console.log(`API call failed for ${provider.name}: ${error.message}, details: ${error.details}`);
+
       // Mark provider as having an issue
       if (error.statusCode === 429 || error.statusCode === 503) {
         provider.status = 'cooldown';
