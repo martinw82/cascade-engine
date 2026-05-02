@@ -113,7 +113,15 @@ fastify.get('/api/config/backup', async (request, reply) => {
 fastify.get('/api/providers', async (request, reply) => {
   try {
     const result = await db.select().from(providers);
-    return reply.send(result);
+    const mapped = result.map(p => ({
+      id: p.id,
+      name: p.name,
+      baseURL: p.baseUrl,
+      apiKey: p.apiKey,
+      status: p.status,
+      created: p.createdAt
+    }));
+    return reply.send(mapped);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to fetch providers' });
   }
@@ -122,9 +130,25 @@ fastify.get('/api/providers', async (request, reply) => {
 fastify.post('/api/providers', async (request, reply) => {
   try {
     const data = request.body as any;
-    const result = await db.insert(providers).values(data).returning();
-    return reply.send(result[0]);
+    const result = await db.insert(providers).values({
+      id: data.id,
+      name: data.name,
+      baseUrl: data.base_url,
+      apiKey: data.api_key,
+      status: data.status,
+      createdAt: data.created_at
+    }).returning();
+    const mapped = {
+      id: result[0].id,
+      name: result[0].name,
+      baseURL: result[0].baseUrl,
+      apiKey: result[0].apiKey,
+      status: result[0].status,
+      created: result[0].createdAt
+    };
+    return reply.send(mapped);
   } catch (error) {
+    console.error('Provider creation error:', error);
     return reply.code(500).send({ error: 'Failed to create provider' });
   }
 });
