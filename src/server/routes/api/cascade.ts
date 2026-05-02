@@ -262,6 +262,39 @@ export class CascadeEngine {
     return null;
   }
 
+  // Make API call to provider
+  private async makeApiCall(provider: ProviderConfig, messages: any[], modelId?: string): Promise<any> {
+    const model = modelId ? this.modelCache.get(modelId) : null;
+    const modelName = model?.modelId || 'gpt-3.5-turbo';
+
+    const url = `${provider.baseURL}/chat/completions`;
+    const body = {
+      model: modelName,
+      messages: messages,
+      max_tokens: 1000, // Reasonable limit
+      temperature: 0.7
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${provider.apiKey}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      const error: any = new Error(`API call failed: ${response.status} ${response.statusText}`);
+      error.statusCode = response.status;
+      error.details = errorData;
+      throw error;
+    }
+
+    return await response.json();
+  }
+
   // Update provider usage stats
   private updateProviderUsage(provider: ProviderConfig, tokensUsed: number = 0) {
     provider.currentRPM++;
@@ -314,42 +347,11 @@ export class CascadeEngine {
     const startTime = Date.now();
 
     try {
-      // In a real implementation, we'd make the actual API call here
-      // For now, we'll simulate success or failure
-
-      // Simulate occasional 429 errors for demonstration
-      const shouldFail = Math.random() < 0.3; // 30% chance of failure
-
-      if (shouldFail) {
-        // Simulate rate limit error
-        const error: any = new Error('Rate limit exceeded');
-        error.statusCode = 429;
-        throw error;
-      }
-
-      // Simulate successful response
-      const response = {
-        id: `chatcmpl-${Math.random().toString(36).substr(2, 9)}`,
-        object: 'chat.completion',
-        created: Math.floor(Date.now() / 1000),
-        model: request.model || 'unknown',
-        choices: [{
-          index: 0,
-          message: {
-            role: 'assistant',
-            content: `This is a simulated response from ${provider.name} for rule: ${rule.id}`
-          },
-          finish_reason: 'stop'
-        }],
-        usage: {
-          prompt_tokens: 10,
-          completion_tokens: 15,
-          total_tokens: 25
-        }
-      };
+      // Make the actual API call
+      const response = await this.makeApiCall(provider, request.messages, request.model);
 
       // Update provider usage
-      this.updateProviderUsage(provider, response.usage.total_tokens);
+      this.updateProviderUsage(provider, response.usage?.total_tokens || 0);
 
       // Log the request
       const responseTime = Date.now() - startTime;
