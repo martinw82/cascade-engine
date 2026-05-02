@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Model {
   id: string;
@@ -19,54 +19,52 @@ interface Model {
 interface Provider {
   id: string;
   name: string;
+  baseURL: string;
+  apiKey: string;
+  status: 'ready' | 'cooldown' | 'errored';
+  created: string;
 }
 
-// Mock providers for the dropdown
-const mockProviders: Provider[] = [
-  { id: '1', name: 'NVIDIA NIM' },
-  { id: '2', name: 'Groq' },
-  { id: '3', name: 'OpenRouter' },
-];
-
 export function Models() {
-  const [models, setModels] = useState<Model[]>([
-    {
-      id: '1',
-      providerId: '1',
-      modelId: 'llama-3.1-70b',
-      contextWindow: 128000,
-      rpmLimit: 40,
-      tpmLimit: 10000,
-      dailyQuota: 1000,
-      isFree: true,
-      status: 'ready',
-      created: new Date().toISOString()
-    },
-    {
-      id: '2',
-      providerId: '2',
-      modelId: 'llama-3.1-8b-instant',
-      contextWindow: 128000,
-      rpmLimit: 30,
-      tpmLimit: 10000,
-      dailyQuota: 1000,
-      isFree: true,
-      status: 'ready',
-      created: new Date().toISOString()
-    },
-    {
-      id: '3',
-      providerId: '3',
-      modelId: 'gemini-1.5-flash',
-      contextWindow: 1000000,
-      rpmLimit: 50,
-      tpmLimit: 10000,
-      dailyQuota: 1000,
-      isFree: true,
-      status: 'ready',
-      created: new Date().toISOString()
-    }
-  ]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [modelsRes, providersRes] = await Promise.all([
+          fetch('http://localhost:3001/api/models'),
+          fetch('http://localhost:3001/api/providers')
+        ]);
+
+        if (modelsRes.ok) {
+          const modelsData = await modelsRes.json();
+          // Map the API response to full model objects
+          const fullModels = modelsData.map((m: any) => ({
+            id: m.id,
+            providerId: m.providerId,
+            modelId: m.modelId,
+            contextWindow: 128000, // Default
+            rpmLimit: 30, // Default
+            tpmLimit: 10000, // Default
+            dailyQuota: 1000, // Default
+            isFree: true, // Default
+            status: 'ready' as const,
+            created: new Date().toISOString()
+          }));
+          setModels(fullModels);
+        }
+
+        if (providersRes.ok) {
+          const providersData = await providersRes.json();
+          setProviders(providersData);
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -96,30 +94,63 @@ export function Models() {
     setEditingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingId) {
-      // Update existing model
-      setModels(prev =>
-        prev.map(m =>
-          m.id === editingId
-            ? { ...m, ...formData }
-            : m
-        )
-      );
-    } else {
-      // Add new model
-      const newModel: Model = {
-        id: Date.now().toString(),
-        ...formData,
+    try {
+      const modelData = {
+        id: editingId || Date.now().toString(),
+        providerId: formData.providerId,
+        modelId: formData.modelId,
+        contextWindow: formData.contextWindow,
+        rpmLimit: formData.rpmLimit,
+        tpmLimit: formData.tpmLimit,
+        dailyQuota: formData.dailyQuota,
+        isFree: formData.isFree,
+        costPerToken: formData.costPerToken,
         status: 'ready',
-        created: new Date().toISOString()
+        createdAt: new Date().toISOString()
       };
-      setModels(prev => [...prev, newModel]);
-    }
 
-    resetForm();
+      const response = await fetch('http://localhost:3001/api/models', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(modelData),
+      });
+
+      if (response.ok) {
+        const newModel = await response.json();
+        // Map back to local format
+        const localModel: Model = {
+          id: newModel.id,
+          providerId: newModel.providerId,
+          modelId: newModel.modelId,
+          contextWindow: newModel.contextWindow || 128000,
+          rpmLimit: newModel.rpmLimit || 30,
+          tpmLimit: newModel.tpmLimit || 10000,
+          dailyQuota: newModel.dailyQuota || 1000,
+          isFree: newModel.isFree !== undefined ? newModel.isFree : true,
+          costPerToken: newModel.costPerToken,
+          status: newModel.status || 'ready',
+          created: newModel.createdAt || new Date().toISOString()
+        };
+
+        if (editingId) {
+          setModels(prev => prev.map(m => m.id === editingId ? localModel : m));
+        } else {
+          setModels(prev => [...prev, localModel]);
+        }
+        resetForm();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to save model: ' + (errorData.error || response.statusText));
+      }
+    } catch (error) {
+      console.error('Error saving model:', error);
+      alert('Error saving model: ' + (error as Error).message);
+    }
   };
 
   const handleEdit = (model: Model) => {
@@ -142,7 +173,7 @@ export function Models() {
   };
 
   const getProviderName = (providerId: string) => {
-    return mockProviders.find(p => p.id === providerId)?.name || 'Unknown';
+    return providers.find(p => p.id === providerId)?.name || 'Unknown';
   };
 
   const getStatusColor = (status: string) => {
@@ -190,7 +221,7 @@ export function Models() {
                   required
                 >
                   <option value="">Select Provider</option>
-                  {mockProviders.map(provider => (
+                  {providers.map(provider => (
                     <option key={provider.id} value={provider.id}>{provider.name}</option>
                   ))}
                 </select>

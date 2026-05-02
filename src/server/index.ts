@@ -190,10 +190,46 @@ fastify.get('/api/models', async (request, reply) => {
 fastify.post('/api/models', async (request, reply) => {
   try {
     const data = request.body as any;
-    const result = await db.insert(models).values(data).returning();
+    const modelData = {
+      id: data.id,
+      providerId: data.providerId,
+      modelId: data.modelId,
+      contextWindow: data.contextWindow,
+      rpmLimit: data.rpmLimit,
+      tpmLimit: data.tpmLimit,
+      dailyQuota: data.dailyQuota,
+      isFree: data.isFree,
+      costPerToken: data.costPerToken,
+      status: data.status,
+      createdAt: data.createdAt
+    };
+
+    // Check if model exists
+    const existing = await db.select().from(models).where(eq(models.id, data.id)).limit(1);
+
+    let result;
+    if (existing.length > 0) {
+      // Update existing
+      result = await db.update(models).set({
+        providerId: data.providerId,
+        modelId: data.modelId,
+        contextWindow: data.contextWindow,
+        rpmLimit: data.rpmLimit,
+        tpmLimit: data.tpmLimit,
+        dailyQuota: data.dailyQuota,
+        isFree: data.isFree,
+        costPerToken: data.costPerToken,
+        status: data.status
+      }).where(eq(models.id, data.id)).returning();
+    } else {
+      // Insert new
+      result = await db.insert(models).values(modelData).returning();
+    }
+
     return reply.send(result[0]);
   } catch (error) {
-    return reply.code(500).send({ error: 'Failed to create model' });
+    console.error('Model save error:', error);
+    return reply.code(500).send({ error: 'Failed to save model' });
   }
 });
 
