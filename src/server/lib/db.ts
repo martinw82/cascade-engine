@@ -1,5 +1,4 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-// @ts-ignore
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { Database } from 'bun:sqlite';
 import * as schema from './schema';
 
@@ -7,7 +6,7 @@ import * as schema from './schema';
 const sqlite = new Database('./cascade.db');
 
 // Enable WAL mode for better concurrency
-sqlite.exec("PRAGMA journal_mode = WAL");
+sqlite.pragma("journal_mode = WAL");
 
 // Create Drizzle instance
 export const db = drizzle(sqlite, { schema });
