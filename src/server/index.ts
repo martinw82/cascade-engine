@@ -130,14 +130,32 @@ fastify.get('/api/providers', async (request, reply) => {
 fastify.post('/api/providers', async (request, reply) => {
   try {
     const data = request.body as any;
-    const result = await db.insert(providers).values({
+    const providerData = {
       id: data.id,
       name: data.name,
       baseUrl: data.base_url,
       apiKey: data.api_key,
       status: data.status,
       createdAt: data.created_at
-    }).returning();
+    };
+
+    // Check if provider exists
+    const existing = await db.select().from(providers).where(eq(providers.id, data.id)).limit(1);
+
+    let result;
+    if (existing.length > 0) {
+      // Update existing
+      result = await db.update(providers).set({
+        name: data.name,
+        baseUrl: data.base_url,
+        apiKey: data.api_key,
+        status: data.status
+      }).where(eq(providers.id, data.id)).returning();
+    } else {
+      // Insert new
+      result = await db.insert(providers).values(providerData).returning();
+    }
+
     const mapped = {
       id: result[0].id,
       name: result[0].name,
@@ -148,8 +166,8 @@ fastify.post('/api/providers', async (request, reply) => {
     };
     return reply.send(mapped);
   } catch (error) {
-    console.error('Provider creation error:', error);
-    return reply.code(500).send({ error: 'Failed to create provider' });
+    console.error('Provider save error:', error);
+    return reply.code(500).send({ error: 'Failed to save provider' });
   }
 });
 
