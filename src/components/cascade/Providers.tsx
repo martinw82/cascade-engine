@@ -54,9 +54,11 @@ export function Providers() {
         },
         body: JSON.stringify({
           id: editingId || Date.now().toString(),
-          ...formData,
+          name: formData.name,
+          base_url: formData.baseURL,
+          api_key: formData.apiKey,
           status: 'ready',
-          createdAt: new Date().toISOString()
+          created_at: new Date().toISOString()
         }),
       });
 
@@ -69,10 +71,12 @@ export function Providers() {
         }
         resetForm();
       } else {
-        console.error('Failed to save provider');
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to save provider: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
       console.error('Error saving provider:', error);
+      alert('Error saving provider: ' + (error as Error).message);
     }
   };
 
