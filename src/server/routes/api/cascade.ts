@@ -277,29 +277,43 @@ export class CascadeEngine {
 
     console.log(`Making API call to ${provider.name}: ${url} with model ${modelName}`);
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${provider.apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    console.log(`API response status: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${provider.apiKey}`
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.log(`API error details: ${errorData}`);
-      const error: any = new Error(`API call failed: ${response.status} ${response.statusText}`);
-      error.statusCode = response.status;
-      error.details = errorData;
+      clearTimeout(timeoutId);
+      console.log(`API response status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.log(`API error details: ${errorData}`);
+        const error: any = new Error(`API call failed: ${response.status} ${response.statusText}`);
+        error.statusCode = response.status;
+        error.details = errorData;
+        throw error;
+      }
+
+      const result = await response.json();
+      console.log(`API call successful for ${provider.name}`);
+      return result;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.log(`API call to ${provider.name} timed out`);
+        throw new Error('API call timed out');
+      }
       throw error;
     }
-
-    const result = await response.json();
-    console.log(`API call successful for ${provider.name}`);
-    return result;
   }
 
   // Update provider usage stats
