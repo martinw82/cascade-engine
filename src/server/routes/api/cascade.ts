@@ -264,7 +264,13 @@ export class CascadeEngine {
 
   // Make API call to provider
   private async makeApiCall(provider: ProviderConfig, messages: any[], modelId?: string): Promise<any> {
-    const model = modelId ? this.modelCache.get(modelId) : null;
+    let model = null;
+    if (modelId) {
+      model = this.modelCache.get(modelId);
+    }
+    if (!model) {
+      model = this.findModelForProvider(provider.id);
+    }
     const modelName = model?.modelId || 'gpt-3.5-turbo';
 
     const url = `${provider.baseURL}/chat/completions`;
@@ -314,6 +320,16 @@ export class CascadeEngine {
       }
       throw error;
     }
+  }
+
+  // Find a suitable model for the provider
+  private findModelForProvider(providerId: string): any {
+    for (const [modelId, model] of this.modelCache.entries()) {
+      if (model.providerId === providerId) {
+        return model;
+      }
+    }
+    return null;
   }
 
   // Update provider usage stats
@@ -382,13 +398,15 @@ export class CascadeEngine {
     } catch (error: any) {
       console.log(`API call failed for ${provider.name}: ${error.message}, details: ${error.details}`);
 
-      // Mark provider as having an issue
+      // Mark provider as having an issue (less aggressive for 400 errors)
       if (error.statusCode === 429 || error.statusCode === 503) {
         provider.status = 'cooldown';
         // In reality, we'd set a timer to reset this after a cooldown period
-      } else {
+      } else if (error.statusCode >= 500 || error.name === 'AbortError') {
+        // Server errors or timeouts disable the provider
         provider.status = 'errored';
       }
+      // 400 errors (client issues like wrong model) don't disable the provider
 
       // Log the failed request
       const responseTime = Date.now() - startTime;
