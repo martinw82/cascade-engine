@@ -18,50 +18,89 @@ interface TestResponse {
   }>;
 }
 
+interface Provider {
+  id: string;
+  name: string;
+  baseURL: string;
+  apiKey: string;
+  status: 'ready' | 'cooldown' | 'errored';
+  created: string;
+}
+
 export function Test() {
   const [models, setModels] = useState<Model[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState('');
   const [message, setMessage] = useState('');
   const [response, setResponse] = useState<TestResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [bypassCascade, setBypassCascade] = useState(false);
 
   useEffect(() => {
-    const fetchModels = async () => {
+    const fetchData = async () => {
+      console.log('Fetching models and providers...');
       try {
-        const res = await fetch('http://localhost:3001/api/models');
-        if (res.ok) {
-          const data = await res.json();
-          setModels(data);
-          if (data.length > 0) {
-            setSelectedModel(data[0].id);
+        const [modelsRes, providersRes] = await Promise.all([
+          fetch('http://localhost:3001/api/models'),
+          fetch('http://localhost:3001/api/providers')
+        ]);
+
+        console.log('Models response status:', modelsRes.status);
+        console.log('Providers response status:', providersRes.status);
+
+        if (modelsRes.ok) {
+          const modelsData = await modelsRes.json();
+          setModels(modelsData);
+          if (modelsData.length > 0) {
+            setSelectedModel(modelsData[0].id);
           }
         }
-      } catch (err) {
-        console.error('Failed to load models:', err);
+
+        if (providersRes.ok) {
+          const providersData = await providersRes.json();
+          setProviders(providersData);
+          if (providersData.length > 0) {
+            setSelectedProvider(providersData[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error);
       }
     };
-    fetchModels();
+    fetchData();
   }, []);
 
   const handleTest = async () => {
-    if (!selectedModel || !message.trim()) return;
+    if (!message.trim()) return;
+    if (!bypassCascade && !selectedModel) return;
+    if (bypassCascade && (!selectedProvider || !selectedModel)) return;
 
     setLoading(true);
     setError('');
     setResponse(null);
 
     try {
-      const res = await fetch('http://localhost:3001/api/cascade', {
+      const endpoint = bypassCascade ? '/api/test' : '/api/cascade';
+      const body = bypassCascade
+        ? {
+            providerId: selectedProvider,
+            modelId: selectedModel,
+            messages: [{ role: 'user', content: message }]
+          }
+        : {
+            model: selectedModel,
+            messages: [{ role: 'user', content: message }]
+          };
+
+      const res = await fetch(`http://localhost:3001${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Internal': 'true',
         },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [{ role: 'user', content: message }]
-        }),
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
@@ -88,6 +127,37 @@ export function Test() {
 
         <div className="space-y-4">
           <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={bypassCascade}
+                onChange={(e) => setBypassCascade(e.target.checked)}
+                className="mr-2 w-4 h-4 text-blue-600 bg-neutral-700 border-neutral-600 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-neutral-300">Bypass cascade (test specific provider/model)</span>
+            </label>
+          </div>
+
+          {bypassCascade && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-2">
+                Provider
+              </label>
+              <select
+                value={selectedProvider}
+                onChange={(e) => setSelectedProvider(e.target.value)}
+                className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {providers.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
             <label className="block text-sm font-medium text-neutral-300 mb-2">
               Model
             </label>
@@ -96,11 +166,13 @@ export function Test() {
               onChange={(e) => setSelectedModel(e.target.value)}
               className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name} ({model.modelId})
-                </option>
-              ))}
+              {models
+                .filter(model => !bypassCascade || model.providerId === selectedProvider)
+                .map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} ({model.modelId})
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -119,7 +191,7 @@ export function Test() {
 
           <button
             onClick={handleTest}
-            disabled={loading || !selectedModel || !message.trim()}
+            disabled={loading || !message.trim() || (!bypassCascade && !selectedModel) || (bypassCascade && (!selectedProvider || !selectedModel))}
             className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-600 text-white rounded-md transition-colors disabled:cursor-not-allowed"
           >
             {loading ? 'Testing...' : 'Send Test Request'}

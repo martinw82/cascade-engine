@@ -4,7 +4,7 @@ import staticPlugin from '@fastify/static';
 import sensiblePlugin from '@fastify/sensible';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { cascadeRoutes } from './routes/api/cascade';
+import { cascadeRoutes, providerCache, modelCache } from './routes/api/cascade';
 import { authenticateRequest } from './middleware/auth';
 import { validateRequest } from './middleware/validation';
 import { db } from './lib/db';
@@ -261,6 +261,34 @@ fastify.post('/api/auth-keys', async (request, reply) => {
     return reply.send(result[0]);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to create auth key' });
+  }
+});
+
+// Test specific provider/model route
+fastify.post('/api/test', async (request, reply) => {
+  try {
+    const data = request.body as any;
+    const { providerId, modelId, messages } = data;
+
+    // Get provider and model from cache
+    const provider = Array.from(providerCache.values()).find(p => p.id === providerId);
+    if (!provider) {
+      return reply.code(404).send({ error: 'Provider not found' });
+    }
+
+    const model = modelCache.get(modelId);
+    if (!model) {
+      return reply.code(404).send({ error: 'Model not found' });
+    }
+
+    // Import makeApiCall
+    const { makeApiCall } = await import('./routes/api/cascade');
+    const response = await makeApiCall(provider, messages, modelId);
+
+    return reply.send(response);
+  } catch (error: any) {
+    console.error('Test API error:', error);
+    return reply.code(500).send({ error: error.message || 'Test failed' });
   }
 });
 

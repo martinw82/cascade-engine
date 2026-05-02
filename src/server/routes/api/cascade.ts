@@ -485,7 +485,9 @@ export class CascadeEngine {
 }
 
 // Initialize cascade engine
-const cascadeEngine = new CascadeEngine();
+export const cascadeEngine = new CascadeEngine();
+export const providerCache = cascadeEngine['providerCache'];
+export const modelCache = cascadeEngine['modelCache'];
 
 // API route handler
 export async function POST(request: FastifyRequest, reply: FastifyReply) {
