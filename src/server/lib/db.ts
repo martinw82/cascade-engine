@@ -69,6 +69,45 @@ function initializeDatabase() {
     // Column might already exist, ignore
   }
 
+  // Rename provider_order to model_order for existing databases
+  try {
+    sqlite.exec(`ALTER TABLE cascade_rules RENAME COLUMN provider_order TO model_order;`);
+  } catch (e) {
+    // Column might already be renamed or not exist, ignore
+  }
+
+  // Migrate existing provider_order data to model_order (convert provider IDs to model IDs)
+  try {
+    // Get all existing cascade rules
+    const existingRules = sqlite.prepare('SELECT id, model_order FROM cascade_rules').all() as Array<{id: string, model_order: string}>;
+
+    for (const rule of existingRules) {
+      try {
+        const providerOrder = JSON.parse(rule.model_order);
+        if (Array.isArray(providerOrder) && providerOrder.length > 0) {
+          // Convert provider IDs to model IDs (this is a simple mapping for common cases)
+          const modelOrder = providerOrder.map((providerId: string) => {
+            switch (providerId) {
+              case 'groq': return 'llama-3.1-8b-instant';
+              case 'nvidia-nim': return 'llama-3.1-70b';
+              case 'openrouter': return 'gemini-1.5-flash';
+              default: return providerId; // Keep as-is if not recognized
+            }
+          });
+
+          // Update the rule with new model order
+          sqlite.prepare('UPDATE cascade_rules SET model_order = ? WHERE id = ?').run(JSON.stringify(modelOrder), rule.id);
+        }
+      } catch (e) {
+        // Skip if parsing fails
+        console.log(`Skipping migration for rule ${rule.id}: ${e.message}`);
+      }
+    }
+  } catch (e) {
+    // Migration failed, but don't crash - user can recreate rules if needed
+    console.log('Data migration warning:', e.message);
+  }
+
   // Create auth_keys table
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS auth_keys (
