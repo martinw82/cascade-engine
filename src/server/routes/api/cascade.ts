@@ -398,7 +398,7 @@ export class CascadeEngine {
     } catch (error: any) {
       console.log(`API call failed for ${provider.name}: ${error.message}, details: ${error.details}`);
 
-      // Mark provider as having an issue (less aggressive for 400 errors)
+      // Mark provider as having an issue (only for server errors or timeouts)
       if (error.statusCode === 429 || error.statusCode === 503) {
         provider.status = 'cooldown';
         // In reality, we'd set a timer to reset this after a cooldown period
@@ -406,7 +406,7 @@ export class CascadeEngine {
         // Server errors or timeouts disable the provider
         provider.status = 'errored';
       }
-      // 400 errors (client issues like wrong model) don't disable the provider
+      // 4xx errors (client issues like wrong model/key) don't disable the provider
 
       // Log the failed request
       const responseTime = Date.now() - startTime;
