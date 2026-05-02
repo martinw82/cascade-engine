@@ -4,8 +4,8 @@ import { eq } from 'drizzle-orm';
 import { authKeys } from '../lib/schema';
 
 export async function authenticateRequest(request: FastifyRequest, reply: FastifyReply) {
-  // Skip authentication for health check and development mode
-  if (request.url === '/health' || process.env.NODE_ENV === 'development') {
+  // Skip authentication for health check, development mode, and internal requests
+  if (request.url === '/health' || process.env.NODE_ENV === 'development' || request.headers['x-internal']) {
     return;
   }
 

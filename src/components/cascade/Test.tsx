@@ -56,6 +56,7 @@ export function Test() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Internal': 'true',
         },
         body: JSON.stringify({
           model: selectedModel,
