@@ -105,6 +105,86 @@ fastify.get('/api/config/backup', async (request, reply) => {
   }
 });
 
+// Providers CRUD routes
+fastify.get('/api/providers', async (request, reply) => {
+  try {
+    const result = await db.select().from(providers);
+    return reply.send(result);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch providers' });
+  }
+});
+
+fastify.post('/api/providers', async (request, reply) => {
+  try {
+    const data = request.body as any;
+    const result = await db.insert(providers).values(data).returning();
+    return reply.send(result[0]);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to create provider' });
+  }
+});
+
+// Models CRUD routes
+fastify.get('/api/models', async (request, reply) => {
+  try {
+    const result = await db.select().from(models);
+    return reply.send(result);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch models' });
+  }
+});
+
+fastify.post('/api/models', async (request, reply) => {
+  try {
+    const data = request.body as any;
+    const result = await db.insert(models).values(data).returning();
+    return reply.send(result[0]);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to create model' });
+  }
+});
+
+// Cascade rules CRUD routes
+fastify.get('/api/cascade-rules', async (request, reply) => {
+  try {
+    const result = await db.select().from(cascadeRules);
+    return reply.send(result);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch cascade rules' });
+  }
+});
+
+fastify.post('/api/cascade-rules', async (request, reply) => {
+  try {
+    const data = request.body as any;
+    const result = await db.insert(cascadeRules).values(data).returning();
+    return reply.send(result[0]);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to create cascade rule' });
+  }
+});
+
+// Auth keys CRUD routes
+fastify.get('/api/auth-keys', async (request, reply) => {
+  try {
+    const result = await db.select().from(authKeys);
+    return reply.send(result);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch auth keys' });
+  }
+});
+
+fastify.post('/api/auth-keys', async (request, reply) => {
+  try {
+    const data = request.body as any;
+    const result = await db.insert(authKeys).values(data).returning();
+    return reply.send(result[0]);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to create auth key' });
+  }
+});
+
 // Register API routes
 fastify.register(async (fastify) => {
   // Apply authentication and validation to cascade routes

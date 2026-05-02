@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Provider {
   id: string;
@@ -12,24 +12,22 @@ interface Provider {
 }
 
 export function Providers() {
-  const [providers, setProviders] = useState<Provider[]>([
-    {
-      id: '1',
-      name: 'NVIDIA NIM',
-      baseURL: 'https://api.nvidia.com/v1',
-      apiKey: process.env.NVIDIA_API_KEY || '',
-      status: 'ready',
-      created: new Date().toISOString()
-    },
-    {
-      id: '2',
-      name: 'Groq',
-      baseURL: 'https://api.groq.com/openai/v1',
-      apiKey: process.env.GROQ_API_KEY || '',
-      status: 'ready',
-      created: new Date().toISOString()
-    }
-  ]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/providers');
+        if (response.ok) {
+          const data = await response.json();
+          setProviders(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch providers:', error);
+      }
+    };
+    fetchProviders();
+  }, []);
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,30 +43,37 @@ export function Providers() {
     setEditingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingId) {
-      // Update existing provider
-      setProviders(prev =>
-        prev.map(p =>
-          p.id === editingId
-            ? { ...p, ...formData }
-            : p
-        )
-      );
-    } else {
-      // Add new provider
-      const newProvider: Provider = {
-        id: Date.now().toString(),
-        ...formData,
-        status: 'ready',
-        created: new Date().toISOString()
-      };
-      setProviders(prev => [...prev, newProvider]);
-    }
+    try {
+      const response = await fetch('http://localhost:3001/api/providers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingId || Date.now().toString(),
+          ...formData,
+          status: 'ready',
+          createdAt: new Date().toISOString()
+        }),
+      });
 
-    resetForm();
+      if (response.ok) {
+        const newProvider = await response.json();
+        if (editingId) {
+          setProviders(prev => prev.map(p => p.id === editingId ? newProvider : p));
+        } else {
+          setProviders(prev => [...prev, newProvider]);
+        }
+        resetForm();
+      } else {
+        console.error('Failed to save provider');
+      }
+    } catch (error) {
+      console.error('Error saving provider:', error);
+    }
   };
 
   const handleEdit = (provider: Provider) => {
