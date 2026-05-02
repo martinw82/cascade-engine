@@ -41,7 +41,7 @@ PORT=3001 bun run dev  # or set custom port: PORT=58008 bun run dev
 
 ### Access the Web Interface
 
-Open [http://localhost:3001](http://localhost:3001) (or your custom port) in your browser. You'll be prompted to enter your access key to log in and access the dashboard for configuring providers, models, cascade rules, testing your setup, and monitoring usage.
+Open [http://localhost:3001](http://localhost:3001) (or your custom port) in your browser. You'll be prompted to enter your access key to log in and access the dashboard for configuring providers, models, cascade rules, testing your setup with real LLM API calls, and monitoring usage.
 
 **For low-resource deployments:** Use the prebuilt standalone UI package (`cascade-deploy.tar.gz`) for instant startup without building. Run the UI on your desired port (e.g., 58008) and the API server on port 3001—the UI will automatically fetch metrics and persist configuration changes (providers, models, rules, auth keys) to the API on port 3001.
 
