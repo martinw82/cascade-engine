@@ -34,7 +34,7 @@ export const cascadeRules = sqliteTable('cascade_rules', {
   priority: integer('priority').notNull(),
   triggerType: text('trigger_type').notNull(), // 'task_type', 'keyword', 'header', 'custom'
   triggerValue: text('trigger_value').notNull(),
-  providerOrder: text('provider_order').notNull(), // JSON array of provider IDs
+  modelOrder: text('model_order').notNull(), // JSON array of model IDs
   wordLimit: integer('word_limit').default(5), // Number of words to check for keyword matching
   enabled: integer('enabled', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default('CURRENT_TIMESTAMP'),

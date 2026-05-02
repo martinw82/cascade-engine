@@ -54,7 +54,7 @@ function initializeDatabase() {
       priority INTEGER NOT NULL,
       trigger_type TEXT NOT NULL, -- 'task_type', 'keyword', 'header', 'custom'
       trigger_value TEXT NOT NULL,
-      provider_order TEXT NOT NULL, -- JSON array of provider IDs
+      model_order TEXT NOT NULL, -- JSON array of model IDs
       word_limit INTEGER DEFAULT 5,
       enabled BOOLEAN DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -212,7 +212,7 @@ function initializeDefaultData() {
       priority: 1,
       trigger_type: 'keyword',
       trigger_value: 'code|program|function|debug|programming',
-      provider_order: JSON.stringify(['groq', 'nvidia-nim', 'openrouter']),
+      model_order: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']),
       word_limit: 5,
       enabled: 1
     },
@@ -222,7 +222,7 @@ function initializeDefaultData() {
       priority: 2,
       trigger_type: 'keyword',
       trigger_value: 'summarize|extract|analyze|document|summary',
-      provider_order: JSON.stringify(['openrouter', 'nvidia-nim', 'groq']),
+      model_order: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']),
       word_limit: 5,
       enabled: 1
     },
@@ -232,14 +232,14 @@ function initializeDefaultData() {
       priority: 99,
       trigger_type: 'task_type',
       trigger_value: 'general',
-      provider_order: JSON.stringify(['nvidia-nim', 'groq', 'openrouter']),
+      model_order: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']),
       word_limit: 5,
       enabled: 1
     }
   ];
 
   const insertRule = sqlite.prepare(`
-    INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, provider_order, word_limit, enabled)
+    INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, model_order, word_limit, enabled)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
@@ -250,7 +250,7 @@ function initializeDefaultData() {
       rule.priority,
       rule.trigger_type,
       rule.trigger_value,
-      rule.provider_order,
+      rule.model_order,
       rule.word_limit,
       rule.enabled
     );

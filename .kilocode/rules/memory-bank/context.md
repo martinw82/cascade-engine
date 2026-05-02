@@ -23,6 +23,13 @@ The template has been expanded to include a basic implementation of Cascade Mast
 - [x] Added analytics dashboard with provider success rate heatmaps
 - [x] Added money saved calculations against GPT-4o pricing
 - [x] Created server directory structure with proper TypeScript types
+- [x] Upgraded cascade logic from provider-specific to model-specific routing
+- [x] Updated database schema to use modelOrder instead of providerOrder
+- [x] Modified UI to select models instead of providers for cascade rules
+- [x] Updated server cascade engine to iterate through modelOrder with proper provider validation
+- [x] Added bulk model import feature with JSON template support
+- [x] Implemented model discovery API for automatic model fetching from providers
+- [x] Created model discovery UI with provider selection and selective import
 
 ## Current Structure
 
@@ -45,11 +52,24 @@ The template has been expanded to include a basic implementation of Cascade Mast
 
 ## Current Focus
 
-The template is ready. Next steps depend on user requirements:
+Cascade Engine is fully functional with model-specific cascading. The system now intelligently routes LLM requests through prioritized model lists based on task detection (keywords or task types).
 
-1. What type of application to build
-2. What features are needed
-3. Design/branding preferences
+## Current State
+
+- ✅ Model-specific cascade engine working
+- ✅ Database schema updated for modelOrder
+- ✅ UI updated to manage models in cascade rules
+- ✅ API endpoints functional
+- ✅ Authentication and security in place
+
+## Next Steps
+
+The implementation is complete. Users can now:
+
+1. Configure cascade rules with specific model priorities
+2. Monitor request routing through analytics
+3. Test cascade behavior with the test interface
+4. Deploy the system for production use
 
 ## Quick Start Guide
 
@@ -107,3 +127,5 @@ export async function GET() {
 | 2026-04-29 AM | Implemented Cascade Master API gateway with Fastify server, cascade engine with task-aware routing, and basic dashboard UI |
 | 2026-04-29 PM | Added complete management UI (Providers, Models, Cascade Rules, Analytics, Security), SQLite persistence, authentication system, enhanced cascade engine with queuing, and configurable keyword word limits |
 | 2026-04-29 CLI | Created one-click installation script, CLI binary, systemd service, PM2 config, comprehensive README, and plugin integration guides for Kilo CLI and other tools |
+| 2026-05-02 | Upgraded cascade system from provider-level to model-specific routing, updated database schema, UI components, and server logic for granular model prioritization |
+| 2026-05-02 PM | Added bulk model import with JSON templates and model discovery API with automatic fetching from OpenRouter, Groq, and NVIDIA providers |

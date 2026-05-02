@@ -8,58 +8,21 @@ interface CascadeRule {
   priority: number;
   triggerType: 'task_type' | 'keyword' | 'header' | 'custom';
   triggerValue: string;
-  providerOrder: string[]; // Array of provider IDs
+  modelOrder: string[]; // Array of model IDs
   wordLimit: number;
   enabled: boolean;
   createdAt: string;
 }
 
-interface Provider {
+interface Model {
   id: string;
-  name: string;
+  modelId: string;
+  providerId: string;
 }
 
 export function Cascade() {
-  const [rules, setRules] = useState<CascadeRule[]>([
-    {
-      id: 'coding-rule',
-      name: 'Coding Tasks',
-      priority: 1,
-      triggerType: 'keyword',
-      triggerValue: 'code|program|function|debug|programming',
-      providerOrder: ['groq', 'nvidia-nim', 'openrouter'],
-      wordLimit: 5,
-      enabled: true,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'summarization-rule',
-      name: 'Summarization Tasks',
-      priority: 2,
-      triggerType: 'keyword',
-      triggerValue: 'summarize|extract|analyze|document|summary',
-      providerOrder: ['openrouter', 'nvidia-nim', 'groq'],
-      wordLimit: 5,
-      enabled: true,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'default-rule',
-      name: 'Default Fallback',
-      priority: 99,
-      triggerType: 'task_type',
-      triggerValue: 'general',
-      providerOrder: ['nvidia-nim', 'groq', 'openrouter'],
-      wordLimit: 5,
-      enabled: true,
-      createdAt: new Date().toISOString()
-    }
-  ]);
-  const [providers, setProviders] = useState<Provider[]>([
-    { id: 'nvidia-nim', name: 'NVIDIA NIM' },
-    { id: 'groq', name: 'Groq' },
-    { id: 'openrouter', name: 'OpenRouter' }
-  ]);
+  const [rules, setRules] = useState<CascadeRule[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -67,12 +30,46 @@ export function Cascade() {
     priority: 1,
     triggerType: 'keyword' as CascadeRule['triggerType'],
     triggerValue: '',
-    providerOrder: [] as string[],
+    modelOrder: [] as string[],
     wordLimit: 5,
     enabled: true
   });
 
-  // Mock data initialized in useState above (will be replaced with API calls)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [rulesRes, modelsRes] = await Promise.all([
+          fetch('/api/cascade-rules'),
+          fetch('/api/models')
+        ]);
+
+        if (rulesRes.ok) {
+          const rulesData = await rulesRes.json();
+          const mappedRules = rulesData.map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            priority: r.priority,
+            triggerType: r.triggerType,
+            triggerValue: r.triggerValue,
+            modelOrder: JSON.parse(r.modelOrder || '[]'),
+            wordLimit: r.wordLimit || 5,
+            enabled: Boolean(r.enabled),
+            createdAt: r.createdAt || r.created_at
+          }));
+          setRules(mappedRules);
+        }
+
+        if (modelsRes.ok) {
+          const modelsData = await modelsRes.json();
+          setModels(modelsData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch cascade data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const resetForm = () => {
     setFormData({
@@ -80,7 +77,7 @@ export function Cascade() {
       priority: 1,
       triggerType: 'keyword',
       triggerValue: '',
-      providerOrder: [],
+      modelOrder: [],
       wordLimit: 5,
       enabled: true
     });
@@ -88,29 +85,58 @@ export function Cascade() {
     setEditingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingId) {
-      // Update existing rule
-      setRules(prev =>
-        prev.map(r =>
-          r.id === editingId
-            ? { ...r, ...formData }
-            : r
-        )
-      );
-    } else {
-      // Add new rule
-      const newRule: CascadeRule = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString()
-      };
-      setRules(prev => [...prev, newRule]);
-    }
+    const ruleData = {
+      name: formData.name,
+      priority: formData.priority,
+      triggerType: formData.triggerType,
+      triggerValue: formData.triggerValue,
+      modelOrder: JSON.stringify(formData.modelOrder),
+      wordLimit: formData.wordLimit,
+      enabled: formData.enabled
+    };
 
-    resetForm();
+    try {
+      if (editingId) {
+        // Update existing rule - for now just update local state since we don't have PUT endpoint
+        setRules(prev =>
+          prev.map(r =>
+            r.id === editingId
+              ? { ...r, ...formData }
+              : r
+          )
+        );
+      } else {
+        // Add new rule
+        const response = await fetch('/api/cascade-rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ruleData)
+        });
+
+        if (response.ok) {
+          const newRule = await response.json();
+          const mappedRule: CascadeRule = {
+            id: newRule.id,
+            name: newRule.name,
+            priority: newRule.priority,
+            triggerType: newRule.triggerType,
+            triggerValue: newRule.triggerValue,
+            modelOrder: JSON.parse(newRule.modelOrder),
+            wordLimit: newRule.wordLimit,
+            enabled: Boolean(newRule.enabled),
+            createdAt: newRule.createdAt || newRule.created_at
+          };
+          setRules(prev => [...prev, mappedRule]);
+        }
+      }
+
+      resetForm();
+    } catch (error) {
+      console.error('Failed to save cascade rule:', error);
+    }
   };
 
   const handleEdit = (rule: CascadeRule) => {
@@ -119,7 +145,7 @@ export function Cascade() {
       priority: rule.priority,
       triggerType: rule.triggerType,
       triggerValue: rule.triggerValue,
-      providerOrder: rule.providerOrder,
+      modelOrder: rule.modelOrder,
       wordLimit: rule.wordLimit,
       enabled: rule.enabled
     });
@@ -131,27 +157,28 @@ export function Cascade() {
     setRules(prev => prev.filter(r => r.id !== id));
   };
 
-  const handleProviderOrderChange = (providerId: string, checked: boolean) => {
+  const handleModelOrderChange = (modelId: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      providerOrder: checked
-        ? [...prev.providerOrder, providerId]
-        : prev.providerOrder.filter(id => id !== providerId)
+      modelOrder: checked
+        ? [...prev.modelOrder, modelId]
+        : prev.modelOrder.filter(id => id !== modelId)
     }));
   };
 
-  const moveProvider = (index: number, direction: 'up' | 'down') => {
-    const newOrder = [...formData.providerOrder];
+  const moveModel = (index: number, direction: 'up' | 'down') => {
+    const newOrder = [...formData.modelOrder];
     if (direction === 'up' && index > 0) {
       [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
     } else if (direction === 'down' && index < newOrder.length - 1) {
       [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
     }
-    setFormData(prev => ({ ...prev, providerOrder: newOrder }));
+    setFormData(prev => ({ ...prev, modelOrder: newOrder }));
   };
 
-  const getProviderName = (id: string) => {
-    return providers.find(p => p.id === id)?.name || id;
+  const getModelName = (id: string) => {
+    const model = models.find(m => m.id === id);
+    return model ? `${model.modelId} (${model.providerId})` : id;
   };
 
   const getTriggerTypeLabel = (type: string) => {
@@ -273,33 +300,33 @@ export function Cascade() {
 
             <div>
               <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Provider Order (Drag to reorder)
+                Model Order (Drag to reorder)
               </label>
               <div className="space-y-2">
-                {providers.map((provider) => (
-                  <div key={provider.id} className="flex items-center space-x-3">
+                {models.map((model) => (
+                  <div key={model.id} className="flex items-center space-x-3">
                     <input
                       type="checkbox"
-                      checked={formData.providerOrder.includes(provider.id)}
-                      onChange={(e) => handleProviderOrderChange(provider.id, e.target.checked)}
+                      checked={formData.modelOrder.includes(model.id)}
+                      onChange={(e) => handleModelOrderChange(model.id, e.target.checked)}
                       className="w-4 h-4 text-blue-600 bg-neutral-700 border-neutral-600 rounded focus:ring-blue-500"
                     />
-                    <span className="text-neutral-300">{provider.name}</span>
+                    <span className="text-neutral-300">{model.modelId} ({model.providerId})</span>
                   </div>
                 ))}
               </div>
-              {formData.providerOrder.length > 0 && (
+              {formData.modelOrder.length > 0 && (
                 <div className="mt-3 p-3 bg-neutral-700 rounded">
                   <div className="text-sm text-neutral-400 mb-2">Current Order:</div>
                   <div className="flex flex-wrap gap-2">
-                    {formData.providerOrder.map((providerId, index) => (
-                      <div key={providerId} className="flex items-center space-x-1 bg-neutral-600 px-2 py-1 rounded text-sm">
+                    {formData.modelOrder.map((modelId, index) => (
+                      <div key={modelId} className="flex items-center space-x-1 bg-neutral-600 px-2 py-1 rounded text-sm">
                         <span>{index + 1}.</span>
-                        <span>{getProviderName(providerId)}</span>
+                        <span>{getModelName(modelId)}</span>
                         <div className="flex space-x-1 ml-2">
                           <button
                             type="button"
-                            onClick={() => moveProvider(index, 'up')}
+                            onClick={() => moveModel(index, 'up')}
                             disabled={index === 0}
                             className="text-neutral-400 hover:text-white disabled:opacity-50"
                           >
@@ -307,8 +334,8 @@ export function Cascade() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => moveProvider(index, 'down')}
-                            disabled={index === formData.providerOrder.length - 1}
+                            onClick={() => moveModel(index, 'down')}
+                            disabled={index === formData.modelOrder.length - 1}
                             className="text-neutral-400 hover:text-white disabled:opacity-50"
                           >
                             ↓
@@ -406,11 +433,11 @@ export function Cascade() {
                   </div>
                 </div>
                 <div>
-                  <span className="text-neutral-400">Provider Order:</span>
+                  <span className="text-neutral-400">Model Order:</span>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {rule.providerOrder.map((providerId, index) => (
-                      <span key={providerId} className="bg-neutral-700 px-2 py-1 rounded text-xs">
-                        {index + 1}. {getProviderName(providerId)}
+                    {rule.modelOrder.map((modelId, index) => (
+                      <span key={modelId} className="bg-neutral-700 px-2 py-1 rounded text-xs">
+                        {index + 1}. {getModelName(modelId)}
                       </span>
                     ))}
                   </div>

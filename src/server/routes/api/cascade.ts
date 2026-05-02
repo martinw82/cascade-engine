@@ -44,7 +44,7 @@ interface CascadeRule {
   priority: number;
   triggerType: 'task_type' | 'keyword' | 'header' | 'custom';
   triggerValue: string;
-  providerOrder: string[];
+  modelOrder: string[];
   wordLimit: number;
   enabled: boolean;
 }
@@ -115,7 +115,7 @@ export class CascadeEngine {
         priority: r.priority,
         triggerType: r.triggerType as CascadeRule['triggerType'],
         triggerValue: r.triggerValue,
-        providerOrder: JSON.parse(r.providerOrder),
+        modelOrder: JSON.parse(r.modelOrder),
         wordLimit: r.wordLimit || 5,
         enabled: Boolean(r.enabled)
       })).sort((a, b) => a.priority - b.priority);
@@ -163,7 +163,7 @@ export class CascadeEngine {
         priority: 99,
         triggerType: 'task_type',
         triggerValue: 'general',
-        providerOrder: ['nvidia-nim'],
+        modelOrder: ['llama-3.1-70b'],
         wordLimit: 5,
         enabled: true
       }
@@ -235,27 +235,40 @@ export class CascadeEngine {
     return null;
   }
 
-  // Select provider based on cascade rule and availability
-  private selectProvider(rule: CascadeRule): ProviderConfig | null {
-    // Try providers in the order specified by the rule
-    for (const providerId of rule.providerOrder) {
-      const provider = this.providerCache.get(providerId);
-      if (provider &&
-          provider.status === 'ready' &&
-          provider.currentRPM < provider.rpmLimit &&
-          provider.currentTPM < provider.tpmLimit &&
-          provider.dailyUsage < provider.dailyQuota) {
-        return provider;
+  // Select model based on cascade rule and availability
+  private selectModel(rule: CascadeRule): ModelConfig | null {
+    // Try models in the order specified by the rule
+    for (const modelId of rule.modelOrder) {
+      const model = this.modelCache.get(modelId);
+      if (model && model.status === 'ready') {
+        const provider = this.providerCache.get(model.providerId);
+        if (provider &&
+            provider.status === 'ready' &&
+            provider.currentRPM < provider.rpmLimit &&
+            provider.currentTPM < provider.tpmLimit &&
+            provider.dailyUsage < provider.dailyQuota &&
+            model.rpmLimit > 0 &&
+            model.tpmLimit > 0 &&
+            model.dailyQuota > 0) {
+          return model;
+        }
       }
     }
 
-    // Fallback: try any available provider
-    for (const provider of this.providerCache.values()) {
-      if (provider.status === 'ready' &&
-          provider.currentRPM < provider.rpmLimit &&
-          provider.currentTPM < provider.tpmLimit &&
-          provider.dailyUsage < provider.dailyQuota) {
-        return provider;
+    // Fallback: try any available model
+    for (const model of this.modelCache.values()) {
+      if (model.status === 'ready') {
+        const provider = this.providerCache.get(model.providerId);
+        if (provider &&
+            provider.status === 'ready' &&
+            provider.currentRPM < provider.rpmLimit &&
+            provider.currentTPM < provider.tpmLimit &&
+            provider.dailyUsage < provider.dailyQuota &&
+            model.rpmLimit > 0 &&
+            model.tpmLimit > 0 &&
+            model.dailyQuota > 0) {
+          return model;
+        }
       }
     }
 
@@ -263,15 +276,12 @@ export class CascadeEngine {
   }
 
   // Make API call to provider
-  private async makeApiCall(provider: ProviderConfig, messages: any[], modelId?: string): Promise<any> {
-    let model = null;
-    if (modelId) {
-      model = this.modelCache.get(modelId);
+  private async makeApiCall(model: ModelConfig, messages: any[]): Promise<any> {
+    const provider = this.providerCache.get(model.providerId);
+    if (!provider) {
+      throw new Error(`Provider ${model.providerId} not found`);
     }
-    if (!model) {
-      model = this.findModelForProvider(provider.id);
-    }
-    const modelName = model?.modelId || 'gpt-3.5-turbo';
+    const modelName = model.modelId;
 
     const url = `${provider.baseURL}/chat/completions`;
     const body = {
@@ -358,70 +368,75 @@ export class CascadeEngine {
     }
   }
 
-  // Handle spillover logic when a provider fails
+  // Handle spillover logic when a model fails
   private async tryProviderWithSpillover(
     request: CascadeRequest,
-    excludedProviders: Set<string> = new Set()
+    excludedModels: Set<string> = new Set()
   ): Promise<any> {
     const rule = this.detectTaskType(request);
     if (!rule) {
       throw new Error('No matching cascade rule found');
     }
 
-    let provider = this.selectProvider(rule);
+    let model = this.selectModel(rule);
 
-    // Skip excluded providers
-    while (provider && excludedProviders.has(provider.id)) {
-      // Remove this provider from the rule's order and try again
-      rule.providerOrder = rule.providerOrder.filter(id => id !== provider!.id);
-      provider = this.selectProvider(rule);
+    // Skip excluded models
+    while (model && excludedModels.has(model.id)) {
+      // Remove this model from the rule's order and try again
+      rule.modelOrder = rule.modelOrder.filter(id => id !== model!.id);
+      model = this.selectModel(rule);
     }
 
+    if (!model) {
+      throw new Error('No available models');
+    }
+
+    const provider = this.providerCache.get(model.providerId);
     if (!provider) {
-      throw new Error('No available providers');
+      throw new Error(`Provider ${model.providerId} not found`);
     }
 
     const startTime = Date.now();
 
     try {
       // Make the actual API call
-      const response = await this.makeApiCall(provider, request.messages, request.model);
+      const response = await this.makeApiCall(model, request.messages);
 
       // Update provider usage
       this.updateProviderUsage(provider, response.usage?.total_tokens || 0);
 
       // Log the request
       const responseTime = Date.now() - startTime;
-      await this.logRequest(request, provider, response, 'success', responseTime);
+      await this.logRequest(request, provider, response, 'success', responseTime, undefined, model.id);
 
       return response;
     } catch (error: any) {
-      console.log(`API call failed for ${provider.name}: ${error.message}, details: ${error.details}`);
+      console.log(`API call failed for ${provider.name} (${model.modelId}): ${error.message}, details: ${error.details}`);
 
-      // Mark provider as having an issue (only for server errors or timeouts)
+      // Mark model as having an issue (only for server errors or timeouts)
       if (error.statusCode === 429 || error.statusCode === 503) {
-        provider.status = 'cooldown';
+        model.status = 'cooldown';
         // In reality, we'd set a timer to reset this after a cooldown period
       } else if (error.statusCode >= 500 || error.name === 'AbortError') {
-        // Server errors or timeouts disable the provider
-        provider.status = 'errored';
+        // Server errors or timeouts disable the model
+        model.status = 'errored';
       }
-      // 4xx errors (client issues like wrong model/key) don't disable the provider
+      // 4xx errors (client issues like wrong model/key) don't disable the model
 
       // Log the failed request
       const responseTime = Date.now() - startTime;
-      await this.logRequest(request, provider, null, 'error', responseTime, error.message);
+      await this.logRequest(request, provider, null, 'error', responseTime, error.message, model.id);
 
-      // Add to excluded providers and try another
-      excludedProviders.add(provider.id);
+      // Add to excluded models and try another
+      excludedModels.add(model.id);
 
-      // If we've tried all providers in the rule, throw the error
-      if (excludedProviders.size >= rule.providerOrder.length) {
+      // If we've tried all models in the rule, throw the error
+      if (excludedModels.size >= rule.modelOrder.length) {
         throw error;
       }
 
-      // Try another provider
-      return this.tryProviderWithSpillover(request, excludedProviders);
+      // Try another model
+      return this.tryProviderWithSpillover(request, excludedModels);
     }
   }
 
@@ -431,7 +446,8 @@ export class CascadeEngine {
     response: any,
     status: string,
     responseTime: number,
-    errorMessage?: string
+    errorMessage?: string,
+    modelId?: string
   ) {
     if (!provider) return;
 
@@ -442,7 +458,7 @@ export class CascadeEngine {
       await db.insert(requestLogs).values({
         id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         providerId: provider.id,
-        modelId: request.model || 'unknown',
+        modelId: modelId || request.model || 'unknown',
         taskType: request.taskType || 'general',
         tokensUsed,
         responseTimeMs: responseTime,

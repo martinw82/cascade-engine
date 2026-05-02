@@ -28,6 +28,20 @@ interface Provider {
 export function Models() {
   const [models, setModels] = useState<Model[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isBulkImport, setIsBulkImport] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [formData, setFormData] = useState({
+    providerId: '',
+    modelId: '',
+    contextWindow: 4096,
+    rpmLimit: 60,
+    tpmLimit: 10000,
+    dailyQuota: 1000,
+    isFree: true,
+    costPerToken: 0
+  });
 
   const fetchData = async () => {
     console.log('Fetching models and providers...');
@@ -70,19 +84,6 @@ export function Models() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    providerId: '',
-    modelId: '',
-    contextWindow: 4096,
-    rpmLimit: 60,
-    tpmLimit: 10000,
-    dailyQuota: 1000,
-    isFree: true,
-    costPerToken: 0
-  });
 
   const resetForm = () => {
     setFormData({
@@ -205,6 +206,18 @@ export function Models() {
             className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-lg transition-colors"
           >
             🔄 Refresh
+          </button>
+          <button
+            onClick={() => setIsBulkImport(true)}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+          >
+            📄 Bulk Import
+          </button>
+          <button
+            onClick={() => setIsDiscovering(true)}
+            className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors"
+          >
+            🔍 Discover Models
           </button>
           <button
             onClick={() => setIsAdding(!isAdding)}
@@ -353,6 +366,79 @@ export function Models() {
         </div>
       )}
 
+      {/* Bulk Import Modal */}
+      {isBulkImport && (
+        <BulkImportModal
+          providers={providers}
+          onClose={() => setIsBulkImport(false)}
+          onImport={async (importedModels) => {
+            try {
+              const response = await fetch('/api/models/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ models: importedModels })
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                alert(`Bulk import completed! ${result.success} models added, ${result.errors} errors.`);
+                fetchData(); // Refresh the list
+                setIsBulkImport(false);
+              } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert('Bulk import failed: ' + (errorData.error || response.statusText));
+              }
+            } catch (error) {
+              alert('Bulk import error: ' + (error as Error).message);
+            }
+          }}
+        />
+      )}
+
+      {/* Model Discovery Modal */}
+      {isDiscovering && (
+        <ModelDiscoveryModal
+          providers={providers}
+          onClose={() => setIsDiscovering(false)}
+          onDiscover={async (providerId) => {
+            try {
+              const response = await fetch(`/api/models/discover/${providerId}`);
+
+              if (response.ok) {
+                const discoveredModels = await response.json();
+                return discoveredModels;
+              } else {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || response.statusText);
+              }
+            } catch (error) {
+              throw error;
+            }
+          }}
+          onImport={async (modelsToImport) => {
+            try {
+              const response = await fetch('/api/models/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ models: modelsToImport })
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                alert(`Models imported! ${result.success} added, ${result.errors} errors.`);
+                fetchData(); // Refresh the list
+                setIsDiscovering(false);
+              } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert('Import failed: ' + (errorData.error || response.statusText));
+              }
+            } catch (error) {
+              alert('Import error: ' + (error as Error).message);
+            }
+          }}
+        />
+      )}
+
       {/* Models List */}
       <div className="grid gap-4">
         {models.map((model) => (
@@ -428,6 +514,273 @@ export function Models() {
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Bulk Import Modal Component
+function BulkImportModal({
+  providers,
+  onClose,
+  onImport
+}: {
+  providers: Provider[];
+  onClose: () => void;
+  onImport: (models: any[]) => Promise<void>;
+}) {
+  const [jsonText, setJsonText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+
+  const template = `[
+  {
+    "providerId": "${providers[0]?.id || 'openrouter'}",
+    "modelId": "gpt-4o-mini",
+    "contextWindow": 128000,
+    "rpmLimit": 50,
+    "tpmLimit": 10000,
+    "dailyQuota": 1000,
+    "isFree": false,
+    "costPerToken": 0.00015,
+    "status": "ready"
+  },
+  {
+    "providerId": "${providers[0]?.id || 'openrouter'}",
+    "modelId": "claude-3-haiku",
+    "contextWindow": 200000,
+    "rpmLimit": 100,
+    "tpmLimit": 25000,
+    "dailyQuota": 2000,
+    "isFree": false,
+    "costPerToken": 0.00025,
+    "status": "ready"
+  }
+]`;
+
+  const handleImport = async () => {
+    if (!jsonText.trim()) return;
+
+    setIsImporting(true);
+    try {
+      const models = JSON.parse(jsonText);
+      await onImport(models);
+    } catch (error) {
+      alert('Invalid JSON format: ' + (error as Error).message);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-neutral-800 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Bulk Model Import</h3>
+          <button
+            onClick={onClose}
+            className="text-neutral-400 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-2">
+              JSON Configuration
+            </label>
+            <textarea
+              value={jsonText}
+              onChange={(e) => setJsonText(e.target.value)}
+              placeholder="Paste your JSON model configuration here..."
+              className="w-full h-64 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="bg-neutral-700 p-4 rounded">
+            <h4 className="text-sm font-medium mb-2">Template Example:</h4>
+            <pre className="text-xs text-neutral-300 font-mono bg-neutral-800 p-2 rounded overflow-x-auto">
+              {template}
+            </pre>
+            <button
+              onClick={() => setJsonText(template)}
+              className="mt-2 text-xs text-blue-400 hover:text-blue-300"
+            >
+              Use Template
+            </button>
+          </div>
+
+          <div className="text-sm text-neutral-400">
+            <strong>Required fields:</strong> providerId, modelId<br />
+            <strong>Optional fields:</strong> contextWindow, rpmLimit, tpmLimit, dailyQuota, isFree, costPerToken, status
+          </div>
+        </div>
+
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={handleImport}
+            disabled={!jsonText.trim() || isImporting}
+            className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-600 text-white rounded-md transition-colors"
+          >
+            {isImporting ? 'Importing...' : 'Import Models'}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-md transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Model Discovery Modal Component
+function ModelDiscoveryModal({
+  providers,
+  onClose,
+  onDiscover,
+  onImport
+}: {
+  providers: Provider[];
+  onClose: () => void;
+  onDiscover: (providerId: string) => Promise<any[]>;
+  onImport: (models: any[]) => Promise<void>;
+}) {
+  const [selectedProvider, setSelectedProvider] = useState('');
+  const [discoveredModels, setDiscoveredModels] = useState<any[]>([]);
+  const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleDiscover = async () => {
+    if (!selectedProvider) return;
+
+    setIsDiscovering(true);
+    try {
+      const models = await onDiscover(selectedProvider);
+      setDiscoveredModels(models);
+      setSelectedModels(new Set()); // Reset selections
+    } catch (error) {
+      alert('Discovery failed: ' + (error as Error).message);
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
+  const handleImport = async () => {
+    const modelsToImport = discoveredModels.filter(model => selectedModels.has(model.id));
+    if (modelsToImport.length === 0) return;
+
+    setIsImporting(true);
+    try {
+      await onImport(modelsToImport);
+    } catch (error) {
+      alert('Import failed: ' + (error as Error).message);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const toggleModelSelection = (modelId: string) => {
+    const newSelected = new Set(selectedModels);
+    if (newSelected.has(modelId)) {
+      newSelected.delete(modelId);
+    } else {
+      newSelected.add(modelId);
+    }
+    setSelectedModels(newSelected);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-neutral-800 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Discover Models</h3>
+          <button
+            onClick={onClose}
+            className="text-neutral-400 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-2">
+              Select Provider
+            </label>
+            <select
+              value={selectedProvider}
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Choose a provider...</option>
+              {providers.map(provider => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleDiscover}
+            disabled={!selectedProvider || isDiscovering}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-600 text-white rounded-md transition-colors"
+          >
+            {isDiscovering ? '🔍 Discovering...' : '🔍 Discover Models'}
+          </button>
+
+          {discoveredModels.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium">Discovered Models ({discoveredModels.length})</h4>
+                <button
+                  onClick={() => setSelectedModels(new Set(discoveredModels.map(m => m.id)))}
+                  className="text-xs text-blue-400 hover:text-blue-300"
+                >
+                  Select All
+                </button>
+              </div>
+              <div className="max-h-64 overflow-y-auto bg-neutral-700 rounded p-2">
+                {discoveredModels.map(model => (
+                  <div key={model.id} className="flex items-center space-x-3 py-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedModels.has(model.id)}
+                      onChange={() => toggleModelSelection(model.id)}
+                      className="w-4 h-4 text-blue-600 bg-neutral-600 border-neutral-500 rounded"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm text-white">{model.modelId}</span>
+                      <span className="text-xs text-neutral-400 ml-2">
+                        {model.contextWindow} tokens, {model.isFree ? 'Free' : 'Paid'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={handleImport}
+            disabled={selectedModels.size === 0 || isImporting}
+            className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-600 text-white rounded-md transition-colors"
+          >
+            {isImporting ? 'Importing...' : `Import ${selectedModels.size} Models`}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-md transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

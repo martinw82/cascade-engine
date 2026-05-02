@@ -8,8 +8,8 @@ import { cascadeRoutes, providerCache, modelCache } from './routes/api/cascade';
 import { authenticateRequest } from './middleware/auth';
 import { validateRequest } from './middleware/validation';
 import { db } from './lib/db';
-import { eq } from 'drizzle-orm';
-import { requestLogs, providers, models, cascadeRules, authKeys } from './lib/schema';
+import { eq, and, sql } from 'drizzle-orm';
+import { requestLogs, providers, models as modelsTable, cascadeRules, authKeys } from './lib/schema';
 
 // Initialize Fastify server
 const fastify: FastifyInstance = Fastify({
@@ -88,7 +88,7 @@ fastify.get('/api/config/backup', async (request, reply) => {
   try {
     const [providersData, modelsData, rulesData, authKeysData] = await Promise.all([
       db.select().from(providers),
-      db.select().from(models),
+      db.select().from(modelsTable),
       db.select().from(cascadeRules),
       db.select().from(authKeys)
     ]);
@@ -165,7 +165,7 @@ fastify.post('/api/providers', async (request, reply) => {
 // Models CRUD routes
 fastify.get('/api/models', async (request, reply) => {
   try {
-    const result = await db.select().from(models);
+    const result = await db.select().from(modelsTable);
     const mapped = result.map(m => ({
       id: m.id,
       name: m.modelId,
@@ -201,7 +201,7 @@ fastify.post('/api/models', async (request, reply) => {
     let result;
     if (existing.length > 0) {
       // Update existing
-      result = await db.update(models).set({
+      result = await db.update(modelsTable).set({
         providerId: data.providerId,
         modelId: data.modelId,
         contextWindow: data.contextWindow,
@@ -214,7 +214,7 @@ fastify.post('/api/models', async (request, reply) => {
       }).where(eq(models.id, data.id)).returning();
     } else {
       // Insert new
-      result = await db.insert(models).values(modelData).returning();
+      result = await db.insert(modelsTable).values(modelData).returning();
     }
 
     return reply.send(result[0]);
@@ -261,6 +261,167 @@ fastify.post('/api/auth-keys', async (request, reply) => {
     return reply.send(result[0]);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to create auth key' });
+  }
+});
+
+// Model discovery routes
+fastify.get('/api/models/discover/:providerId', async (request, reply) => {
+  try {
+    const { providerId } = request.params as { providerId: string };
+
+    // Get provider from database
+    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).limit(1);
+    if (!provider.length) {
+      return reply.code(404).send({ error: 'Provider not found' });
+    }
+
+    const p = provider[0];
+    let models: any[] = [];
+
+    try {
+      if (p.id === 'openrouter') {
+        // OpenRouter model discovery
+        const response = await fetch('https://openrouter.ai/api/v1/models', {
+          headers: {
+            'Authorization': `Bearer ${p.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          models = data.data.map((model: any) => ({
+            id: `${p.id}-${model.id.replace('/', '-')}`,
+            providerId: p.id,
+            modelId: model.id,
+            contextWindow: model.context_length || 4096,
+            rpmLimit: 50, // Default, can be adjusted
+            tpmLimit: 10000,
+            dailyQuota: 1000,
+            isFree: model.pricing?.prompt === '0' && model.pricing?.completion === '0',
+            costPerToken: model.pricing?.prompt ? parseFloat(model.pricing.prompt) : 0,
+            status: 'ready'
+          }));
+        }
+      } else if (p.id === 'groq') {
+        // Groq model discovery
+        const response = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: {
+            'Authorization': `Bearer ${p.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          models = data.data.map((model: any) => ({
+            id: `${p.id}-${model.id}`,
+            providerId: p.id,
+            modelId: model.id,
+            contextWindow: 128000, // Groq models typically have large context
+            rpmLimit: 30, // Conservative default
+            tpmLimit: 10000,
+            dailyQuota: 1000,
+            isFree: true, // Groq has free tier
+            costPerToken: 0,
+            status: 'ready'
+          }));
+        }
+      } else if (p.id === 'nvidia-nim') {
+        // NVIDIA NIM - use their model catalog
+        const response = await fetch('https://api.nvidia.com/v1/models', {
+          headers: {
+            'Authorization': `Bearer ${p.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          models = data.models?.map((model: any) => ({
+            id: `${p.id}-${model.name}`,
+            providerId: p.id,
+            modelId: model.name,
+            contextWindow: model.context_length || 128000,
+            rpmLimit: 40, // NVIDIA NIM limits
+            tpmLimit: 10000,
+            dailyQuota: 1000,
+            isFree: true, // NIM has free tier
+            costPerToken: 0,
+            status: 'ready'
+          })) || [];
+        }
+      }
+
+      return reply.send(models);
+    } catch (error) {
+      console.error(`Failed to discover models for ${p.id}:`, error);
+      return reply.code(500).send({ error: `Failed to discover models: ${error.message}` });
+    }
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to get provider' });
+  }
+});
+
+// Bulk model import route
+fastify.post('/api/models/bulk', async (request, reply) => {
+  try {
+    const { models } = request.body as { models: any[] };
+
+    if (!Array.isArray(models)) {
+      return reply.code(400).send({ error: 'Models must be an array' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (const modelData of models) {
+      try {
+        // Validate required fields
+        if (!modelData.providerId || !modelData.modelId) {
+          errors.push({ model: modelData, error: 'Missing providerId or modelId' });
+          continue;
+        }
+
+        // Check if model already exists
+        const existing = await db.select().from(modelsTable)
+          .where(eq(modelsTable.providerId, modelData.providerId))
+          .where(eq(modelsTable.modelId, modelData.modelId))
+          .limit(1);
+
+        if (existing.length > 0) {
+          errors.push({ model: modelData, error: 'Model already exists' });
+          continue;
+        }
+
+        // Insert the model
+        const result = await db.insert(modelsTable).values({
+          id: modelData.id || `${modelData.providerId}-${modelData.modelId.replace(/[^a-zA-Z0-9-_]/g, '-')}`,
+          providerId: modelData.providerId,
+          modelId: modelData.modelId,
+          contextWindow: modelData.contextWindow || 4096,
+          rpmLimit: modelData.rpmLimit || 60,
+          tpmLimit: modelData.tpmLimit || 10000,
+          dailyQuota: modelData.dailyQuota || 1000,
+          isFree: modelData.isFree !== undefined ? modelData.isFree : true,
+          costPerToken: modelData.costPerToken || 0,
+          status: modelData.status || 'ready'
+        }).returning();
+
+        results.push(result[0]);
+      } catch (error) {
+        errors.push({ model: modelData, error: error.message });
+      }
+    }
+
+    return reply.send({
+      success: results.length,
+      errors: errors.length,
+      inserted: results,
+      failed: errors
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Bulk import failed' });
   }
 });
 
