@@ -1,4 +1,5 @@
 import Fastify, { FastifyInstance } from 'fastify';
+import corsPlugin from '@fastify/cors';
 import staticPlugin from '@fastify/static';
 import sensiblePlugin from '@fastify/sensible';
 import { fileURLToPath } from 'url';
@@ -16,6 +17,9 @@ const fastify: FastifyInstance = Fastify({
 });
 
 // Register plugins
+fastify.register(corsPlugin, {
+  origin: true, // Allow all origins for development
+});
 fastify.register(sensiblePlugin);
 
 // Serve Next.js static files
