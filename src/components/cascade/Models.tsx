@@ -29,40 +29,45 @@ export function Models() {
   const [models, setModels] = useState<Model[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [modelsRes, providersRes] = await Promise.all([
-          fetch('http://localhost:3001/api/models'),
-          fetch('http://localhost:3001/api/providers')
-        ]);
+  const fetchData = async () => {
+    console.log('Fetching models and providers...');
+    try {
+      const [modelsRes, providersRes] = await Promise.all([
+        fetch('http://localhost:3001/api/models'),
+        fetch('http://localhost:3001/api/providers')
+      ]);
 
-        if (modelsRes.ok) {
-          const modelsData = await modelsRes.json();
-          // Map the API response to full model objects
-          const fullModels = modelsData.map((m: any) => ({
-            id: m.id,
-            providerId: m.providerId,
-            modelId: m.modelId,
-            contextWindow: 128000, // Default
-            rpmLimit: 30, // Default
-            tpmLimit: 10000, // Default
-            dailyQuota: 1000, // Default
-            isFree: true, // Default
-            status: 'ready' as const,
-            created: new Date().toISOString()
-          }));
-          setModels(fullModels);
-        }
+      console.log('Models response status:', modelsRes.status);
+      console.log('Providers response status:', providersRes.status);
 
-        if (providersRes.ok) {
-          const providersData = await providersRes.json();
-          setProviders(providersData);
-        }
-      } catch (error) {
-        console.error('Failed to load data:', error);
+      if (modelsRes.ok) {
+        const modelsData = await modelsRes.json();
+        // Map the API response to full model objects
+        const fullModels = modelsData.map((m: any) => ({
+          id: m.id,
+          providerId: m.providerId,
+          modelId: m.modelId,
+          contextWindow: 128000, // Default
+          rpmLimit: 30, // Default
+          tpmLimit: 10000, // Default
+          dailyQuota: 1000, // Default
+          isFree: true, // Default
+          status: 'ready' as const,
+          created: new Date().toISOString()
+        }));
+        setModels(fullModels);
       }
-    };
+
+      if (providersRes.ok) {
+        const providersData = await providersRes.json();
+        setProviders(providersData);
+      }
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -194,12 +199,20 @@ export function Models() {
             Configure models for each provider with their limits and capabilities
           </p>
         </div>
-        <button
-          onClick={() => setIsAdding(!isAdding)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
-        >
-          {isAdding ? 'Cancel' : '+ Add Model'}
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={fetchData}
+            className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-lg transition-colors"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+          >
+            {isAdding ? 'Cancel' : '+ Add Model'}
+          </button>
+        </div>
       </div>
 
       {/* Add/Edit Form */}

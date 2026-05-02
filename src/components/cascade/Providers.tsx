@@ -16,11 +16,16 @@ export function Providers() {
 
   useEffect(() => {
     const fetchProviders = async () => {
+      console.log('Fetching providers...');
       try {
         const response = await fetch('http://localhost:3001/api/providers');
+        console.log('Providers response status:', response.status);
         if (response.ok) {
           const data = await response.json();
+          console.log('Fetched providers:', data.length);
           setProviders(data);
+        } else {
+          console.error('Failed to fetch providers, status:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch providers:', error);
@@ -132,12 +137,35 @@ export function Providers() {
             Configure LLM providers with their base URLs and API keys
           </p>
         </div>
-        <button
-          onClick={() => setIsAdding(!isAdding)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
-        >
-          {isAdding ? 'Cancel' : '+ Add Provider'}
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => {
+              const fetchProviders = async () => {
+                console.log('Refreshing providers...');
+                try {
+                  const response = await fetch('http://localhost:3001/api/providers');
+                  console.log('Refresh response status:', response.status);
+                  if (response.ok) {
+                    const data = await response.json();
+                    setProviders(data);
+                  }
+                } catch (error) {
+                  console.error('Failed to refresh providers:', error);
+                }
+              };
+              fetchProviders();
+            }}
+            className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-lg transition-colors"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+          >
+            {isAdding ? 'Cancel' : '+ Add Provider'}
+          </button>
+        </div>
       </div>
 
       {/* Add/Edit Form */}
