@@ -196,7 +196,7 @@ fastify.post('/api/models', async (request, reply) => {
     };
 
     // Check if model exists
-    const existing = await db.select().from(models).where(eq(models.id, data.id)).limit(1);
+    const existing = await db.select().from(modelsTable).where(eq(modelsTable.id, data.id)).limit(1);
 
     let result;
     if (existing.length > 0) {
@@ -211,7 +211,7 @@ fastify.post('/api/models', async (request, reply) => {
         isFree: data.isFree,
         costPerToken: data.costPerToken,
         status: data.status
-      }).where(eq(models.id, data.id)).returning();
+      }).where(eq(modelsTable.id, data.id)).returning();
     } else {
       // Insert new
       result = await db.insert(modelsTable).values(modelData).returning();
@@ -354,10 +354,10 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
       }
 
       return reply.send(models);
-    } catch (error) {
-      console.error(`Failed to discover models for ${p.id}:`, error);
-      return reply.code(500).send({ error: `Failed to discover models: ${error.message}` });
-    }
+     } catch (error: any) {
+       console.error(`Failed to discover models for ${p.id}:`, error);
+       return reply.code(500).send({ error: `Failed to discover models: ${error.message}` });
+     }
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to get provider' });
   }
@@ -385,8 +385,10 @@ fastify.post('/api/models/bulk', async (request, reply) => {
 
         // Check if model already exists
         const existing = await db.select().from(modelsTable)
-          .where(eq(modelsTable.providerId, modelData.providerId))
-          .where(eq(modelsTable.modelId, modelData.modelId))
+          .where(and(
+            eq(modelsTable.providerId, modelData.providerId),
+            eq(modelsTable.modelId, modelData.modelId)
+          ))
           .limit(1);
 
         if (existing.length > 0) {
@@ -410,7 +412,7 @@ fastify.post('/api/models/bulk', async (request, reply) => {
 
         results.push(result[0]);
       } catch (error) {
-        errors.push({ model: modelData, error: error.message });
+        errors.push({ model: modelData, error: (error as Error).message });
       }
     }
 
@@ -442,9 +444,13 @@ fastify.post('/api/test', async (request, reply) => {
       return reply.code(404).send({ error: 'Model not found' });
     }
 
-    // Import makeApiCall
-    const { makeApiCall } = await import('./routes/api/cascade');
-    const response = await makeApiCall(provider, messages, modelId);
+    // Call makeApiCall method on cascadeEngine instance
+    const { cascadeEngine } = await import('./routes/api/cascade');
+    const response = await cascadeEngine.handleRequest({
+      providerId,
+      modelId,
+      messages
+    });
 
     return reply.send(response);
   } catch (error: any) {
