@@ -1,0 +1,44 @@
+{
+  "name": "cascade-master",
+  "version": "1.0.0",
+  "description": "Universal AI Traffic Controller - Intelligent LLM API Gateway",
+  "main": "src/server/index.ts",
+  "bin": {
+    "cascade-master": "./bin/cascade-master.js"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && bun run build:server",
+    "build:server": "echo 'Server built'",
+    "start": "PORT=3001 bun src/server/index.ts",
+    "server": "PORT=${PORT:-3001} bun src/server/index.ts",
+    "cli": "bun src/server/index.ts",
+    "test": "./test.sh",
+    "install-service": "sudo cp cascade-master.service /etc/systemd/system/ && sudo systemctl daemon-reload",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "install-cli": "bun link"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.0",
+    "@fastify/sensible": "^6.0.4",
+    "@fastify/static": "^9.1.3",
+
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.8.5",
+    "next": "^16.1.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "semver": "^7.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.0.0",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3"
+  }
+}

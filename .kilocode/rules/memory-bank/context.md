@@ -30,6 +30,9 @@ The template has been expanded to include a basic implementation of Cascade Mast
 - [x] Added bulk model import feature with JSON template support
 - [x] Implemented model discovery API for automatic model fetching from providers
 - [x] Created model discovery UI with provider selection and selective import
+- [x] Fixed TypeScript compilation issue by excluding cascade-deploy directory from tsconfig
+- [x] Built Next.js application with standalone output for deployment
+- [x] Set up cascade-deploy directory with built files for production deployment
 
 ## Current Structure
 
@@ -129,3 +132,4 @@ export async function GET() {
 | 2026-04-29 CLI | Created one-click installation script, CLI binary, systemd service, PM2 config, comprehensive README, and plugin integration guides for Kilo CLI and other tools |
 | 2026-05-02 | Upgraded cascade system from provider-level to model-specific routing, updated database schema, UI components, and server logic for granular model prioritization |
 | 2026-05-02 PM | Added bulk model import with JSON templates and model discovery API with automatic fetching from OpenRouter, Groq, and NVIDIA providers |
+| 2026-05-03 | Fixed build issues for standalone deployment, updated tsconfig excludes, and prepared cascade-deploy package |
