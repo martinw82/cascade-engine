@@ -36,7 +36,7 @@
 
 ## Database
 
-SQLite via Drizzle ORM (`drizzle-orm/bun-sqlite`). Auto-initializes on import with schema + default data (3 providers, 3 models, 3 cascade rules, 1 auth key). File: `./cascade.db` (in `.gitignore` implicitly via `.env*` — NO, it's not in `.gitignore`; be aware it exists).
+SQLite via Drizzle ORM (`drizzle-orm/bun-sqlite`). Auto-initializes on import with schema + default data (3 providers, 3 models, 3 cascade rules, 1 auth key). File: `./cascade.db` (in `.gitignore` — do not commit runtime files).
 
 ## Authentication
 
@@ -78,6 +78,37 @@ No unit test framework is configured.
 - Installer: `install.sh` — clones repo, installs deps, creates systemd service
 - Next.js config: `output: 'standalone'`
 - Prebuilt deploy package: `cascade-deploy/` directory + `cascade-deploy.tar.gz`
+
+## API Endpoints
+
+### Core
+- `POST /api/cascade` — Send LLM request through cascade engine (OpenAI-compatible)
+- `GET /api/cascade` — API status info
+- `GET /health` — Health check (no auth)
+
+### Providers
+- `GET /api/providers` — List all providers
+- `POST /api/providers` — Create/update provider
+- `DELETE /api/providers` — Delete all providers and models
+
+### Models
+- `GET /api/models` — List all models
+- `POST /api/models` — Create/update model
+- `DELETE /api/models` — Delete all models
+- `DELETE /api/models/provider/:id` — Delete models by provider
+- `POST /api/models/test` — Test if a model works (sends minimal request)
+- `GET /api/models/discover/:providerId` — Discover available models from provider
+- `POST /api/models/bulk` — Bulk import models
+
+### Cascade Rules
+- `GET /api/cascade-rules` — List rules
+- `POST /api/cascade-rules` — Create rule
+- `PUT /api/cascade-rules` — Update rule
+- `DELETE /api/cascade-rules` — Delete rule
+
+### Other
+- `GET /api/analytics` — Analytics and stats
+- `GET /api/config/backup` — Export config (keys redacted)
 
 ## Style / Conventions
 

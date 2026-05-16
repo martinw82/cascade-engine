@@ -126,6 +126,26 @@ export function Providers() {
     setProviders(prev => prev.filter(p => p.id !== id));
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm('Are you sure you want to delete ALL providers and models? This cannot be undone.')) return;
+    try {
+      const response = await fetch('/api/providers', {
+        method: 'DELETE',
+        headers: {
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+        }
+      });
+      if (response.ok) {
+        setProviders([]);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to delete all providers: ' + (errorData.error || response.statusText));
+      }
+    } catch (error) {
+      alert('Failed to delete all providers: ' + (error as Error).message);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ready': return 'text-green-400 bg-green-900/20';
@@ -169,6 +189,13 @@ export function Providers() {
             className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-lg transition-colors"
           >
             🔄 Refresh
+          </button>
+          <button
+            onClick={handleDeleteAll}
+            disabled={providers.length === 0}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-neutral-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+          >
+            🗑️ Delete All
           </button>
           <button
             onClick={() => setIsAdding(!isAdding)}

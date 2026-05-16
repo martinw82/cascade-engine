@@ -219,6 +219,8 @@ export function Cascade() {
     }));
   };
 
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
   const moveModel = (index: number, direction: 'up' | 'down') => {
     const newOrder = [...formData.modelOrder];
     if (direction === 'up' && index > 0) {
@@ -227,6 +229,25 @@ export function Cascade() {
       [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
     }
     setFormData(prev => ({ ...prev, modelOrder: newOrder }));
+  };
+
+  const handleDragStart = (index: number) => {
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) return;
+    const newOrder = [...formData.modelOrder];
+    const draggedItem = newOrder[dragIndex];
+    newOrder.splice(dragIndex, 1);
+    newOrder.splice(index, 0, draggedItem);
+    setDragIndex(index);
+    setFormData(prev => ({ ...prev, modelOrder: newOrder }));
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
   };
 
   const getModelName = (id: string) => {
@@ -370,18 +391,30 @@ export function Cascade() {
               </div>
               {formData.modelOrder.length > 0 && (
                 <div className="mt-3 p-3 bg-neutral-700 rounded">
-                  <div className="text-sm text-neutral-400 mb-2">Current Order:</div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="text-sm text-neutral-400 mb-2">Current Order (drag to reorder):</div>
+                  <div className="space-y-1">
                     {formData.modelOrder.map((modelId, index) => (
-                      <div key={modelId} className="flex items-center space-x-1 bg-neutral-600 px-2 py-1 rounded text-sm">
-                        <span>{index + 1}.</span>
-                        <span>{getModelName(modelId)}</span>
-                        <div className="flex space-x-1 ml-2">
+                      <div
+                        key={modelId}
+                        draggable
+                        onDragStart={() => handleDragStart(index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        className={`flex items-center justify-between bg-neutral-600 px-3 py-2 rounded cursor-move transition-opacity ${
+                          dragIndex === index ? 'opacity-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="text-neutral-400 text-sm">☰</span>
+                          <span className="text-sm font-medium">{index + 1}.</span>
+                          <span className="text-sm">{getModelName(modelId)}</span>
+                        </div>
+                        <div className="flex space-x-1">
                           <button
                             type="button"
                             onClick={() => moveModel(index, 'up')}
                             disabled={index === 0}
-                            className="text-neutral-400 hover:text-white disabled:opacity-50"
+                            className="text-neutral-400 hover:text-white disabled:opacity-50 p-1"
                           >
                             ↑
                           </button>
@@ -389,7 +422,7 @@ export function Cascade() {
                             type="button"
                             onClick={() => moveModel(index, 'down')}
                             disabled={index === formData.modelOrder.length - 1}
-                            className="text-neutral-400 hover:text-white disabled:opacity-50"
+                            className="text-neutral-400 hover:text-white disabled:opacity-50 p-1"
                           >
                             ↓
                           </button>

@@ -232,6 +232,17 @@ fastify.post('/api/providers', async (request, reply) => {
   }
 });
 
+// Delete all providers (and their models due to cascade)
+fastify.delete('/api/providers', async (request, reply) => {
+  try {
+    await db.delete(modelsTable);
+    await db.delete(providers);
+    return reply.send({ success: true, message: 'All providers and models deleted' });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete providers' });
+  }
+});
+
 // Models CRUD routes
 fastify.get('/api/models', async (request, reply) => {
   try {
@@ -291,6 +302,27 @@ fastify.post('/api/models', async (request, reply) => {
   } catch (error) {
     console.error('Model save error:', error);
     return reply.code(500).send({ error: 'Failed to save model' });
+  }
+});
+
+// Delete all models
+fastify.delete('/api/models', async (request, reply) => {
+  try {
+    await db.delete(modelsTable);
+    return reply.send({ success: true, message: 'All models deleted' });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete models' });
+  }
+});
+
+// Delete models by provider
+fastify.delete('/api/models/provider/:providerId', async (request, reply) => {
+  try {
+    const { providerId } = request.params as { providerId: string };
+    await db.delete(modelsTable).where(eq(modelsTable.providerId, providerId));
+    return reply.send({ success: true, message: `All models for provider ${providerId} deleted` });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete models' });
   }
 });
 
@@ -367,6 +399,84 @@ fastify.post('/api/auth-keys', async (request, reply) => {
     return reply.send(result[0]);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to create auth key' });
+  }
+});
+
+// Model test endpoint - validates a model by sending a minimal request
+fastify.post('/api/models/test', async (request, reply) => {
+  try {
+    const { providerId, modelId } = request.body as { providerId: string; modelId: string };
+
+    if (!providerId || !modelId) {
+      return reply.code(400).send({ error: 'providerId and modelId are required' });
+    }
+
+    // Get provider from database
+    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).limit(1);
+    if (!provider.length) {
+      return reply.code(404).send({ error: 'Provider not found' });
+    }
+
+    const p = provider[0];
+    const baseUrl = p.baseUrl.endsWith('/') ? p.baseUrl.slice(0, -1) : p.baseUrl;
+
+    // Determine API format based on provider
+    let url: string;
+    let headers: Record<string, string>;
+    let body: any;
+
+    if (p.id === 'gemini' || p.id === 'google') {
+      // Google Gemini format
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${p.apiKey}`;
+      headers = { 'Content-Type': 'application/json' };
+      body = {
+        contents: [{ role: 'user', parts: [{ text: 'Say "OK" in one word.' }] }],
+        generationConfig: { maxOutputTokens: 10 }
+      };
+    } else {
+      // OpenAI-compatible format
+      url = `${baseUrl}/chat/completions`;
+      headers = {
+        'Authorization': `Bearer ${p.apiKey}`,
+        'Content-Type': 'application/json'
+      };
+      body = {
+        model: modelId,
+        messages: [{ role: 'user', content: 'Say "OK" in one word.' }],
+        max_tokens: 10
+      };
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return reply.send({
+        success: true,
+        message: `Model "${modelId}" is working on ${p.name}`,
+        response: data
+      });
+    } else {
+      return reply.send({
+        success: false,
+        message: `Model "${modelId}" failed on ${p.name}`,
+        error: data.error?.message || data.message || JSON.stringify(data).slice(0, 200),
+        statusCode: response.status,
+        response: data
+      });
+    }
+  } catch (error: any) {
+    return reply.send({
+      success: false,
+      message: 'Model test failed',
+      error: error.message,
+      statusCode: 0
+    });
   }
 });
 

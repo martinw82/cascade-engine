@@ -1,8 +1,8 @@
-# Active Context: Next.js Starter Template
+# Active Context: Cascade Master
 
 ## Current State
 
-**Template Status**: 🚀 Cascade Master API Gateway Implementation
+**Project Status**: 🚀 Cascade Master - Universal AI Traffic Controller
 
 The template has been expanded to include a basic implementation of Cascade Master - a lightweight, intelligent API gateway designed to maximize free-tier LLM usage through sophisticated rotation, task-awareness, and real-time monitoring.
 
@@ -133,4 +133,5 @@ export async function GET() {
 | 2026-05-02 | Upgraded cascade system from provider-level to model-specific routing, updated database schema, UI components, and server logic for granular model prioritization |
 | 2026-05-02 PM | Added bulk model import with JSON templates and model discovery API with automatic fetching from OpenRouter, Groq, and NVIDIA providers |
 | 2026-05-03 | Fixed build issues for standalone deployment, updated tsconfig excludes, and prepared cascade-deploy package |
-| 2026-05-16 | Fixed login page loading issues, added logout button, fixed provider creation (POST handles both update/create), fixed model discovery for Mistral/Gemini/NVIDIA, added multi-format API support (Gemini, Anthropic, OpenAI-compatible), added DELETE/PUT endpoints for cascade rules, replaced hardcoded Analytics with real data from request_logs, added detailed error reporting for provider failures, fixed test suite to use x-internal header, added standalone makeApiCall function for test endpoint |
+| 2026-05-16 AM | Fixed login page loading issues, added logout button, fixed provider creation, fixed model discovery for Mistral/Gemini/NVIDIA, added multi-format API support, added DELETE/PUT endpoints for cascade rules, replaced hardcoded Analytics with real data, added detailed error reporting, fixed test suite, added standalone makeApiCall function |
+| 2026-05-16 PM | Added drag-and-drop model reordering in cascade rules, added model testing endpoint and UI buttons, added bulk delete operations (all providers, all models, by provider), fixed baseURL field name mismatch, removed runtime files from git, updated README/LICENSE/CHANGELOG/SESSION_LOG/PRODUCTION_READINESS documentation |

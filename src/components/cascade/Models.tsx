@@ -33,6 +33,8 @@ export function Models() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isBulkImport, setIsBulkImport] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(false);
+  const [testingModel, setTestingModel] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; error?: string } | null>(null);
   const [formData, setFormData] = useState({
     providerId: '',
     modelId: '',
@@ -189,6 +191,76 @@ export function Models() {
     setModels(prev => prev.filter(m => m.id !== id));
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm('Are you sure you want to delete ALL models? This cannot be undone.')) return;
+    try {
+      const response = await fetch('/api/models', {
+        method: 'DELETE',
+        headers: {
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+        }
+      });
+      if (response.ok) {
+        setModels([]);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to delete all models: ' + (errorData.error || response.statusText));
+      }
+    } catch (error) {
+      alert('Failed to delete all models: ' + (error as Error).message);
+    }
+  };
+
+  const handleDeleteByProvider = async (providerId: string) => {
+    const providerName = getProviderName(providerId);
+    if (!confirm(`Delete all models for ${providerName}?`)) return;
+    try {
+      const response = await fetch(`/api/models/provider/${providerId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+        }
+      });
+      if (response.ok) {
+        setModels(prev => prev.filter(m => m.providerId !== providerId));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to delete models: ' + (errorData.error || response.statusText));
+      }
+    } catch (error) {
+      alert('Failed to delete models: ' + (error as Error).message);
+    }
+  };
+
+  const testModel = async (providerId: string, modelId: string) => {
+    setTestingModel(true);
+    setTestResult(null);
+    try {
+      const response = await fetch('/api/models/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+        },
+        body: JSON.stringify({ providerId, modelId })
+      });
+      const result = await response.json();
+      setTestResult({
+        success: result.success,
+        message: result.message,
+        error: result.error
+      });
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: 'Test failed',
+        error: (error as Error).message
+      });
+    } finally {
+      setTestingModel(false);
+    }
+  };
+
   const getProviderName = (providerId: string) => {
     return providers.find(p => p.id === providerId)?.name || 'Unknown';
   };
@@ -218,6 +290,33 @@ export function Models() {
           >
             🔄 Refresh
           </button>
+          <button
+            onClick={handleDeleteAll}
+            disabled={models.length === 0}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-neutral-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+          >
+            🗑️ Delete All
+          </button>
+          {providers.length > 0 && (
+            <div className="relative group">
+              <button
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition-colors"
+              >
+                🗑️ By Provider ▾
+              </button>
+              <div className="absolute right-0 mt-2 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg hidden group-hover:block z-50">
+                {providers.map(provider => (
+                  <button
+                    key={provider.id}
+                    onClick={() => handleDeleteByProvider(provider.id)}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-700 first:rounded-t-lg last:rounded-b-lg"
+                  >
+                    {provider.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <button
             onClick={() => setIsBulkImport(true)}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
@@ -267,14 +366,24 @@ export function Models() {
                 <label className="block text-sm font-medium text-neutral-300 mb-2">
                   Model ID
                 </label>
-                <input
-                  type="text"
-                  value={formData.modelId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, modelId: e.target.value }))}
-                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., gpt-4, llama-3.1-70b"
-                  required
-                />
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={formData.modelId}
+                    onChange={(e) => setFormData(prev => ({ ...prev, modelId: e.target.value }))}
+                    className="flex-1 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., gpt-4, llama-3.1-70b"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => testModel(formData.providerId, formData.modelId)}
+                    disabled={!formData.providerId || !formData.modelId || testingModel}
+                    className="px-3 py-2 bg-yellow-600 hover:bg-yellow-500 disabled:bg-neutral-600 text-white rounded-md transition-colors text-sm whitespace-nowrap"
+                  >
+                    {testingModel ? 'Testing...' : 'Test'}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2">
@@ -290,6 +399,24 @@ export function Models() {
                 />
               </div>
             </div>
+
+            {testResult && (
+              <div className={`p-3 rounded ${testResult.success ? 'bg-green-900/20 border border-green-700' : 'bg-red-900/20 border border-red-700'}`}>
+                <div className="flex items-start space-x-2">
+                  <span className="text-lg">{testResult.success ? '✅' : '❌'}</span>
+                  <div className="flex-1">
+                    <p className={`text-sm font-medium ${testResult.success ? 'text-green-400' : 'text-red-400'}`}>
+                      {testResult.message}
+                    </p>
+                    {testResult.error && (
+                      <p className="text-xs text-neutral-400 mt-1 font-mono break-all">
+                        {testResult.error}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -674,6 +801,8 @@ function ModelDiscoveryModal({
   const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [testingModelId, setTestingModelId] = useState<string | null>(null);
+  const [modelTestResults, setModelTestResults] = useState<Record<string, { success: boolean; error?: string }>>({});
 
   const handleDiscover = async () => {
     if (!selectedProvider) return;
@@ -712,6 +841,38 @@ function ModelDiscoveryModal({
       newSelected.add(modelId);
     }
     setSelectedModels(newSelected);
+  };
+
+  const testDiscoveredModel = async (model: any) => {
+    setTestingModelId(model.id);
+    try {
+      const response = await fetch('/api/models/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': 'cascade-master-default-key-2026'
+        },
+        body: JSON.stringify({ providerId: model.providerId, modelId: model.modelId })
+      });
+      const result = await response.json();
+      setModelTestResults(prev => ({
+        ...prev,
+        [model.id]: { success: result.success, error: result.error }
+      }));
+    } catch (error) {
+      setModelTestResults(prev => ({
+        ...prev,
+        [model.id]: { success: false, error: (error as Error).message }
+      }));
+    } finally {
+      setTestingModelId(null);
+    }
+  };
+
+  const testAllModels = async () => {
+    for (const model of discoveredModels) {
+      await testDiscoveredModel(model);
+    }
   };
 
   return (
@@ -758,30 +919,61 @@ function ModelDiscoveryModal({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium">Discovered Models ({discoveredModels.length})</h4>
-                <button
-                  onClick={() => setSelectedModels(new Set(discoveredModels.map(m => m.id)))}
-                  className="text-xs text-blue-400 hover:text-blue-300"
-                >
-                  Select All
-                </button>
+                <div className="space-x-2">
+                  <button
+                    onClick={testAllModels}
+                    className="text-xs text-yellow-400 hover:text-yellow-300"
+                  >
+                    Test All
+                  </button>
+                  <button
+                    onClick={() => setSelectedModels(new Set(discoveredModels.filter(m => modelTestResults[m.id]?.success).map(m => m.id)))}
+                    className="text-xs text-green-400 hover:text-green-300"
+                  >
+                    Select Working
+                  </button>
+                  <button
+                    onClick={() => setSelectedModels(new Set(discoveredModels.map(m => m.id)))}
+                    className="text-xs text-blue-400 hover:text-blue-300"
+                  >
+                    Select All
+                  </button>
+                </div>
               </div>
               <div className="max-h-64 overflow-y-auto bg-neutral-700 rounded p-2">
-                {discoveredModels.map(model => (
-                  <div key={model.id} className="flex items-center space-x-3 py-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedModels.has(model.id)}
-                      onChange={() => toggleModelSelection(model.id)}
-                      className="w-4 h-4 text-blue-600 bg-neutral-600 border-neutral-500 rounded"
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm text-white">{model.modelId}</span>
-                      <span className="text-xs text-neutral-400 ml-2">
-                        {model.contextWindow} tokens, {model.isFree ? 'Free' : 'Paid'}
-                      </span>
+                {discoveredModels.map(model => {
+                  const testResult = modelTestResults[model.id];
+                  return (
+                    <div key={model.id} className="flex items-center space-x-3 py-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedModels.has(model.id)}
+                        onChange={() => toggleModelSelection(model.id)}
+                        className="w-4 h-4 text-blue-600 bg-neutral-600 border-neutral-500 rounded"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm text-white">{model.modelId}</span>
+                        <span className="text-xs text-neutral-400 ml-2">
+                          {model.contextWindow} tokens, {model.isFree ? 'Free' : 'Paid'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => testDiscoveredModel(model)}
+                        disabled={testingModelId === model.id}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          testResult?.success
+                            ? 'bg-green-700 hover:bg-green-600 text-white'
+                            : testResult
+                            ? 'bg-red-700 hover:bg-red-600 text-white'
+                            : 'bg-yellow-600 hover:bg-yellow-500 text-white'
+                        } disabled:opacity-50`}
+                      >
+                        {testingModelId === model.id ? '...' : testResult?.success ? '✓' : testResult ? '✗' : 'Test'}
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

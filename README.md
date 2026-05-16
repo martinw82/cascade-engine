@@ -7,53 +7,58 @@
 
 ## ✨ Features
 
-- 🚀 **Intelligent Routing** - Automatic provider selection based on task type and availability
+- 🚀 **Intelligent Routing** - Automatic model selection based on task type and availability
 - 💰 **Cost Optimization** - Maximize free-tier usage, track savings vs GPT-4o pricing
-- 🎯 **Task-Aware** - Detects coding, summarization, and general tasks automatically
-- 🔄 **Smart Cascading** - Falls back gracefully when providers hit rate limits
+- 🎯 **Task-Aware** - Detects coding, summarization, and general tasks automatically via keyword matching
+- 🔄 **Smart Cascading** - Falls back gracefully when models hit rate limits or fail
 - 📊 **Real-time Monitoring** - Live dashboard with request tracing and analytics
-- 🔐 **Secure Access** - IP-restricted API keys with granular permissions
-- ⚡ **High Performance** - Optimized for 1vCPU/1GB RAM environments
+- 🔐 **Secure Access** - API key authentication with IP restrictions
+- ⚡ **High Performance** - Optimized for low-resource environments (1vCPU/1GB RAM)
 - 🛠️ **Easy Integration** - Drop-in replacement for OpenAI-compatible APIs
+- 🔍 **Model Discovery** - Auto-discover available models from OpenRouter, Groq, NVIDIA, Mistral, and Gemini
+- ✅ **Model Testing** - Test models before adding them to verify they work
+- 🗑️ **Bulk Operations** - Delete all models/providers or filter by provider
 
 ## 🚀 Quick Start
 
-### One-Click Installation
-
-```bash
-# Download and run the installer
-curl -fsSL https://raw.githubusercontent.com/your-repo/cascade-engine/main/install.sh | bash
-```
-
-**Or install manually:**
+### Manual Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/cascade-engine.git
+git clone https://github.com/martinw82/cascade-engine.git
 cd cascade-engine
 
-# Install dependencies
-bun install  # or npm install
+# Install dependencies (Bun is required)
+bun install
 
-# Start the integrated application (UI + API)
-PORT=3001 bun run dev  # or set custom port: PORT=58008 bun run dev
+# Start servers:
+# API server (port 3001)
+bun run server
+
+# UI dev server (port 3000)
+bun dev
 ```
 
 ### Access the Web Interface
 
-Open [http://localhost:3001](http://localhost:3001) (or your custom port) in your browser. You'll be prompted to enter your access key to log in and access the dashboard for configuring providers, models, cascade rules, testing your setup with real LLM API calls, and monitoring usage.
+Open [http://localhost:3000](http://localhost:3000) in your browser. The API server runs on port 3001.
 
-**For low-resource deployments:** Use the prebuilt standalone UI package (`cascade-deploy.tar.gz`) for instant startup without building. Run the UI on your desired port (e.g., 58008) and the API server on port 3001—the UI will automatically fetch metrics and persist configuration changes (providers, models, rules, auth keys) to the API on port 3001.
+**For network access:**
+```bash
+HOST=0.0.0.0 PORT=3000 bun dev  # UI
+PORT=3001 bun run server         # API (already binds to 0.0.0.0)
+```
 
 ## 📚 Documentation
 
-- **[Complete User Guide & Tutorial](USER_GUIDE.md)** - Step-by-step setup, advanced configuration, and troubleshooting
+- **[Complete User Guide](USER_GUIDE.md)** - Step-by-step setup, advanced configuration, and troubleshooting
 - **[Session Development Log](SESSION_LOG.md)** - Complete development history and technical implementation details
-- **[Plugin Integration Guide](CASCADE_PLUGIN.md)** - Integration with Kilo CLI and other tools
+- **[Production Readiness Report](PRODUCTION_READINESS.md)** - Gap analysis and roadmap for production deployment
+- **[Agent Guide](AGENTS.md)** - Internal development commands and architecture reference
 
 ## 🛠️ Integration Options
 
-### Option 1: Simple API Override (Recommended)
+### OpenAI-Compatible API
 
 Replace your OpenAI base URL with Cascade Master's endpoint:
 
@@ -66,87 +71,104 @@ const client = new OpenAI({
 
 // Use:
 const client = new OpenAI({
-  baseURL: "http://localhost:3001/api/cascade",
-  apiKey: "your-cascade-master-key"  // Optional
+  baseURL: "http://your-server-ip:3001/api/cascade",
+  apiKey: "your-cascade-api-key"
 });
 ```
 
-**Works with any tool:**
-- Claude Desktop
-- OpenClaw
+**Works with any OpenAI-compatible client:**
+- opencode
+- Claude Code
 - Cursor
-- Any OpenAI-compatible client
+- Continue
+- Any OpenAI SDK
 
-### Option 2: CLI Commands
+### Direct API Usage
 
 ```bash
-# Start server
-cascade-master
-
-# Or with specific port
-PORT=3001 cascade-master
-
-# Check status
-curl http://localhost:3001/health
-
-# View API
-curl http://localhost:3001/api/cascade
+curl http://your-server-ip:3001/api/cascade \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Hello, summarize this text: ..."}
+    ]
+  }'
 ```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check (no auth required) |
+| GET | `/api/cascade` | API status info |
+| POST | `/api/cascade` | Send LLM request through cascade engine |
+| GET | `/api/providers` | List all providers |
+| POST | `/api/providers` | Create/update provider |
+| DELETE | `/api/providers` | Delete all providers and models |
+| GET | `/api/models` | List all models |
+| POST | `/api/models` | Create/update model |
+| DELETE | `/api/models` | Delete all models |
+| DELETE | `/api/models/provider/:id` | Delete models by provider |
+| POST | `/api/models/test` | Test if a model works |
+| GET | `/api/models/discover/:providerId` | Discover available models |
+| POST | `/api/models/bulk` | Bulk import models |
+| GET | `/api/cascade-rules` | List cascade rules |
+| POST | `/api/cascade-rules` | Create cascade rule |
+| PUT | `/api/cascade-rules` | Update cascade rule |
+| DELETE | `/api/cascade-rules` | Delete cascade rule |
+| GET | `/api/analytics` | Get analytics and stats |
+| GET | `/api/config/backup` | Export configuration (keys redacted) |
 
 ## ⚙️ Configuration
 
 ### 1. Add Providers
 
-In the web interface (`http://localhost:3001`):
-
+In the web interface:
 1. Go to **Providers** tab
 2. Click **"+ Add Provider"**
 3. Configure:
    - Provider name (e.g., "NVIDIA NIM")
-   - Base URL (e.g., `https://api.nvidia.com/v1`)
+   - Base URL (e.g., `https://integrate.api.nvidia.com/v1`)
    - API Key
 
 ### 2. Configure Models
 
 1. Go to **Models** tab
-2. Add models for each provider:
-   - Model ID (e.g., `llama-3.1-70b`)
-   - Context window, RPM/TPM limits
-   - Cost per token (0 for free models)
+2. Use **🔍 Discover Models** to auto-discover, or add manually
+3. **Test models** before adding to verify they work
+4. Configure context window, RPM/TPM limits, daily quotas
 
 ### 3. Set Up Cascade Rules
 
 1. Go to **Cascade** tab
-2. Create routing rules:
-   - **Coding Tasks** (priority 1): Routes to fastest coding models
-   - **Summarization** (priority 2): Routes to high-context models
-   - **General** (priority 99): Fallback for everything else
+2. Create routing rules with:
+   - **Trigger type**: Keyword match (regex), task type, header match, or custom
+   - **Trigger value**: Keywords like `summarize|extract|analyze`
+   - **Model order**: Drag-and-drop to set priority order
+   - **Word limit**: How many words from message start to check for keywords
+3. Rules are evaluated by priority (lower number = higher priority)
 
-### 4. Configure Security (Optional)
+### 4. Configure Security
 
 1. Go to **Security** tab
-2. Add API keys with IP restrictions
+2. Add API keys with optional IP restrictions
 3. Set permissions (read, write, admin)
 
 ## 📊 Monitoring
 
 ### Web Dashboard
-- **Real-time logs** - Live request tracing
-- **Statistics** - Success rates, costs saved
+- **Real-time logs** - Live request tracing with error details
+- **Statistics** - Success rates, costs saved, response times
 - **Heatmaps** - Usage patterns by provider and time
 - **Performance metrics** - Latency and throughput
 
-### API Endpoints
-```bash
-# Health check
-GET /health
-
-# API status
-GET /api/cascade
-
-# Send requests
-POST /api/cascade
-```
+### Error Reporting
+Every request is logged with full error details:
+- HTTP status codes mapped to user-friendly messages
+- Raw provider error messages included
+- Model/provider identification in error output
+- Response time tracking
 
 ## 🏗️ Architecture
 
@@ -154,21 +176,35 @@ POST /api/cascade
 ┌─────────────────┐    ┌──────────────────┐
 │   Your Tools    │────│  Cascade Master  │
 │                 │    │   API Gateway    │
-│ Claude Desktop  │    │                  │
-│ OpenClaw        │    │ ┌──────────────┐ │
-│ Cursor          │    │ │   Cascade    │ │
-│ Any OpenAI      │────│ │   Engine     │ │
-│ Compatible      │    │ └──────────────┘ │
-└─────────────────┘    │                  │
+│ opencode        │    │   (Fastify)      │
+│ Claude Code     │    │                  │
+│ Cursor          │    │ ┌──────────────┐ │
+│ Any OpenAI      │────│ │   Cascade    │ │
+│ Compatible      │    │ │   Engine     │ │
+└─────────────────┘    │ └──────────────┘ │
+                       │                  │
                        │ ┌──────────────┐ │
-                       │ │  Providers   │ │
+                       │ │  Models      │ │
                        │ │              │ │
                        │ │ NVIDIA NIM   │ │
                        │ │ Groq         │ │
                        │ │ OpenRouter   │ │
-                       │ │ Anthropic    │ │
+                       │ │ Mistral      │ │
+                       │ │ Gemini       │ │
                        │ └──────────────┘ │
                        └──────────────────┘
+
+┌─────────────────┐
+│   Web UI        │
+│   (Next.js)     │
+│                 │
+│ Dashboard       │
+│ Providers       │
+│ Models          │
+│ Cascade Rules   │
+│ Analytics       │
+│ Security        │
+└─────────────────┘
 ```
 
 ## 🔧 Advanced Configuration
@@ -177,14 +213,13 @@ POST /api/cascade
 
 ```bash
 # Server configuration
-PORT=3001                    # Server port (default: 3001)
-NODE_ENV=production          # Environment (development/production)
+PORT=3001                    # API server port (default: 3001)
+NODE_ENV=development         # Skips auth when set to "development"
 
 # Provider API keys (optional, can be set in UI)
 NVIDIA_API_KEY=your_key
 GROQ_API_KEY=your_key
 OPENROUTER_API_KEY=your_key
-ANTHROPIC_API_KEY=your_key
 ```
 
 ### Database
@@ -192,42 +227,40 @@ ANTHROPIC_API_KEY=your_key
 Cascade Master uses SQLite for configuration persistence:
 - **Location**: `./cascade.db`
 - **Tables**: providers, models, cascade_rules, auth_keys, request_logs
+- **Mode**: WAL (Write-Ahead Logging) for concurrent access
 
-### System Service (Linux)
+### Supported Provider Formats
+
+The cascade engine automatically handles different API formats:
+- **OpenAI-compatible** (Groq, Mistral, OpenRouter, NVIDIA NIM, etc.)
+- **Google Gemini** (generativelanguage.googleapis.com)
+- **Anthropic** (api.anthropic.com)
+
+## 🚀 Deployment Options
+
+### Systemd (Linux)
 
 ```bash
-# Install as system service
 sudo cp cascade-master.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable cascade-master
 sudo systemctl start cascade-master
 ```
 
-## 🚀 Deployment Options
-
-### Docker
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY . .
-RUN npm ci --production
-EXPOSE 3001
-CMD ["npm", "start"]
-```
-
 ### PM2
+
 ```bash
 npm install -g pm2
 pm2 start ecosystem.config.js
 ```
 
-### Binary Distribution
-```bash
-# Build standalone binary
-npm run build:binary
+### Standalone Deploy
 
-# Distribute single executable
-./cascade-master
+```bash
+bun run build                    # Build Next.js + server
+tar -czf cascade-deploy.tar.gz cascade-deploy/
+# Transfer and extract on target server
+cd cascade-deploy && bun run start
 ```
 
 ## 🤝 Contributing
@@ -235,8 +268,7 @@ npm run build:binary
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests
-5. Submit a pull request
+4. Submit a pull request
 
 ## 📄 License
 
@@ -250,30 +282,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📖 Documentation Overview
-
-Cascade Master includes comprehensive documentation:
-
-### 📚 [Complete User Guide](USER_GUIDE.md)
-- Step-by-step installation and setup
-- Basic and advanced configuration tutorials
-- Production deployment guides
-- Troubleshooting and optimization tips
-- API reference and integration examples
-
-### 📋 [Development Session Log](SESSION_LOG.md)
-- Complete development history
-- Technical implementation details
-- Architecture decisions and rationale
-- Testing and validation results
-- Future enhancement roadmap
-
-### 🔌 [Plugin Integration Guide](CASCADE_PLUGIN.md)
-- Integration with Kilo CLI and other tools
-- Simple API override methods
-- Advanced plugin development
-- Deployment and distribution options
-
-**🎯 You're now a Cascade Master expert!**
-
-For support, check the documentation first, then open an issue on GitHub or join our Discord community.
+For support, check the documentation or open an issue on GitHub.
