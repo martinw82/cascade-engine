@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local database
+cascade.db
+cascade.db-shm
+cascade.db-wal
+cascade.db-bak
+
+# logs
+server.log
+ui.log
+*.log
