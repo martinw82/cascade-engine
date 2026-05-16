@@ -243,72 +243,89 @@ function initializeDefaultData() {
     );
   }
 
-  // Insert default cascade rules
-  const cascadeRules = [
-    {
-      id: 'coding-rule',
-      name: 'Coding Tasks',
-      priority: 1,
-      trigger_type: 'keyword',
-      trigger_value: 'code|program|function|debug|programming',
-      model_order: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']),
-      word_limit: 5,
-      enabled: 1
-    },
-    {
-      id: 'summarization-rule',
-      name: 'Summarization Tasks',
-      priority: 2,
-      trigger_type: 'keyword',
-      trigger_value: 'summarize|extract|analyze|document|summary',
-      model_order: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']),
-      word_limit: 5,
-      enabled: 1
-    },
-    {
-      id: 'default-rule',
-      name: 'Default Fallback',
-      priority: 99,
-      trigger_type: 'task_type',
-      trigger_value: 'general',
-      model_order: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']),
-      word_limit: 5,
-      enabled: 1
+  // Insert default cascade rules (only if none exist)
+  const ruleCount = sqlite.prepare('SELECT COUNT(*) as count FROM cascade_rules').get() as { count: number };
+  if (ruleCount.count === 0) {
+    const cascadeRules = [
+      {
+        id: 'coding-rule',
+        name: 'Coding Tasks',
+        priority: 1,
+        trigger_type: 'keyword',
+        trigger_value: 'code|program|function|debug|programming',
+        model_order: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']),
+        word_limit: 5,
+        enabled: 1
+      },
+      {
+        id: 'summarization-rule',
+        name: 'Summarization Tasks',
+        priority: 2,
+        trigger_type: 'keyword',
+        trigger_value: 'summarize|extract|analyze|document|summary',
+        model_order: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']),
+        word_limit: 5,
+        enabled: 1
+      },
+      {
+        id: 'default-rule',
+        name: 'Default Fallback',
+        priority: 99,
+        trigger_type: 'task_type',
+        trigger_value: 'general',
+        model_order: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']),
+        word_limit: 5,
+        enabled: 1
+      }
+    ];
+
+    const insertRule = sqlite.prepare(`
+      INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, model_order, word_limit, enabled)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const rule of cascadeRules) {
+      insertRule.run(
+        rule.id,
+        rule.name,
+        rule.priority,
+        rule.trigger_type,
+        rule.trigger_value,
+        rule.model_order,
+        rule.word_limit,
+        rule.enabled
+      );
     }
-  ];
-
-  const insertRule = sqlite.prepare(`
-    INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, model_order, word_limit, enabled)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  for (const rule of cascadeRules) {
-    insertRule.run(
-      rule.id,
-      rule.name,
-      rule.priority,
-      rule.trigger_type,
-      rule.trigger_value,
-      rule.model_order,
-      rule.word_limit,
-      rule.enabled
-    );
   }
 
-  // Insert default auth key
-  const insertAuthKey = sqlite.prepare(`
-    INSERT INTO auth_keys (id, name, key_value, allowed_ips, permissions, enabled)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
+  // Insert default auth key (only if none exist)
+  const authKeyCount = sqlite.prepare('SELECT COUNT(*) as count FROM auth_keys').get() as { count: number };
+  if (authKeyCount.count === 0) {
+    const insertAuthKey = sqlite.prepare(`
+      INSERT INTO auth_keys (id, name, key_value, allowed_ips, permissions, enabled)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
 
-  insertAuthKey.run(
-    'default-key',
-    'Default Access Key',
-    'cascade-master-default-key-2026',
-    JSON.stringify(['127.0.0.1', '::1']),
-    JSON.stringify(['read', 'write', 'admin']),
-    1
-  );
+    // Generate a cryptographically secure random key
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    const defaultApiKey = 'cm-' + Array.from(randomBytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    console.log(`\n⚠️  NEW DEFAULT API KEY GENERATED ⚠️`);
+    console.log(`Key: ${defaultApiKey}`);
+    console.log(`Save this key - you will need it to access the API!\n`);
+
+    insertAuthKey.run(
+      'default-key',
+      'Default Access Key',
+      defaultApiKey,
+      null,
+      JSON.stringify(['read', 'write', 'admin']),
+      1
+    );
+  }
 }
 
 // Initialize database on import

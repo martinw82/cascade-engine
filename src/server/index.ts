@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import corsPlugin from '@fastify/cors';
 import staticPlugin from '@fastify/static';
 import sensiblePlugin from '@fastify/sensible';
+import rateLimitPlugin from '@fastify/rate-limit';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { cascadeRoutes, providerCache, modelCache } from './routes/api/cascade';
@@ -17,10 +18,22 @@ const fastify: FastifyInstance = Fastify({
 });
 
 // Register plugins
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
 fastify.register(corsPlugin, {
-  origin: true, // Allow all origins for development
+  origin: allowedOrigins,
+  credentials: true,
 });
 fastify.register(sensiblePlugin);
+fastify.register(rateLimitPlugin, {
+  max: 100,
+  timeWindow: '1 minute',
+  keyGenerator: (request) => {
+    return (request.headers['x-api-key'] as string) || request.ip || 'unknown';
+  },
+});
 
 // Serve Next.js static files
 const __filename = fileURLToPath(import.meta.url);
@@ -59,51 +72,72 @@ fastify.get('/health', async (request, reply) => {
   });
 });
 
-// Login endpoint for UI authentication (no API key required)
-fastify.post('/api/login', async (request, reply) => {
+// Validate API key endpoint - external apps can test their key here
+fastify.post('/api/validate-key', async (request, reply) => {
   try {
-    const { username, password } = request.body as { username: string; password: string };
+    const apiKey = request.headers['x-api-key'] as string;
 
-    // Simple validation - in production, validate against database
-    if (!username || !password) {
+    if (!apiKey) {
       return reply.code(400).send({
         error: 'Validation failed',
-        message: 'Username and password are required'
+        message: 'X-API-Key header is required'
       });
     }
 
-    // Validate against hardcoded credentials
-    if (username === 'admin' && password === 'myn3wp4ssw0rd') {
-      // Return success - the UI will handle session storage
-      reply.send({
-        success: true,
-        message: 'Login successful',
-        user: {
-          username: 'admin',
-          role: 'admin'
-        }
-      });
-    } else {
+    const authKey = await db
+      .select()
+      .from(authKeys)
+      .where(eq(authKeys.keyValue, apiKey))
+      .limit(1);
+
+    if (authKey.length === 0) {
       return reply.code(401).send({
         error: 'Authentication failed',
-        message: 'Invalid username or password'
+        message: 'Invalid API key'
       });
     }
+
+    const key = authKey[0];
+
+    if (!key.enabled) {
+      return reply.code(403).send({
+        error: 'Access denied',
+        message: 'API key is disabled'
+      });
+    }
+
+    reply.send({
+      success: true,
+      message: 'API key is valid',
+      key: {
+        id: key.id,
+        name: key.name,
+        permissions: JSON.parse(key.permissions || '["read"]'),
+        enabled: key.enabled
+      }
+    });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Key validation error:', error);
     reply.code(500).send({
-      error: 'Login error',
-      message: 'Internal server error during login'
+      error: 'Validation error',
+      message: 'Internal server error during validation'
     });
   }
 });
 
-// Apply authentication to all API routes except health, internal requests, and login
+// Apply authentication to all API routes except health
 fastify.addHook('preHandler', async (request, reply) => {
-  // Skip authentication for health check, internal requests, and login endpoint
-  if (request.url === '/health' || request.headers['x-internal'] || request.url === '/api/login') {
+  // Skip authentication for health check
+  if (request.url === '/health') {
     return;
   }
+
+  // Only trust x-internal from localhost
+  const isLocalhost = request.ip === '127.0.0.1' || request.ip === '::1' || request.ip === '::ffff:127.0.0.1';
+  if (request.headers['x-internal'] && isLocalhost) {
+    return;
+  }
+
   // Only apply to routes under /api/
   if (request.url?.startsWith('/api/')) {
     await authenticateRequest(request, reply);
@@ -927,6 +961,22 @@ const start = async () => {
     process.exit(1);
   }
 };
+
+// Graceful shutdown
+const gracefulShutdown = async (signal: string) => {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  try {
+    await fastify.close();
+    console.log('Server closed successfully');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 start();
 

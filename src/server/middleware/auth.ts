@@ -4,8 +4,14 @@ import { eq } from 'drizzle-orm';
 import { authKeys } from '../lib/schema';
 
 export async function authenticateRequest(request: FastifyRequest, reply: FastifyReply) {
-  // Skip authentication for health check and internal requests
-  if (request.url === '/health' || request.headers['x-internal']) {
+  // Skip authentication for health check
+  if (request.url === '/health') {
+    return;
+  }
+
+  // Only trust x-internal from localhost
+  const isLocalhost = request.ip === '127.0.0.1' || request.ip === '::1' || request.ip === '::ffff:127.0.0.1';
+  if (request.headers['x-internal'] && isLocalhost) {
     return;
   }
 
