@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface Model {
   id: string;
@@ -35,16 +36,25 @@ export function Test() {
   const [message, setMessage] = useState('');
   const [response, setResponse] = useState<TestResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{ title: string; details: string } | null>(null);
   const [bypassCascade, setBypassCascade] = useState(false);
+  const { apiKey } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       console.log('Fetching models and providers...');
       try {
         const [modelsRes, providersRes] = await Promise.all([
-          fetch('http://localhost:3001/api/models'),
-          fetch('http://localhost:3001/api/providers')
+          fetch('/api/models', {
+            headers: {
+              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            }
+          }),
+          fetch('/api/providers', {
+            headers: {
+              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            }
+          })
         ]);
 
         console.log('Models response status:', modelsRes.status);
@@ -70,7 +80,7 @@ export function Test() {
       }
     };
     fetchData();
-  }, []);
+  }, [apiKey]); // Re-fetch when API key changes
 
   const handleTest = async () => {
     if (!message.trim()) return;
@@ -94,25 +104,35 @@ export function Test() {
             messages: [{ role: 'user', content: message }]
           };
 
-      const res = await fetch(`http://localhost:3001${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal': 'true',
-        },
-        body: JSON.stringify(body),
-      });
+       const res = await fetch(`${endpoint}`, {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'X-API-Key': apiKey || 'cascade-master-default-key-2026',
+           'X-Internal': 'true',
+         },
+         body: JSON.stringify(body),
+       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setResponse(data);
-      } else {
-        const errData = await res.json().catch(() => ({ error: 'Unknown error' }));
-        setError(errData.error || `HTTP ${res.status}`);
-      }
-    } catch (err) {
-      setError('Network error');
-    } finally {
+       if (res.ok) {
+         const data = await res.json();
+         setResponse(data);
+         setError(null);
+       } else {
+         const errData = await res.json().catch(() => ({ error: 'Unknown error', details: '' }));
+         setError({
+           title: errData.error || `HTTP ${res.status}`,
+           details: errData.details || ''
+         });
+         setResponse(null);
+       }
+     } catch (err: any) {
+       setError({
+         title: 'Network error',
+         details: err.message || 'Could not connect to the server'
+       });
+       setResponse(null);
+     } finally {
       setLoading(false);
     }
   };
@@ -202,7 +222,14 @@ export function Test() {
       {error && (
         <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
           <h3 className="text-red-400 font-medium mb-2">Error</h3>
-          <p className="text-red-300">{error}</p>
+          <p className="text-red-300 font-medium">{error.title}</p>
+          {error.details && (
+            <div className="mt-2 p-2 bg-red-950/30 rounded border border-red-800/50">
+              <p className="text-red-400 text-xs font-mono whitespace-pre-wrap break-words">
+                {error.details}
+              </p>
+            </div>
+          )}
         </div>
       )}
 

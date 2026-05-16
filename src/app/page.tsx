@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { AuthWrapper } from '@/app/auth-wrapper';
+import { useUIAuth } from '@/context/UIAuthContext';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dashboard } from '../components/cascade/Dashboard';
 import { Providers } from '../components/cascade/Providers';
 import { Models } from '../components/cascade/Models';
@@ -13,8 +16,13 @@ type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const { logout } = useUIAuth();
+  const router = useRouter();
 
-
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   const tabs = [
     { id: 'dashboard' as TabType, label: 'Dashboard', icon: '📊' },
@@ -27,8 +35,8 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-neutral-900 text-neutral-100">
-      <div className="max-w-7xl mx-auto p-6">
+    <AuthWrapper>
+      <main className="min-h-screen bg-neutral-900 text-neutral-100">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Cascade Master</h1>
@@ -36,9 +44,17 @@ export default function Home() {
               Universal AI Traffic Controller - Maximize free-tier LLM usage
             </p>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-neutral-400">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span>Server Online</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-neutral-400">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span>Server Online</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 text-sm rounded-md transition-colors border border-red-600/30"
+            >
+              Logout
+            </button>
           </div>
         </div>
 
@@ -70,7 +86,7 @@ export default function Home() {
           {activeTab === 'auth' && <Auth />}
           {activeTab === 'test' && <Test />}
         </div>
-      </div>
-    </main>
+      </main>
+    </AuthWrapper>
   );
 }

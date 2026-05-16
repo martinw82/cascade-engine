@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface CascadeRule {
   id: string;
@@ -34,13 +35,22 @@ export function Cascade() {
     wordLimit: 5,
     enabled: true
   });
+  const { apiKey } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [rulesRes, modelsRes] = await Promise.all([
-          fetch('/api/cascade-rules'),
-          fetch('/api/models')
+          fetch('/api/cascade-rules', {
+            headers: {
+              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            }
+          }),
+          fetch('/api/models', {
+            headers: {
+              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            }
+          })
         ]);
 
         if (rulesRes.ok) {
@@ -69,7 +79,7 @@ export function Cascade() {
     };
 
     fetchData();
-  }, []);
+  }, [apiKey]); // Re-fetch when API key changes
 
   const resetForm = () => {
     setFormData({
@@ -100,19 +110,43 @@ export function Cascade() {
 
     try {
       if (editingId) {
-        // Update existing rule - for now just update local state since we don't have PUT endpoint
-        setRules(prev =>
-          prev.map(r =>
-            r.id === editingId
-              ? { ...r, ...formData }
-              : r
-          )
-        );
+        // Update existing rule
+        const response = await fetch('/api/cascade-rules', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          },
+          body: JSON.stringify({ id: editingId, ...ruleData })
+        });
+
+        if (response.ok) {
+          const updatedRule = await response.json();
+          setRules(prev =>
+            prev.map(r =>
+              r.id === editingId
+                ? {
+                    ...r,
+                    name: updatedRule.name,
+                    priority: updatedRule.priority,
+                    triggerType: updatedRule.triggerType,
+                    triggerValue: updatedRule.triggerValue,
+                    modelOrder: JSON.parse(updatedRule.modelOrder),
+                    wordLimit: updatedRule.wordLimit,
+                    enabled: Boolean(updatedRule.enabled)
+                  }
+                : r
+            )
+          );
+        }
       } else {
         // Add new rule
         const response = await fetch('/api/cascade-rules', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          },
           body: JSON.stringify(ruleData)
         });
 
@@ -153,8 +187,27 @@ export function Cascade() {
     setIsAdding(true);
   };
 
-  const handleDelete = (id: string) => {
-    setRules(prev => prev.filter(r => r.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch('/api/cascade-rules', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+        },
+        body: JSON.stringify({ id })
+      });
+
+      if (response.ok) {
+        setRules(prev => prev.filter(r => r.id !== id));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to delete rule: ' + (errorData.error || response.statusText));
+      }
+    } catch (error) {
+      console.error('Failed to delete cascade rule:', error);
+      alert('Failed to delete rule');
+    }
   };
 
   const handleModelOrderChange = (modelId: string, checked: boolean) => {

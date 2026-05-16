@@ -275,6 +275,52 @@ export class CascadeEngine {
     return null;
   }
 
+  // Parse error response from provider and return user-friendly message
+  private parseProviderError(statusCode: number, errorBody: string, providerName: string, modelId: string): string {
+    let providerMessage = '';
+    let providerCode = '';
+    let providerType = '';
+
+    // Try to parse JSON error response
+    try {
+      const parsed = JSON.parse(errorBody);
+      providerMessage = parsed.error?.message || parsed.message || parsed.detail || errorBody;
+      providerCode = parsed.error?.code || parsed.error?.type || parsed.code || '';
+      providerType = parsed.error?.type || '';
+    } catch {
+      providerMessage = errorBody.substring(0, 200);
+    }
+
+    // Map HTTP status codes to user-friendly messages
+    const statusMessages: Record<number, string> = {
+      400: 'Bad request - check your request format',
+      401: 'Invalid or missing API key',
+      403: 'API key does not have permission for this model or endpoint',
+      404: `Model "${modelId}" not found on ${providerName}`,
+      422: 'Invalid request parameters - model may not support these settings',
+      429: 'Rate limit exceeded - too many requests',
+      500: `${providerName} server error - try again later`,
+      502: `${providerName} gateway error - service may be down`,
+      503: `${providerName} service unavailable - try again later`,
+      504: `${providerName} gateway timeout - request took too long`
+    };
+
+    const baseMessage = statusMessages[statusCode] || `HTTP ${statusCode} error from ${providerName}`;
+
+    // Add provider-specific details if available
+    let details = '';
+    if (providerMessage) {
+      // Truncate long messages
+      const shortMsg = providerMessage.length > 150 ? providerMessage.substring(0, 150) + '...' : providerMessage;
+      details = ` | Provider: ${shortMsg}`;
+    }
+    if (providerCode) {
+      details += ` | Code: ${providerCode}`;
+    }
+
+    return `${baseMessage}${details}`;
+  }
+
   // Make API call to provider
   private async makeApiCall(model: ModelConfig, messages: any[]): Promise<any> {
     const provider = this.providerCache.get(model.providerId);
@@ -283,29 +329,96 @@ export class CascadeEngine {
     }
     const modelName = model.modelId;
 
-    const url = `${provider.baseURL}/chat/completions`;
-    const body = {
-      model: modelName,
-      messages: messages,
-      max_tokens: 1000, // Reasonable limit
-      temperature: 0.7
-    };
-
-    console.log(`Making API call to ${provider.name}: ${url} with model ${modelName}`);
+    console.log(`Making API call to ${provider.name}: ${provider.baseURL} with model ${modelName}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${provider.apiKey}`
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal
-      });
+      let response: Response;
+
+      // Handle different provider API formats
+      if (provider.baseURL.includes('generativelanguage.googleapis.com') || provider.id === 'gemini' || provider.id === 'google') {
+        // Google Gemini API format
+        const geminiModel = modelName.replace('gemini-', 'gemini-').split('-').slice(0, 3).join('-');
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${provider.apiKey}`;
+        const body = {
+          contents: messages.map((m: any) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+          })),
+          generationConfig: {
+            maxOutputTokens: 1000,
+            temperature: 0.7
+          }
+        };
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          // Convert Gemini response to OpenAI-compatible format
+          const content = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          return {
+            choices: [{ message: { role: 'assistant', content } }],
+            usage: result.usageMetadata || {}
+          };
+        }
+      } else if (provider.baseURL.includes('api.anthropic.com') || provider.id === 'anthropic') {
+        // Anthropic API format
+        const url = 'https://api.anthropic.com/v1/messages';
+        const body = {
+          model: modelName,
+          messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
+          max_tokens: 1000,
+          temperature: 0.7
+        };
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': provider.apiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          // Convert Anthropic response to OpenAI-compatible format
+          const content = result.content?.[0]?.text || '';
+          return {
+            choices: [{ message: { role: 'assistant', content } }],
+            usage: result.usage || {}
+          };
+        }
+      } else {
+        // Default: OpenAI-compatible API format (works with Groq, Mistral, OpenRouter, NVIDIA, etc.)
+        const url = provider.baseURL.endsWith('/') ? `${provider.baseURL}chat/completions` : `${provider.baseURL}/chat/completions`;
+        const body = {
+          model: modelName,
+          messages: messages,
+          max_tokens: 1000,
+          temperature: 0.7
+        };
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${provider.apiKey}`
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+      }
 
       clearTimeout(timeoutId);
       console.log(`API response status: ${response.status}`);
@@ -313,7 +426,8 @@ export class CascadeEngine {
       if (!response.ok) {
         const errorData = await response.text();
         console.log(`API error details: ${errorData}`);
-        const error: any = new Error(`API call failed: ${response.status} ${response.statusText}`);
+        const friendlyMessage = this.parseProviderError(response.status, errorData, provider.name, modelName);
+        const error: any = new Error(friendlyMessage);
         error.statusCode = response.status;
         error.details = errorData;
         throw error;
@@ -326,7 +440,16 @@ export class CascadeEngine {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         console.log(`API call to ${provider.name} timed out`);
-        throw new Error('API call timed out');
+        throw new Error(`Request to ${provider.name} timed out after 30 seconds`);
+      }
+      if (error.message && error.message.includes('ERR_TLS_CERT_ALTNAME_INVALID')) {
+        throw new Error(`TLS certificate error for ${provider.name} - the provider's SSL certificate doesn't match their domain. Check if the base URL is correct.`);
+      }
+      if (error.message && error.message.includes('ECONNREFUSED')) {
+        throw new Error(`Connection refused to ${provider.name} - check if the base URL is correct and the service is online.`);
+      }
+      if (error.message && error.message.includes('ENOTFOUND')) {
+        throw new Error(`DNS lookup failed for ${provider.name} - the base URL domain could not be resolved. Check the URL.`);
       }
       throw error;
     }
@@ -522,11 +645,14 @@ export async function POST(request: FastifyRequest, reply: FastifyReply) {
   } catch (error: any) {
     console.error('Cascade engine error:', error);
     
-    // Return appropriate error response
+    // Return appropriate error response with details
     const statusCode = error.statusCode || 500;
     const message = error.message || 'Internal server error';
     
-    return reply.code(statusCode).send({ error: message });
+    return reply.code(statusCode).send({
+      error: message,
+      details: error.details || ''
+    });
   }
 }
 
@@ -546,3 +672,34 @@ export const cascadeRoutes = {
   POST,
   GET
 };
+
+// Standalone makeApiCall function for testing endpoint
+export async function makeApiCall(provider: any, messages: any[], modelId: string): Promise<any> {
+  // Find the model in the cache
+  let model: any = null;
+  for (const [id, m] of modelCache.entries()) {
+    if (m.modelId === modelId && m.providerId === provider.id) {
+      model = m;
+      break;
+    }
+  }
+  
+  if (!model) {
+    // Create a temporary model object
+    model = {
+      id: `${provider.id}-${modelId}`,
+      providerId: provider.id,
+      modelId: modelId,
+      contextWindow: 128000,
+      rpmLimit: 60,
+      tpmLimit: 10000,
+      dailyQuota: 1000,
+      isFree: false,
+      costPerToken: 0,
+      status: 'ready' as const
+    };
+  }
+  
+  // Use the cascade engine's private makeApiCall method via reflection
+  return (cascadeEngine as any).makeApiCall(model, messages);
+}

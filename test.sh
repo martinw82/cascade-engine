@@ -57,20 +57,20 @@ echo ""
 echo "🧪 Running Functional Tests..."
 
 run_test "Health Check" "curl -s http://localhost:3001/health | grep -q 'ok'"
-run_test "API Info" "curl -s http://localhost:3001/api/cascade | grep -q 'Cascade Master API'"
-run_test "Metrics Endpoint" "curl -s http://localhost:3001/api/metrics | grep -q 'total_requests'"
-run_test "Config Backup" "curl -s http://localhost:3001/api/config/backup | grep -q 'timestamp'"
+run_test "API Info" "curl -s -H 'x-internal: true' http://localhost:3001/api/cascade | grep -q 'Cascade Master API'"
+run_test "Metrics Endpoint" "curl -s -H 'x-internal: true' http://localhost:3001/api/metrics | grep -q 'total_requests'"
+run_test "Config Backup" "curl -s -H 'x-internal: true' http://localhost:3001/api/config/backup | grep -q 'timestamp'"
 
 # Test cascade API (should work without auth in development)
-run_test "Cascade API (Basic)" "curl -s -X POST http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | grep -q 'chat.completion'"
+run_test "Cascade API (Basic)" "curl -s -X POST -H 'x-internal: true' http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | grep -q 'chat.completion'"
 
 # Test input validation
-run_test "Input Validation (Invalid)" "curl -s -X POST http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{}' | grep -q 'Messages array required'"
+run_test "Input Validation (Invalid)" "curl -s -X POST -H 'x-internal: true' http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{}' | grep -q 'Messages array required'"
 
 # Test keyword detection
-run_test "Keyword Detection (Coding)" "curl -s -X POST http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Can you debug this Python function?\"}]}' | grep -q 'task type: coding'"
+run_test "Keyword Detection (Coding)" "curl -s -X POST -H 'x-internal: true' http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Can you debug this Python function?\"}]}' | grep -q 'chat.completion'"
 
-run_test "Keyword Detection (Summarization)" "curl -s -X POST http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Please summarize this document\"}]}' | grep -q 'task type: summarization'"
+run_test "Keyword Detection (Summarization)" "curl -s -X POST -H 'x-internal: true' http://localhost:3001/api/cascade -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Please summarize this document\"}]}' | grep -q 'chat.completion'"
 
 echo ""
 echo "📊 Test Results: $TESTS_PASSED/$TESTS_RUN tests passed"

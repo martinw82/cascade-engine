@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface LogEntry {
   timestamp: string;
@@ -11,6 +12,7 @@ interface LogEntry {
 }
 
 export function Dashboard() {
+  const { apiKey } = useAuth();
   const [logs, setLogs] = useState<LogEntry[]>([
     { timestamp: new Date().toISOString(), level: 'info', message: 'Cascade Master initialized' },
   ]);
@@ -55,7 +57,11 @@ export function Dashboard() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/metrics');
+        const response = await fetch('/api/metrics', {
+          headers: {
+            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          }
+        });
         if (response.ok) {
         const data = await response.json();
         const uptimeSeconds = data.uptime_seconds || 0;
@@ -83,7 +89,7 @@ export function Dashboard() {
     const interval = setInterval(fetchMetrics, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [apiKey]);
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface Provider {
   id: string;
@@ -13,12 +14,17 @@ interface Provider {
 
 export function Providers() {
   const [providers, setProviders] = useState<Provider[]>([]);
+  const { apiKey } = useAuth();
 
   useEffect(() => {
     const fetchProviders = async () => {
       console.log('Fetching providers...');
       try {
-        const response = await fetch('http://localhost:3001/api/providers');
+        const response = await fetch('/api/providers', {
+          headers: {
+            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          }
+        });
         console.log('Providers response status:', response.status);
         if (response.ok) {
           const data = await response.json();
@@ -32,7 +38,7 @@ export function Providers() {
       }
     };
     fetchProviders();
-  }, []);
+  }, [apiKey]); // Re-fetch when API key changes
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,17 +56,17 @@ export function Providers() {
 
   const handleReset = async (id: string) => {
     try {
-      await fetch(`http://localhost:3001/api/providers`, {
+      await fetch(`/api/providers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
         },
         body: JSON.stringify({
           id,
           status: 'ready'
         }),
       });
-      // Update local state
       setProviders(prev => prev.map(p => p.id === id ? { ...p, status: 'ready' } : p));
     } catch (error) {
       console.error('Failed to reset provider:', error);
@@ -72,10 +78,11 @@ export function Providers() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:3001/api/providers', {
+      const response = await fetch('/api/providers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
         },
         body: JSON.stringify({
           id: editingId || Date.now().toString(),
@@ -143,7 +150,11 @@ export function Providers() {
               const fetchProviders = async () => {
                 console.log('Refreshing providers...');
                 try {
-                  const response = await fetch('http://localhost:3001/api/providers');
+                  const response = await fetch('/api/providers', {
+                    headers: {
+                      'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                    }
+                  });
                   console.log('Refresh response status:', response.status);
                   if (response.ok) {
                     const data = await response.json();

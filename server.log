@@ -1,0 +1,42 @@
+$ PORT=${PORT:-3001} bun src/server/index.ts
+{"level":40,"time":1778890450171,"pid":1932892,"hostname":"VM-0-10-ubuntu","msg":"\"root\" path \"/home/ubuntu/cascade-engine/.next/static\" must exist"}
+{"level":30,"time":1778890450237,"pid":1932892,"hostname":"VM-0-10-ubuntu","msg":"Server listening at http://127.0.0.1:3001"}
+{"level":30,"time":1778890450237,"pid":1932892,"hostname":"VM-0-10-ubuntu","msg":"Server listening at http://10.3.0.10:3001"}
+{"level":30,"time":1778890450238,"pid":1932892,"hostname":"VM-0-10-ubuntu","msg":"Server listening on http://127.0.0.1:3001"}
+{"level":30,"time":1778890475427,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-1","req":{"method":"GET","url":"/health","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":44754},"msg":"incoming request"}
+{"level":30,"time":1778890475433,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-1","res":{"statusCode":200},"responseTime":5.269776000001002,"msg":"request completed"}
+{"level":30,"time":1778890823047,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-2","req":{"method":"POST","url":"/api/login","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":57440},"msg":"incoming request"}
+{"level":30,"time":1778890823051,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-2","res":{"statusCode":200},"responseTime":2.956800000043586,"msg":"request completed"}
+{"level":30,"time":1778890875243,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-3","req":{"method":"GET","url":"/health","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":44556},"msg":"incoming request"}
+{"level":30,"time":1778890875245,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-3","res":{"statusCode":200},"responseTime":0.9879599999985658,"msg":"request completed"}
+{"level":30,"time":1778890885709,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-4","req":{"method":"POST","url":"/api/login","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":42578},"msg":"incoming request"}
+{"level":30,"time":1778890885711,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-4","res":{"statusCode":200},"responseTime":1.0188089999719523,"msg":"request completed"}
+{"level":30,"time":1778890953293,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-5","req":{"method":"POST","url":"/api/login","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":33028},"msg":"incoming request"}
+{"level":30,"time":1778890953294,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-5","res":{"statusCode":200},"responseTime":0.5993090000119992,"msg":"request completed"}
+{"level":30,"time":1778891154775,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-6","req":{"method":"POST","url":"/api/login","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":58204},"msg":"incoming request"}
+{"level":30,"time":1778891154777,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-6","res":{"statusCode":200},"responseTime":1.8029749999986961,"msg":"request completed"}
+{"level":30,"time":1778891202209,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-7","req":{"method":"GET","url":"/api/providers","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":42420},"msg":"incoming request"}
+{"level":30,"time":1778891202214,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-7","res":{"statusCode":401},"responseTime":4.523036999977194,"msg":"request completed"}
+{"level":30,"time":1778891208648,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-8","req":{"method":"GET","url":"/api/providers","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":34420},"msg":"incoming request"}
+{"level":30,"time":1778891208654,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-8","res":{"statusCode":200},"responseTime":5.044982000021264,"msg":"request completed"}
+{"level":30,"time":1778891700986,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-9","req":{"method":"POST","url":"/api/login","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":48906},"msg":"incoming request"}
+{"level":30,"time":1778891700989,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-9","res":{"statusCode":200},"responseTime":2.7300810001324862,"msg":"request completed"}
+{"level":30,"time":1778891705755,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-a","req":{"method":"GET","url":"/api/providers","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":48918},"msg":"incoming request"}
+{"level":30,"time":1778891705758,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-a","res":{"statusCode":200},"responseTime":2.4435719999019057,"msg":"request completed"}
+{"level":30,"time":1778891714736,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-b","req":{"method":"GET","url":"/health","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41742},"msg":"incoming request"}
+{"level":30,"time":1778891714737,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-b","res":{"statusCode":200},"responseTime":0.39522300008684397,"msg":"request completed"}
+{"level":30,"time":1778891714744,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-c","req":{"method":"GET","url":"/api/cascade","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41744},"msg":"incoming request"}
+{"level":30,"time":1778891714745,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-c","res":{"statusCode":401},"responseTime":1.1336189999710768,"msg":"request completed"}
+{"level":30,"time":1778891714754,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-d","req":{"method":"GET","url":"/api/metrics","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41746},"msg":"incoming request"}
+{"level":30,"time":1778891714755,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-d","res":{"statusCode":401},"responseTime":0.2939089999999851,"msg":"request completed"}
+{"level":30,"time":1778891714764,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-e","req":{"method":"GET","url":"/api/config/backup","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41750},"msg":"incoming request"}
+{"level":30,"time":1778891714764,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-e","res":{"statusCode":401},"responseTime":0.23765600007027388,"msg":"request completed"}
+{"level":30,"time":1778891714772,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-f","req":{"method":"POST","url":"/api/cascade","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41756},"msg":"incoming request"}
+{"level":30,"time":1778891714773,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-f","res":{"statusCode":401},"responseTime":0.47343400004319847,"msg":"request completed"}
+{"level":30,"time":1778891714781,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-g","req":{"method":"POST","url":"/api/cascade","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41758},"msg":"incoming request"}
+{"level":30,"time":1778891714782,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-g","res":{"statusCode":401},"responseTime":0.938522000098601,"msg":"request completed"}
+{"level":30,"time":1778891714793,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-h","req":{"method":"POST","url":"/api/cascade","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41772},"msg":"incoming request"}
+{"level":30,"time":1778891714794,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-h","res":{"statusCode":401},"responseTime":0.7112099998630583,"msg":"request completed"}
+{"level":30,"time":1778891714802,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-i","req":{"method":"POST","url":"/api/cascade","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":41780},"msg":"incoming request"}
+{"level":30,"time":1778891714803,"pid":1932892,"hostname":"VM-0-10-ubuntu","reqId":"req-i","res":{"statusCode":401},"responseTime":0.3984659998677671,"msg":"request completed"}
+error: script "server" was terminated by signal SIGTERM (Polite quit request)

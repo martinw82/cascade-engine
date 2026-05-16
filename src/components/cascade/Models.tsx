@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface Model {
   id: string;
@@ -42,13 +43,22 @@ export function Models() {
     isFree: true,
     costPerToken: 0
   });
+  const { apiKey } = useAuth();
 
   const fetchData = async () => {
     console.log('Fetching models and providers...');
     try {
       const [modelsRes, providersRes] = await Promise.all([
-        fetch('http://localhost:3001/api/models'),
-        fetch('http://localhost:3001/api/providers')
+        fetch('/api/models', {
+          headers: {
+            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          }
+        }),
+        fetch('/api/providers', {
+          headers: {
+            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          }
+        })
       ]);
 
       console.log('Models response status:', modelsRes.status);
@@ -83,7 +93,7 @@ export function Models() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [apiKey]); // Re-fetch when API key changes
 
   const resetForm = () => {
     setFormData({
@@ -118,10 +128,11 @@ export function Models() {
         createdAt: new Date().toISOString()
       };
 
-      const response = await fetch('http://localhost:3001/api/models', {
+      const response = await fetch('/api/models', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
         },
         body: JSON.stringify(modelData),
       });
@@ -375,7 +386,10 @@ export function Models() {
             try {
               const response = await fetch('/api/models/bulk', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                },
                 body: JSON.stringify({ models: importedModels })
               });
 
@@ -402,7 +416,11 @@ export function Models() {
           onClose={() => setIsDiscovering(false)}
           onDiscover={async (providerId) => {
             try {
-              const response = await fetch(`/api/models/discover/${providerId}`);
+              const response = await fetch(`/api/models/discover/${providerId}`, {
+                headers: {
+                  'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                }
+              });
 
               if (response.ok) {
                 const discoveredModels = await response.json();
@@ -419,7 +437,10 @@ export function Models() {
             try {
               const response = await fetch('/api/models/bulk', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                },
                 body: JSON.stringify({ models: modelsToImport })
               });
 

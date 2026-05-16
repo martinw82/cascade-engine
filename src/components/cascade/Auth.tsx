@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface AuthKey {
   id: string;
@@ -13,17 +14,9 @@ interface AuthKey {
 }
 
 export function Auth() {
-  const [authKeys, setAuthKeys] = useState<AuthKey[]>([
-    {
-      id: 'default-key',
-      name: 'Default Access Key',
-      keyValue: 'cascade-master-default-key-2026',
-      allowedIps: ['127.0.0.1', '::1', '192.168.1.100'],
-      permissions: ['read', 'write', 'admin'],
-      enabled: true,
-      createdAt: new Date().toISOString()
-    }
-  ]);
+  const [authKeys, setAuthKeys] = useState<AuthKey[]>([]);
+  const { apiKey: currentApiKey, setApiKey } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -34,6 +27,63 @@ export function Auth() {
     permissions: ['read', 'write'],
     enabled: true
   });
+
+  // Load auth keys from API on mount and when current API key changes
+  useEffect(() => {
+    const fetchAuthKeys = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/auth-keys', {
+          headers: {
+            'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Convert database format to our local format
+          const formattedKeys = data.map((key: any) => ({
+            id: key.id,
+            name: key.name,
+            keyValue: key.keyValue,
+            allowedIps: key.allowedIps ? JSON.parse(key.allowedIps) : [],
+            permissions: key.permissions ? JSON.parse(key.permissions) : ['read'],
+            enabled: key.enabled,
+            createdAt: key.createdAt
+          }));
+          setAuthKeys(formattedKeys);
+        } else {
+          console.error('Failed to fetch auth keys');
+          // Fallback to default key if API fails
+          setAuthKeys([{
+            id: 'default-key',
+            name: 'Default Access Key',
+            keyValue: 'cascade-master-default-key-2026',
+            allowedIps: ['127.0.0.1', '::1', '192.168.1.100'],
+            permissions: ['read', 'write', 'admin'],
+            enabled: true,
+            createdAt: new Date().toISOString()
+          }]);
+        }
+      } catch (error) {
+        console.error('Error fetching auth keys:', error);
+        // Fallback to default key
+        setAuthKeys([{
+          id: 'default-key',
+          name: 'Default Access Key',
+          keyValue: 'cascade-master-default-key-2026',
+          allowedIps: ['127.0.0.1', '::1', '192.168.1.100'],
+          permissions: ['read', 'write', 'admin'],
+          enabled: true,
+          createdAt: new Date().toISOString()
+        }]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAuthKeys();
+  }, [currentApiKey]); // Re-fetch when API key changes
 
   const resetForm = () => {
     setFormData({
@@ -47,50 +97,140 @@ export function Auth() {
     setEditingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+   const handleSubmit = async (e: React.FormEvent) => {
+     e.preventDefault();
 
-    // Filter out empty IPs
-    const cleanIps = formData.allowedIps.filter(ip => ip.trim() !== '');
+     // Filter out empty IPs
+     const cleanIps = formData.allowedIps.filter(ip => ip.trim() !== '');
 
-    if (editingId) {
-      // Update existing key
-      setAuthKeys(prev =>
-        prev.map(k =>
-          k.id === editingId
-            ? { ...k, ...formData, allowedIps: cleanIps }
-            : k
-        )
-      );
-    } else {
-      // Add new key
-      const newKey: AuthKey = {
-        id: Date.now().toString(),
-        ...formData,
-        allowedIps: cleanIps,
-        createdAt: new Date().toISOString()
-      };
-      setAuthKeys(prev => [...prev, newKey]);
-    }
+     try {
+       if (editingId) {
+         // Update existing key via API
+         const response = await fetch(`/api/auth-keys`, {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+             'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+           },
+           body: JSON.stringify({
+             id: editingId,
+             name: formData.name,
+             keyValue: formData.keyValue,
+             allowedIps: JSON.stringify(cleanIps),
+             permissions: JSON.stringify(formData.permissions),
+             enabled: formData.enabled
+           })
+         });
 
-    resetForm();
-  };
+         if (response.ok) {
+           const updatedKey = await response.json();
+           // Update local state
+           setAuthKeys(prev =>
+             prev.map(k =>
+               k.id === editingId
+                 ? { ...updatedKey, allowedIps: cleanIps }
+                 : k
+             )
+           );
+         } else {
+           throw new Error('Failed to update access key');
+         }
+       } else {
+         // Add new key via API
+         const response = await fetch('/api/auth-keys', {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+             'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+           },
+           body: JSON.stringify({
+             name: formData.name,
+             keyValue: formData.keyValue,
+             allowedIps: JSON.stringify(cleanIps),
+             permissions: JSON.stringify(formData.permissions),
+             enabled: formData.enabled
+           })
+         });
 
-  const handleEdit = (authKey: AuthKey) => {
-    setFormData({
-      name: authKey.name,
-      keyValue: authKey.keyValue,
-      allowedIps: authKey.allowedIps.length > 0 ? authKey.allowedIps : [''],
-      permissions: authKey.permissions,
-      enabled: authKey.enabled
-    });
-    setEditingId(authKey.id);
-    setIsAdding(true);
-  };
+         if (response.ok) {
+           const newKey = await response.json();
+           // Add to local state
+           setAuthKeys(prev => [...prev, {
+             id: newKey.id,
+             name: formData.name,
+             keyValue: formData.keyValue,
+             allowedIps: cleanIps,
+             permissions: formData.permissions,
+             enabled: formData.enabled,
+             createdAt: new Date().toISOString()
+           }]);
+         } else {
+           throw new Error('Failed to create access key');
+         }
+       }
 
-  const handleDelete = (id: string) => {
-    setAuthKeys(prev => prev.filter(k => k.id !== id));
-  };
+       resetForm();
+       // Refresh keys list to ensure we have latest data
+       const refreshResponse = await fetch('/api/auth-keys', {
+         headers: {
+           'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+         }
+       });
+       if (refreshResponse.ok) {
+         const data = await refreshResponse.json();
+         const formattedKeys = data.map((key: any) => ({
+           id: key.id,
+           name: key.name,
+           keyValue: key.keyValue,
+           allowedIps: key.allowedIps ? JSON.parse(key.allowedIps) : [],
+           permissions: key.permissions ? JSON.parse(key.permissions) : ['read'],
+           enabled: key.enabled,
+           createdAt: key.createdAt
+         }));
+         setAuthKeys(formattedKeys);
+       }
+     } catch (error) {
+       console.error('Error saving access key:', error);
+       alert('Failed to save access key: ' + (error as Error).message);
+     }
+   };
+
+   const handleEdit = (authKey: AuthKey) => {
+     setFormData({
+       name: authKey.name,
+       keyValue: authKey.keyValue,
+       allowedIps: authKey.allowedIps.length > 0 ? authKey.allowedIps : [''],
+       permissions: authKey.permissions,
+       enabled: authKey.enabled
+     });
+     setEditingId(authKey.id);
+     setIsAdding(true);
+     // Update the current API key in context when editing
+     setApiKey(authKey.keyValue);
+   };
+
+   const handleDelete = async (id: string) => {
+     try {
+       const response = await fetch(`/api/auth-keys`, {
+         method: 'DELETE',
+         headers: {
+           'Content-Type': 'application/json',
+           'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+         },
+         body: JSON.stringify({ id })
+       });
+
+       if (!response.ok) {
+         throw new Error('Failed to delete access key');
+       }
+
+       // Remove from local state
+       setAuthKeys(prev => prev.filter(k => k.id !== id));
+     } catch (error) {
+       console.error('Error deleting access key:', error);
+       alert('Failed to delete access key: ' + (error as Error).message);
+     }
+   };
 
   const handleIpChange = (index: number, value: string) => {
     const newIps = [...formData.allowedIps];
@@ -375,7 +515,7 @@ export function Auth() {
           <div>
             <strong>Example:</strong>
             <pre className="bg-neutral-900 p-3 rounded mt-1 text-xs overflow-x-auto">
-{`curl -X POST http://your-server:3001/api/cascade \\
+{`curl -X POST http://your-server:3002/api/cascade \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: your-access-key-here" \\
   -d '{"messages": [{"role": "user", "content": "Hello"}]}'`}
