@@ -50,3 +50,7 @@ cascade.db-bak
 server.log
 ui.log
 *.log
+
+# deploy artifacts (build artifacts, not source)
+cascade-deploy/
+cascade-deploy.tar.gz

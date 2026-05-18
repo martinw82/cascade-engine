@@ -3,18 +3,37 @@ import corsPlugin from '@fastify/cors';
 import staticPlugin from '@fastify/static';
 import sensiblePlugin from '@fastify/sensible';
 import rateLimitPlugin from '@fastify/rate-limit';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { cascadeRoutes, providerCache, modelCache } from './routes/api/cascade';
-import { authenticateRequest } from './middleware/auth';
-import { validateRequest } from './middleware/validation';
-import { db } from './lib/db';
+import { cascadeRoutes, providerCache, modelCache, cascadeEngine, cascadeSchema } from './routes/api/cascade';
+import { authenticateRequest, getUserId } from './middleware/auth';
+import { validateRequest, validateProviderInput, validateModelInput, validateCascadeRuleInput, validateAuthKeyInput } from './middleware/validation';
+import { auditLogPlugin } from './middleware/audit';
+import { validateEnv } from './lib/env';
+import { db, hashPassword, verifyPassword } from './lib/db';
 import { eq, and, sql } from 'drizzle-orm';
-import { requestLogs, providers, models as modelsTable, cascadeRules, authKeys } from './lib/schema';
+import { requestLogs, providers, models as modelsTable, cascadeRules, authKeys, users } from './lib/schema';
+
+// Validate environment variables on startup
+const envValidation = validateEnv();
+if (envValidation.errors.length > 0) {
+  console.error('Environment validation errors:');
+  envValidation.errors.forEach(e => console.error(`  ❌ ${e}`));
+  process.exit(1);
+}
+if (envValidation.warnings.length > 0) {
+  console.warn('Environment warnings:');
+  envValidation.warnings.forEach(w => console.warn(`  ⚠️  ${w}`));
+}
 
 // Initialize Fastify server
 const fastify: FastifyInstance = Fastify({
-  logger: true,
+  logger: {
+    level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  },
+  bodyLimit: parseInt(process.env.BODY_SIZE_LIMIT || '10485760'), // 10MB default
 });
 
 // Register plugins
@@ -22,17 +41,107 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
+// Security headers hook (applied globally to all routes)
+fastify.addHook('preHandler', async (request, reply) => {
+  reply.header('X-Content-Type-Options', 'nosniff');
+  reply.header('X-Frame-Options', 'DENY');
+  reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd) {
+    reply.header('Content-Security-Policy', [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; '));
+    reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  } else {
+    reply.header('Content-Security-Policy', [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      "connect-src 'self' ws: wss:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; '));
+  }
+});
+
+fastify.register(auditLogPlugin);
 fastify.register(corsPlugin, {
   origin: allowedOrigins,
   credentials: true,
 });
 fastify.register(sensiblePlugin);
+
+// OpenAPI/Swagger documentation
+fastify.register(swagger, {
+  openapi: {
+    info: {
+      title: 'Cascade Engine API',
+      description: 'AI-ready API for managing LLM providers, models, cascade rules, and routing requests through multiple models with automatic failover.',
+      version: '2.0.0',
+    },
+    servers: [
+      { url: 'http://localhost:3001', description: 'Local development' }
+    ],
+    components: {
+      securitySchemes: {
+        apiKey: {
+          type: 'apiKey',
+          name: 'X-API-Key',
+          in: 'header',
+          description: 'API key for authentication. Get one via POST /api/users/register or POST /api/users/login'
+        }
+      }
+    },
+    tags: [
+      { name: 'health', description: 'Health and status endpoints' },
+      { name: 'users', description: 'User registration, login, and profile' },
+      { name: 'cascade', description: 'Main LLM request routing through cascade engine' },
+      { name: 'providers', description: 'LLM provider management (NVIDIA, Groq, Mistral, etc.)' },
+      { name: 'models', description: 'Model management and discovery' },
+      { name: 'cascade-rules', description: 'Routing rules for task-aware model selection' },
+      { name: 'auth-keys', description: 'API key management' },
+      { name: 'analytics', description: 'Request logs, metrics, and analytics' },
+      { name: 'system', description: 'Cache management and configuration' }
+    ]
+  }
+});
+
+fastify.register(swaggerUi, {
+  routePrefix: '/api/docs',
+  uiConfig: {
+    docExpansion: 'list',
+    deepLinking: true
+  }
+});
+
+// Global rate limit
+const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX || '100');
+const rateLimitWindow = process.env.RATE_LIMIT_WINDOW || '1 minute';
+
 fastify.register(rateLimitPlugin, {
-  max: 100,
-  timeWindow: '1 minute',
+  max: rateLimitMax,
+  timeWindow: rateLimitWindow,
   keyGenerator: (request) => {
     return (request.headers['x-api-key'] as string) || request.ip || 'unknown';
   },
+  errorResponseBuilder: (request, context) => ({
+    error: 'Rate limit exceeded',
+    message: `Too many requests, please try again later. Limit: ${context.max} requests per ${context.after}`,
+    retryAfter: context.after
+  }),
 });
 
 // Serve Next.js static files
@@ -73,7 +182,9 @@ fastify.get('/health', async (request, reply) => {
 });
 
 // Validate API key endpoint - external apps can test their key here
-fastify.post('/api/validate-key', async (request, reply) => {
+fastify.post('/api/validate-key', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
   try {
     const apiKey = request.headers['x-api-key'] as string;
 
@@ -125,23 +236,48 @@ fastify.post('/api/validate-key', async (request, reply) => {
   }
 });
 
-// Apply authentication to all API routes except health
+// Apply authentication to all API routes except health and validate-key
 fastify.addHook('preHandler', async (request, reply) => {
-  // Skip authentication for health check
-  if (request.url === '/health') {
+  const publicRoutes = ['/health', '/api/validate-key', '/api/users/register', '/api/users/login', '/api/docs', '/api/docs/', '/api/docs/json', '/api/docs/index.html'];
+  if (publicRoutes.some(route => request.url === route || request.url?.startsWith(route))) {
     return;
   }
 
-  // Only trust x-internal from localhost
   const isLocalhost = request.ip === '127.0.0.1' || request.ip === '::1' || request.ip === '::ffff:127.0.0.1';
   if (request.headers['x-internal'] && isLocalhost) {
     return;
   }
 
-  // Only apply to routes under /api/
   if (request.url?.startsWith('/api/')) {
     await authenticateRequest(request, reply);
   }
+});
+
+// Global error handler - sanitize errors in production
+fastify.setErrorHandler((error, request, reply) => {
+  // Log the full error internally
+  fastify.log.error({ err: error, url: request.url, method: request.method }, 'Unhandled error');
+
+  const isProd = process.env.NODE_ENV === 'production';
+
+  // Sanitize error response
+  const statusCode = error.statusCode || (reply.statusCode !== 200 ? reply.statusCode : 500);
+  const response: any = {
+    error: error.name || 'Error',
+    message: isProd ? 'Internal server error' : error.message,
+  };
+
+  // Only include stack trace in development
+  if (!isProd && error.stack) {
+    response.stack = error.stack;
+  }
+
+  // Include validation details if available
+  if (error.validation) {
+    response.details = error.validation;
+  }
+
+  return reply.code(statusCode).send(response);
 });
 
 // Metrics endpoint
@@ -171,20 +307,21 @@ fastify.get('/api/metrics', async (request, reply) => {
 // Configuration backup endpoint
 fastify.get('/api/config/backup', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const [providersData, modelsData, rulesData, authKeysData] = await Promise.all([
-      db.select().from(providers),
-      db.select().from(modelsTable),
-      db.select().from(cascadeRules),
-      db.select().from(authKeys)
+      db.select().from(providers).where(eq(providers.userId, userId)),
+      db.select().from(modelsTable).where(eq(modelsTable.userId, userId)),
+      db.select().from(cascadeRules).where(eq(cascadeRules.userId, userId)),
+      db.select().from(authKeys).where(eq(authKeys.userId, userId))
     ]);
 
     const backup = {
       timestamp: new Date().toISOString(),
-      version: '1.0.0',
+      version: '2.0.0',
       providers: providersData,
       models: modelsData,
       cascadeRules: rulesData,
-      authKeys: authKeysData.map((key: any) => ({ ...key, keyValue: '[REDACTED]' })) // Don't export actual keys
+      authKeys: authKeysData.map((key: any) => ({ ...key, keyValue: '[REDACTED]' }))
     };
 
     reply.header('Content-Disposition', `attachment; filename="cascade-backup-${new Date().toISOString().split('T')[0]}.json"`);
@@ -197,12 +334,13 @@ fastify.get('/api/config/backup', async (request, reply) => {
 // Providers CRUD routes
 fastify.get('/api/providers', async (request, reply) => {
   try {
-    const result = await db.select().from(providers);
+    const userId = getUserId(request);
+    const result = await db.select().from(providers).where(eq(providers.userId, userId));
     const mapped = result.map(p => ({
       id: p.id,
       name: p.name,
       baseURL: p.baseUrl,
-      apiKey: p.apiKey,
+      apiKey: '[REDACTED]',
       status: p.status,
       created: p.createdAt
     }));
@@ -214,50 +352,56 @@ fastify.get('/api/providers', async (request, reply) => {
 
 fastify.post('/api/providers', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const data = request.body as any;
+    const validation = validateProviderInput(data);
+    if (!validation.valid) {
+      return reply.code(400).send({ error: validation.error });
+    }
+    const sanitized = validation.sanitized;
 
-    // Check if provider exists
-    const existing = await db.select().from(providers).where(eq(providers.id, data.id)).limit(1);
+    const existing = await db.select().from(providers).where(eq(providers.id, sanitized.id || data.id)).where(eq(providers.userId, userId)).limit(1);
 
     if (existing.length > 0) {
-      // Update existing (allows partial updates)
       const updateData: any = {};
-      if (data.name !== undefined) updateData.name = data.name;
-      if (data.base_url !== undefined) updateData.baseUrl = data.base_url;
-      if (data.api_key !== undefined) updateData.apiKey = data.api_key;
-      if (data.status !== undefined) updateData.status = data.status;
+      if (sanitized.name !== undefined) updateData.name = sanitized.name;
+      if (sanitized.base_url !== undefined) updateData.baseUrl = sanitized.base_url;
+      if (sanitized.api_key !== undefined) updateData.apiKey = sanitized.api_key;
+      if (sanitized.status !== undefined) updateData.status = sanitized.status;
 
-      const result = await db.update(providers).set(updateData).where(eq(providers.id, data.id)).returning();
+      const result = await db.update(providers).set(updateData).where(eq(providers.id, existing[0].id)).returning();
 
       const mapped = {
         id: result[0].id,
         name: result[0].name,
         baseURL: result[0].baseUrl,
-        apiKey: result[0].apiKey,
+        apiKey: '[REDACTED]',
         status: result[0].status,
         created: result[0].createdAt
       };
+      await cascadeEngine.refreshCaches();
       return reply.send(mapped);
     } else {
-      // Create new provider
-      const newId = data.id || `provider-${Date.now()}`;
+      const newId = sanitized.id || `provider-${Date.now()}`;
       const result = await db.insert(providers).values({
         id: newId,
-        name: data.name || '',
-        baseUrl: data.base_url || '',
-        apiKey: data.api_key || '',
-        status: data.status || 'ready',
-        createdAt: data.created_at || new Date().toISOString()
+        userId,
+        name: sanitized.name || '',
+        baseUrl: sanitized.base_url || '',
+        apiKey: sanitized.api_key || '',
+        status: sanitized.status || 'ready',
+        createdAt: sanitized.created_at || new Date().toISOString()
       }).returning();
 
       const mapped = {
         id: result[0].id,
         name: result[0].name,
         baseURL: result[0].baseUrl,
-        apiKey: result[0].apiKey,
+        apiKey: '[REDACTED]',
         status: result[0].status,
         created: result[0].createdAt
       };
+      await cascadeEngine.refreshCaches();
       return reply.code(201).send(mapped);
     }
   } catch (error) {
@@ -269,18 +413,35 @@ fastify.post('/api/providers', async (request, reply) => {
 // Delete all providers (and their models due to cascade)
 fastify.delete('/api/providers', async (request, reply) => {
   try {
-    await db.delete(modelsTable);
-    await db.delete(providers);
+    const userId = getUserId(request);
+    await db.delete(modelsTable).where(eq(modelsTable.userId, userId));
+    await db.delete(providers).where(eq(providers.userId, userId));
+    await cascadeEngine.refreshCaches();
     return reply.send({ success: true, message: 'All providers and models deleted' });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to delete providers' });
   }
 });
 
+// Delete single provider (and its models)
+fastify.delete('/api/providers/:id', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+    await db.delete(modelsTable).where(eq(modelsTable.providerId, id)).where(eq(modelsTable.userId, userId));
+    await db.delete(providers).where(eq(providers.id, id)).where(eq(providers.userId, userId));
+    await cascadeEngine.refreshCaches();
+    return reply.send({ success: true, message: `Provider "${id}" and its models deleted` });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete provider' });
+  }
+});
+
 // Models CRUD routes
 fastify.get('/api/models', async (request, reply) => {
   try {
-    const result = await db.select().from(modelsTable);
+    const userId = getUserId(request);
+    const result = await db.select().from(modelsTable).where(eq(modelsTable.userId, userId));
     const mapped = result.map(m => ({
       id: m.id,
       name: m.modelId,
@@ -295,54 +456,48 @@ fastify.get('/api/models', async (request, reply) => {
 
 fastify.post('/api/models', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const data = request.body as any;
-    const modelData = {
-      id: data.id,
-      providerId: data.providerId,
-      modelId: data.modelId,
-      contextWindow: data.contextWindow,
-      rpmLimit: data.rpmLimit,
-      tpmLimit: data.tpmLimit,
-      dailyQuota: data.dailyQuota,
-      isFree: data.isFree,
-      costPerToken: data.costPerToken,
-      status: data.status,
-      createdAt: data.createdAt
-    };
+    const validation = validateModelInput(data);
+    if (!validation.valid) {
+      return reply.code(400).send({ error: validation.error });
+    }
+    const sanitized = validation.sanitized;
 
-    // Check if model exists
-    const existing = await db.select().from(models).where(eq(models.id, data.id)).limit(1);
+    const existing = await db.select().from(modelsTable).where(eq(modelsTable.id, sanitized.id)).where(eq(modelsTable.userId, userId)).limit(1);
 
     let result;
     if (existing.length > 0) {
-      // Update existing
       result = await db.update(modelsTable).set({
-        providerId: data.providerId,
-        modelId: data.modelId,
-        contextWindow: data.contextWindow,
-        rpmLimit: data.rpmLimit,
-        tpmLimit: data.tpmLimit,
-        dailyQuota: data.dailyQuota,
-        isFree: data.isFree,
-        costPerToken: data.costPerToken,
-        status: data.status
-      }).where(eq(models.id, data.id)).returning();
+        providerId: sanitized.providerId,
+        modelId: sanitized.modelId,
+        contextWindow: sanitized.contextWindow,
+        rpmLimit: sanitized.rpmLimit,
+        tpmLimit: sanitized.tpmLimit,
+        dailyQuota: sanitized.dailyQuota,
+        isFree: sanitized.isFree,
+        costPerToken: sanitized.costPerToken,
+        status: sanitized.status
+      }).where(eq(modelsTable.id, sanitized.id)).returning();
     } else {
-      // Insert new
-      result = await db.insert(modelsTable).values(modelData).returning();
+      result = await db.insert(modelsTable).values({ ...sanitized, userId }).returning();
     }
 
     return reply.send(result[0]);
   } catch (error) {
     console.error('Model save error:', error);
     return reply.code(500).send({ error: 'Failed to save model' });
+  } finally {
+    await cascadeEngine.refreshCaches();
   }
 });
 
 // Delete all models
 fastify.delete('/api/models', async (request, reply) => {
   try {
-    await db.delete(modelsTable);
+    const userId = getUserId(request);
+    await db.delete(modelsTable).where(eq(modelsTable.userId, userId));
+    await cascadeEngine.refreshCaches();
     return reply.send({ success: true, message: 'All models deleted' });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to delete models' });
@@ -352,8 +507,10 @@ fastify.delete('/api/models', async (request, reply) => {
 // Delete models by provider
 fastify.delete('/api/models/provider/:providerId', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const { providerId } = request.params as { providerId: string };
-    await db.delete(modelsTable).where(eq(modelsTable.providerId, providerId));
+    await db.delete(modelsTable).where(eq(modelsTable.providerId, providerId)).where(eq(modelsTable.userId, userId));
+    await cascadeEngine.refreshCaches();
     return reply.send({ success: true, message: `All models for provider ${providerId} deleted` });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to delete models' });
@@ -363,7 +520,8 @@ fastify.delete('/api/models/provider/:providerId', async (request, reply) => {
 // Cascade rules CRUD routes
 fastify.get('/api/cascade-rules', async (request, reply) => {
   try {
-    const result = await db.select().from(cascadeRules);
+    const userId = getUserId(request);
+    const result = await db.select().from(cascadeRules).where(eq(cascadeRules.userId, userId));
     return reply.send(result);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to fetch cascade rules' });
@@ -372,8 +530,14 @@ fastify.get('/api/cascade-rules', async (request, reply) => {
 
 fastify.post('/api/cascade-rules', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const data = request.body as any;
-    const result = await db.insert(cascadeRules).values(data).returning();
+    const validation = validateCascadeRuleInput(data);
+    if (!validation.valid) {
+      return reply.code(400).send({ error: validation.error });
+    }
+    const result = await db.insert(cascadeRules).values({ ...validation.sanitized, userId }).returning();
+    await cascadeEngine.refreshCaches();
     return reply.send(result[0]);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to create cascade rule' });
@@ -382,11 +546,13 @@ fastify.post('/api/cascade-rules', async (request, reply) => {
 
 fastify.delete('/api/cascade-rules', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const data = request.body as any;
     if (!data.id) {
       return reply.code(400).send({ error: 'Rule ID is required' });
     }
-    await db.delete(cascadeRules).where(eq(cascadeRules.id, data.id));
+    await db.delete(cascadeRules).where(eq(cascadeRules.id, data.id)).where(eq(cascadeRules.userId, userId));
+    await cascadeEngine.refreshCaches();
     return reply.send({ success: true });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to delete cascade rule' });
@@ -395,21 +561,27 @@ fastify.delete('/api/cascade-rules', async (request, reply) => {
 
 fastify.put('/api/cascade-rules', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const data = request.body as any;
     if (!data.id) {
       return reply.code(400).send({ error: 'Rule ID is required' });
     }
+    const validation = validateCascadeRuleInput(data);
+    if (!validation.valid) {
+      return reply.code(400).send({ error: validation.error });
+    }
     const updateData: any = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.priority !== undefined) updateData.priority = data.priority;
-    if (data.triggerType !== undefined) updateData.triggerType = data.triggerType;
-    if (data.triggerValue !== undefined) updateData.triggerValue = data.triggerValue;
-    if (data.modelOrder !== undefined) updateData.modelOrder = data.modelOrder;
-    if (data.wordLimit !== undefined) updateData.wordLimit = data.wordLimit;
-    if (data.enabled !== undefined) updateData.enabled = data.enabled;
+    if (validation.sanitized.name !== undefined) updateData.name = validation.sanitized.name;
+    if (validation.sanitized.priority !== undefined) updateData.priority = validation.sanitized.priority;
+    if (validation.sanitized.triggerType !== undefined) updateData.triggerType = validation.sanitized.triggerType;
+    if (validation.sanitized.triggerValue !== undefined) updateData.triggerValue = validation.sanitized.triggerValue;
+    if (validation.sanitized.modelOrder !== undefined) updateData.modelOrder = validation.sanitized.modelOrder;
+    if (validation.sanitized.wordLimit !== undefined) updateData.wordLimit = validation.sanitized.wordLimit;
+    if (validation.sanitized.enabled !== undefined) updateData.enabled = validation.sanitized.enabled;
     updateData.updatedAt = new Date().toISOString();
 
-    const result = await db.update(cascadeRules).set(updateData).where(eq(cascadeRules.id, data.id)).returning();
+    const result = await db.update(cascadeRules).set(updateData).where(eq(cascadeRules.id, data.id)).where(eq(cascadeRules.userId, userId)).returning();
+    await cascadeEngine.refreshCaches();
     return reply.send(result[0]);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to update cascade rule' });
@@ -417,36 +589,158 @@ fastify.put('/api/cascade-rules', async (request, reply) => {
 });
 
 // Auth keys CRUD routes
-fastify.get('/api/auth-keys', async (request, reply) => {
+fastify.get('/api/auth-keys', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
   try {
-    const result = await db.select().from(authKeys);
-    return reply.send(result);
+    const userId = getUserId(request);
+    const result = await db.select().from(authKeys).where(eq(authKeys.userId, userId));
+    const redacted = result.map(k => ({
+      ...k,
+      keyValue: '[REDACTED]'
+    }));
+    return reply.send(redacted);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to fetch auth keys' });
   }
 });
 
-fastify.post('/api/auth-keys', async (request, reply) => {
+fastify.post('/api/auth-keys', {
+  preHandler: [createEndpointRateLimiter(10, '1 minute')],
+}, async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const data = request.body as any;
-    const result = await db.insert(authKeys).values(data).returning();
-    return reply.send(result[0]);
+    const validation = validateAuthKeyInput(data);
+    if (!validation.valid) {
+      return reply.code(400).send({ error: validation.error });
+    }
+    const sanitized = validation.sanitized;
+
+    let keyValue = data.keyValue;
+    if (!keyValue) {
+      const randomBytes = new Uint8Array(32);
+      crypto.getRandomValues(randomBytes);
+      keyValue = 'cm-' + Array.from(randomBytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    const result = await db.insert(authKeys).values({
+      id: sanitized.id,
+      userId,
+      name: sanitized.name,
+      keyValue: keyValue,
+      allowedIps: sanitized.allowedIps || null,
+      permissions: sanitized.permissions || JSON.stringify(['read']),
+      enabled: sanitized.enabled !== undefined ? sanitized.enabled : true,
+    }).returning();
+
+    return reply.code(201).send({
+      ...result[0],
+      keyValue: keyValue,
+      warning: 'Save this key - it will not be shown again'
+    });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to create auth key' });
   }
 });
 
-// Model test endpoint - validates a model by sending a minimal request
-fastify.post('/api/models/test', async (request, reply) => {
+// Rotate an API key
+fastify.post('/api/auth-keys/:id/rotate', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
   try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+
+    const existing = await db.select().from(authKeys).where(eq(authKeys.id, id)).where(eq(authKeys.userId, userId)).limit(1);
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Auth key not found' });
+    }
+
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    const newKeyValue = 'cm-' + Array.from(randomBytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    const result = await db.update(authKeys)
+      .set({ keyValue: newKeyValue, updatedAt: new Date().toISOString() })
+      .where(eq(authKeys.id, id))
+      .returning();
+
+    return reply.send({
+      ...result[0],
+      keyValue: newKeyValue,
+      warning: 'Save this key - it will not be shown again. The old key is now invalid.'
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to rotate auth key' });
+  }
+});
+
+// Revoke (disable) an API key
+fastify.post('/api/auth-keys/:id/revoke', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+
+    const existing = await db.select().from(authKeys).where(eq(authKeys.id, id)).where(eq(authKeys.userId, userId)).limit(1);
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Auth key not found' });
+    }
+
+    const result = await db.update(authKeys)
+      .set({ enabled: false, updatedAt: new Date().toISOString() })
+      .where(eq(authKeys.id, id))
+      .returning();
+
+    return reply.send({ success: true, message: `Key "${result[0].name}" has been revoked`, key: result[0] });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to revoke auth key' });
+  }
+});
+
+// Delete an API key
+fastify.delete('/api/auth-keys/:id', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+
+    const existing = await db.select().from(authKeys).where(eq(authKeys.id, id)).where(eq(authKeys.userId, userId)).limit(1);
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Auth key not found' });
+    }
+
+    if (id === 'default-key') {
+      return reply.code(400).send({ error: 'Cannot delete default key. Use revoke instead.' });
+    }
+
+    await db.delete(authKeys).where(eq(authKeys.id, id));
+    return reply.send({ success: true, message: 'Auth key deleted' });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete auth key' });
+  }
+});
+
+// Model test endpoint
+fastify.post('/api/models/test', {
+  preHandler: [createEndpointRateLimiter(10, '1 minute')],
+}, async (request, reply) => {
+  try {
+    const userId = getUserId(request);
     const { providerId, modelId } = request.body as { providerId: string; modelId: string };
 
     if (!providerId || !modelId) {
       return reply.code(400).send({ error: 'providerId and modelId are required' });
     }
 
-    // Get provider from database
-    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).limit(1);
+    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).where(eq(providers.userId, userId)).limit(1);
     if (!provider.length) {
       return reply.code(404).send({ error: 'Provider not found' });
     }
@@ -517,10 +811,10 @@ fastify.post('/api/models/test', async (request, reply) => {
 // Model discovery routes
 fastify.get('/api/models/discover/:providerId', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const { providerId } = request.params as { providerId: string };
 
-    // Get provider from database
-    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).limit(1);
+    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).where(eq(providers.userId, userId)).limit(1);
     if (!provider.length) {
       return reply.code(404).send({ error: 'Provider not found' });
     }
@@ -539,19 +833,28 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
         });
 
         if (response.ok) {
-          const data = await response.json();
-          models = data.data.map((model: any) => ({
-            id: `${p.id}-${model.id.replace('/', '-')}`,
-            providerId: p.id,
-            modelId: model.id,
-            contextWindow: model.context_length || 4096,
-            rpmLimit: 50,
-            tpmLimit: 10000,
-            dailyQuota: 1000,
-            isFree: model.pricing?.prompt === '0' && model.pricing?.completion === '0',
-            costPerToken: model.pricing?.prompt ? parseFloat(model.pricing.prompt) : 0,
-            status: 'ready'
-          }));
+          const text = await response.text();
+          let data: any;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            return reply.code(502).send({ error: 'Failed to parse OpenRouter response', raw: text.slice(0, 500) });
+          }
+
+          if (data.data && Array.isArray(data.data)) {
+            models = data.data.map((model: any) => ({
+              id: `${p.id}-${model.id.replace('/', '-')}`,
+              providerId: p.id,
+              modelId: model.id,
+              contextWindow: model.context_length || 4096,
+              rpmLimit: 50,
+              tpmLimit: 10000,
+              dailyQuota: 1000,
+              isFree: model.pricing?.prompt === '0' && model.pricing?.completion === '0',
+              costPerToken: model.pricing?.prompt ? parseFloat(model.pricing.prompt) : 0,
+              status: 'ready'
+            }));
+          }
         }
       } else if (p.id === 'groq') {
         // Groq model discovery
@@ -684,8 +987,11 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
 });
 
 // Bulk model import route
-fastify.post('/api/models/bulk', async (request, reply) => {
+fastify.post('/api/models/bulk', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const { models } = request.body as { models: any[] };
 
     if (!Array.isArray(models)) {
@@ -697,16 +1003,15 @@ fastify.post('/api/models/bulk', async (request, reply) => {
 
     for (const modelData of models) {
       try {
-        // Validate required fields
         if (!modelData.providerId || !modelData.modelId) {
           errors.push({ model: modelData, error: 'Missing providerId or modelId' });
           continue;
         }
 
-        // Check if model already exists
         const existing = await db.select().from(modelsTable)
           .where(eq(modelsTable.providerId, modelData.providerId))
           .where(eq(modelsTable.modelId, modelData.modelId))
+          .where(eq(modelsTable.userId, userId))
           .limit(1);
 
         if (existing.length > 0) {
@@ -714,9 +1019,9 @@ fastify.post('/api/models/bulk', async (request, reply) => {
           continue;
         }
 
-        // Insert the model
         const result = await db.insert(modelsTable).values({
           id: modelData.id || `${modelData.providerId}-${modelData.modelId.replace(/[^a-zA-Z0-9-_]/g, '-')}`,
+          userId,
           providerId: modelData.providerId,
           modelId: modelData.modelId,
           contextWindow: modelData.contextWindow || 4096,
@@ -734,6 +1039,7 @@ fastify.post('/api/models/bulk', async (request, reply) => {
       }
     }
 
+    await cascadeEngine.refreshCaches();
     return reply.send({
       success: results.length,
       errors: errors.length,
@@ -748,10 +1054,10 @@ fastify.post('/api/models/bulk', async (request, reply) => {
 // Test specific provider/model route
 fastify.post('/api/test', async (request, reply) => {
   try {
+    const userId = getUserId(request);
     const data = request.body as any;
     const { providerId, modelId, messages } = data;
 
-    // Get provider and model from cache
     const provider = Array.from(providerCache.values()).find(p => p.id === providerId);
     if (!provider) {
       return reply.code(404).send({ error: 'Provider not found' });
@@ -762,16 +1068,15 @@ fastify.post('/api/test', async (request, reply) => {
       return reply.code(404).send({ error: 'Model not found' });
     }
 
-    // Import makeApiCall
     const { makeApiCall } = await import('./routes/api/cascade');
     const startTime = Date.now();
     const response = await makeApiCall(provider, messages, modelId);
     const responseTime = Date.now() - startTime;
 
-    // Log the test request
     try {
       await db.insert(requestLogs).values({
         id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId,
         providerId: provider.id,
         modelId: modelId,
         taskType: 'test',
@@ -787,11 +1092,12 @@ fastify.post('/api/test', async (request, reply) => {
     return reply.send(response);
   } catch (error: any) {
     console.error('Test API error:', error);
-    // Log the failed test request
     try {
+      const userId = getUserId(request);
       const data = request.body as any;
       await db.insert(requestLogs).values({
         id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId,
         providerId: data.providerId || 'unknown',
         modelId: data.modelId || 'unknown',
         taskType: 'test',
@@ -814,17 +1120,10 @@ fastify.post('/api/test', async (request, reply) => {
 // Analytics endpoint
 fastify.get('/api/analytics', async (request, reply) => {
   try {
-    // Get provider stats
-    const providerStats = await db.select({
-      providerId: requestLogs.providerId,
-      totalRequests: requestLogs.providerId,
-    }).from(requestLogs)
-    .groupBy(requestLogs.providerId);
+    const userId = getUserId(request);
 
-    // Get all logs for detailed stats
-    const allLogs = await db.select().from(requestLogs).orderBy(requestLogs.timestamp);
+    const allLogs = await db.select().from(requestLogs).where(eq(requestLogs.userId, userId)).orderBy(requestLogs.timestamp);
 
-    // Calculate stats per provider
     const statsMap = new Map();
     for (const log of allLogs) {
       const pid = log.providerId || 'unknown';
@@ -848,8 +1147,7 @@ fastify.get('/api/analytics', async (request, reply) => {
       stat.totalCostSaved += log.costSaved || 0;
     }
 
-    // Get provider names
-    const providersList = await db.select().from(providers);
+    const providersList = await db.select().from(providers).where(eq(providers.userId, userId));
     const providerNames = new Map(providersList.map(p => [p.id, p.name]));
 
     const providerStatsResult = Array.from(statsMap.values()).map(stat => ({
@@ -862,7 +1160,6 @@ fastify.get('/api/analytics', async (request, reply) => {
       totalTokens: stat.totalTokens
     }));
 
-    // Get hourly data (last 24 hours)
     const hourlyData = [];
     const now = new Date();
     for (let i = 23; i >= 0; i--) {
@@ -879,7 +1176,6 @@ fastify.get('/api/analytics', async (request, reply) => {
       });
     }
 
-    // Get recent logs
     const recentLogs = allLogs.slice(-50).reverse().map(log => ({
       id: log.id,
       timestamp: log.timestamp,
@@ -907,14 +1203,286 @@ fastify.get('/api/analytics', async (request, reply) => {
   }
 });
 
-// Register API routes (cascade routes keep their own validation hook)
+// User management endpoints
+fastify.post('/api/users/register', {
+  schema: {
+    tags: ['users'],
+    summary: 'Register a new user',
+    description: 'Creates a new user account with a unique API key. Each user has isolated providers, models, cascade rules, and logs.',
+    body: {
+      type: 'object',
+      required: ['username', 'password'],
+      properties: {
+        username: { type: 'string', minLength: 3, maxLength: 50, description: 'Unique username' },
+        email: { type: 'string', format: 'email', description: 'Optional email address' },
+        password: { type: 'string', minLength: 6, description: 'Password (min 6 characters)' }
+      }
+    },
+    response: {
+      201: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          user: { type: 'object', properties: { id: { type: 'string' }, username: { type: 'string' }, role: { type: 'string' } } },
+          apiKey: { type: 'string', description: 'Save this - will not be shown again' },
+          warning: { type: 'string' }
+        }
+      }
+    }
+  }
+}, async (request, reply) => {
+  try {
+    const { username, email, password } = request.body as any;
+
+    if (!username || !password) {
+      return reply.code(400).send({ error: 'Username and password are required' });
+    }
+
+    if (username.length < 3 || username.length > 50) {
+      return reply.code(400).send({ error: 'Username must be 3-50 characters' });
+    }
+
+    if (password.length < 6) {
+      return reply.code(400).send({ error: 'Password must be at least 6 characters' });
+    }
+
+    const existing = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    if (existing.length > 0) {
+      return reply.code(409).send({ error: 'Username already exists' });
+    }
+
+    const passwordHash = hashPassword(password);
+    const userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const result = await db.insert(users).values({
+      id: userId,
+      username,
+      email: email || null,
+      passwordHash,
+      role: 'user',
+      enabled: true
+    }).returning();
+
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    const apiKey = 'cm-' + Array.from(randomBytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    await db.insert(authKeys).values({
+      id: `key-${userId}`,
+      userId,
+      name: `${username}'s API Key`,
+      keyValue: apiKey,
+      permissions: JSON.stringify(['read', 'write', 'admin']),
+      enabled: true
+    });
+
+    return reply.code(201).send({
+      success: true,
+      user: { id: result[0].id, username: result[0].username, role: result[0].role },
+      apiKey,
+      warning: 'Save this API key - it will not be shown again'
+    });
+  } catch (error: any) {
+    console.error('User registration error:', error);
+    return reply.code(500).send({ error: 'Failed to register user', details: error.message });
+  }
+});
+
+fastify.post('/api/users/login', {
+  schema: {
+    tags: ['users'],
+    summary: 'Login and get API key',
+    description: 'Authenticate with username/password and retrieve your API key for subsequent requests.',
+    body: {
+      type: 'object',
+      required: ['username', 'password'],
+      properties: {
+        username: { type: 'string', description: 'Username' },
+        password: { type: 'string', description: 'Password' }
+      }
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          user: { type: 'object', properties: { id: { type: 'string' }, username: { type: 'string' }, role: { type: 'string' } } },
+          apiKey: { type: 'string', nullable: true }
+        }
+      }
+    }
+  }
+}, async (request, reply) => {
+  try {
+    const { username, password } = request.body as any;
+
+    if (!username || !password) {
+      return reply.code(400).send({ error: 'Username and password are required' });
+    }
+
+    const user = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    if (user.length === 0) {
+      return reply.code(401).send({ error: 'Invalid credentials' });
+    }
+
+    if (!verifyPassword(password, user[0].passwordHash)) {
+      return reply.code(401).send({ error: 'Invalid credentials' });
+    }
+
+    if (!user[0].enabled) {
+      return reply.code(403).send({ error: 'Account is disabled' });
+    }
+
+    const apiKey = await db.select().from(authKeys).where(eq(authKeys.userId, user[0].id)).where(eq(authKeys.enabled, true)).limit(1);
+
+    return reply.send({
+      success: true,
+      user: { id: user[0].id, username: user[0].username, role: user[0].role },
+      apiKey: apiKey.length > 0 ? apiKey[0].keyValue : null
+    });
+  } catch (error: any) {
+    console.error('Login error:', error);
+    return reply.code(500).send({ error: 'Login failed', details: error.message });
+  }
+});
+
+fastify.get('/api/users/me', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const user = await db.select({ id: users.id, username: users.username, email: users.email, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.id, userId)).limit(1);
+    if (user.length === 0) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    return reply.send(user[0]);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch user' });
+  }
+});
+
+fastify.post('/api/users/change-password', {
+  schema: {
+    tags: ['users'],
+    summary: 'Change your password',
+    description: 'Change the password for the currently authenticated user.',
+    body: {
+      type: 'object',
+      required: ['currentPassword', 'newPassword'],
+      properties: {
+        currentPassword: { type: 'string', description: 'Your current password' },
+        newPassword: { type: 'string', description: 'New password (min 6 characters)' }
+      }
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' }
+        }
+      }
+    }
+  }
+}, async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { currentPassword, newPassword } = request.body as any;
+
+    if (!currentPassword || !newPassword) {
+      return reply.code(400).send({ error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return reply.code(400).send({ error: 'New password must be at least 6 characters' });
+    }
+
+    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (user.length === 0) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    if (!verifyPassword(currentPassword, user[0].passwordHash)) {
+      return reply.code(401).send({ error: 'Current password is incorrect' });
+    }
+
+    const newHash = hashPassword(newPassword);
+    await db.update(users).set({ passwordHash: newHash, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
+
+    return reply.send({ success: true, message: 'Password updated successfully' });
+  } catch (error: any) {
+    console.error('Password change error:', error);
+    return reply.code(500).send({ error: 'Failed to change password', details: error.message });
+  }
+});
+
+// Cache refresh endpoint - reloads providers/models/rules from DB without restart
+fastify.post('/api/cache/refresh', async (request, reply) => {
+  try {
+    const result = await cascadeEngine.refreshCaches();
+    return reply.send({ success: true, message: 'Caches refreshed', ...result });
+  } catch (error) {
+    console.error('Cache refresh error:', error);
+    return reply.code(500).send({ error: 'Failed to refresh caches' });
+  }
+});
+
+// Delete logs endpoint
+fastify.delete('/api/logs', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { olderThan } = (request.query as any) || {};
+
+    if (olderThan) {
+      const cutoffDate = new Date(olderThan).toISOString();
+      const result = await db.delete(requestLogs).where(sql`${requestLogs.timestamp} < ${cutoffDate}`).where(eq(requestLogs.userId, userId)).run();
+      return reply.send({ success: true, message: `Logs older than ${olderThan} deleted`, count: result.changes });
+    }
+
+    const result = await db.delete(requestLogs).where(eq(requestLogs.userId, userId)).run();
+    return reply.send({ success: true, message: 'All logs deleted', count: result.changes });
+  } catch (error) {
+    console.error('Failed to delete logs:', error);
+    return reply.code(500).send({ error: 'Failed to delete logs', details: error.message });
+  }
+});
+
+// Per-endpoint rate limiting factory
+// Stricter limits for sensitive endpoints
+function createEndpointRateLimiter(max: number, timeWindow: string) {
+  return async function endpointRateLimit(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      await fastify.rateLimit({
+        max,
+        timeWindow,
+        keyGenerator: (req) => (req.headers['x-api-key'] as string) || req.ip || 'unknown',
+      });
+    } catch {
+      return reply.code(429).send({
+        error: 'Rate limit exceeded',
+        message: `Too many requests. Limit: ${max} per ${timeWindow}`,
+      });
+    }
+  };
+}
+
+// Register API routes
 fastify.register(async (fastify) => {
-  // POST route gets additional validation
   fastify.post('/api/cascade', {
-    preHandler: [validateRequest]
+    ...cascadeSchema,
+    preHandler: [
+      createEndpointRateLimiter(30, '1 minute'),
+      validateRequest,
+    ],
   }, cascadeRoutes.POST);
 
-  fastify.get('/api/cascade', cascadeRoutes.GET);
+  fastify.get('/api/cascade', {
+    schema: {
+      tags: ['cascade'],
+      summary: 'Get cascade engine status',
+      description: 'Returns the current status and available endpoints for the cascade engine.'
+    }
+  }, cascadeRoutes.GET);
 }, { prefix: '' });
 
 // Catch-all route to serve Next.js app for client-side routing

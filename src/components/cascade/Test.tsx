@@ -93,16 +93,21 @@ export function Test() {
 
     try {
       const endpoint = bypassCascade ? '/api/test' : '/api/cascade';
-      const body = bypassCascade
-        ? {
-            providerId: selectedProvider,
-            modelId: selectedModel,
-            messages: [{ role: 'user', content: message }]
-          }
-        : {
-            model: selectedModel,
-            messages: [{ role: 'user', content: message }]
-          };
+
+      let body: any;
+      if (bypassCascade) {
+        const model = models.find(m => m.id === selectedModel);
+        body = {
+          providerId: selectedProvider,
+          modelId: model?.modelId || selectedModel,
+          messages: [{ role: 'user', content: message }]
+        };
+      } else {
+        body = {
+          model: selectedModel,
+          messages: [{ role: 'user', content: message }]
+        };
+      }
 
        const res = await fetch(`${endpoint}`, {
          method: 'POST',

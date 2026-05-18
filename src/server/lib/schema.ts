@@ -1,8 +1,21 @@
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 
+// Users table
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  email: text('email'),
+  passwordHash: text('password_hash').notNull(),
+  role: text('role').default('user'), // 'admin', 'user'
+  enabled: integer('enabled', { mode: 'boolean' }).default(true),
+  createdAt: text('created_at').default('CURRENT_TIMESTAMP'),
+  updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
+});
+
 // Providers table
 export const providers = sqliteTable('providers', {
   id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   baseUrl: text('base_url').notNull(),
   apiKey: text('api_key').notNull(),
@@ -14,6 +27,7 @@ export const providers = sqliteTable('providers', {
 // Models table
 export const models = sqliteTable('models', {
   id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   providerId: text('provider_id').notNull().references(() => providers.id, { onDelete: 'cascade' }),
   modelId: text('model_id').notNull(),
   contextWindow: integer('context_window').notNull(),
@@ -30,12 +44,13 @@ export const models = sqliteTable('models', {
 // Cascade rules table
 export const cascadeRules = sqliteTable('cascade_rules', {
   id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   priority: integer('priority').notNull(),
-  triggerType: text('trigger_type').notNull(), // 'task_type', 'keyword', 'header', 'custom'
+  triggerType: text('trigger_type').notNull(),
   triggerValue: text('trigger_value').notNull(),
-  modelOrder: text('model_order').notNull(), // JSON array of model IDs
-  wordLimit: integer('word_limit').default(5), // Number of words to check for keyword matching
+  modelOrder: text('model_order').notNull(),
+  wordLimit: integer('word_limit').default(5),
   enabled: integer('enabled', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default('CURRENT_TIMESTAMP'),
   updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
@@ -44,10 +59,11 @@ export const cascadeRules = sqliteTable('cascade_rules', {
 // Auth keys table
 export const authKeys = sqliteTable('auth_keys', {
   id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   keyValue: text('key_value').notNull().unique(),
-  allowedIps: text('allowed_ips'), // JSON array of allowed IP addresses
-  permissions: text('permissions').default('["read","write"]'), // JSON array of permissions
+  allowedIps: text('allowed_ips'),
+  permissions: text('permissions').default('["read","write"]'),
   enabled: integer('enabled', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default('CURRENT_TIMESTAMP'),
   updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
@@ -56,13 +72,14 @@ export const authKeys = sqliteTable('auth_keys', {
 // Request logs table
 export const requestLogs = sqliteTable('request_logs', {
   id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   timestamp: text('timestamp').default('CURRENT_TIMESTAMP'),
   providerId: text('provider_id'),
   modelId: text('model_id'),
   taskType: text('task_type'),
   tokensUsed: integer('tokens_used').default(0),
   responseTimeMs: integer('response_time_ms'),
-  status: text('status'), // 'success', 'error', 'rate_limit'
+  status: text('status'),
   errorMessage: text('error_message'),
   costSaved: real('cost_saved').default(0),
   clientIp: text('client_ip'),

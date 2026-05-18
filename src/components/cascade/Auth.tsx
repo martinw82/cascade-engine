@@ -28,6 +28,15 @@ export function Auth() {
     enabled: true
   });
 
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{ username: string; role: string } | null>(null);
+
   // Load auth keys from API on mount and when current API key changes
   useEffect(() => {
     const fetchAuthKeys = async () => {
@@ -38,10 +47,9 @@ export function Auth() {
             'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
           }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
-          // Convert database format to our local format
           const formattedKeys = data.map((key: any) => ({
             id: key.id,
             name: key.name,
@@ -54,7 +62,6 @@ export function Auth() {
           setAuthKeys(formattedKeys);
         } else {
           console.error('Failed to fetch auth keys');
-          // Fallback to default key if API fails
           setAuthKeys([{
             id: 'default-key',
             name: 'Default Access Key',
@@ -67,7 +74,6 @@ export function Auth() {
         }
       } catch (error) {
         console.error('Error fetching auth keys:', error);
-        // Fallback to default key
         setAuthKeys([{
           id: 'default-key',
           name: 'Default Access Key',
@@ -82,8 +88,25 @@ export function Auth() {
       }
     };
 
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch('/api/users/me', {
+          headers: {
+            'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserInfo(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+      }
+    };
+
     fetchAuthKeys();
-  }, [currentApiKey]); // Re-fetch when API key changes
+    fetchUserInfo();
+  }, [currentApiKey]);
 
   const resetForm = () => {
     setFormData({
@@ -265,6 +288,50 @@ export function Auth() {
     setFormData(prev => ({ ...prev, keyValue: newKey }));
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMessage(null);
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'New passwords do not match' });
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPasswordMessage({ type: 'success', text: 'Password updated successfully' });
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setTimeout(() => {
+          setShowPasswordChange(false);
+          setPasswordMessage(null);
+        }, 2000);
+      } else {
+        setPasswordMessage({ type: 'error', text: data.error || 'Failed to change password' });
+      }
+    } catch (error) {
+      setPasswordMessage({ type: 'error', text: 'Failed to change password' });
+    }
+  };
+
   const permissions = ['read', 'write', 'admin'];
 
   return (
@@ -417,6 +484,90 @@ export function Auth() {
           </form>
         </div>
       )}
+
+      {/* User Profile & Password Change */}
+      <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">Account</h3>
+            {userInfo && (
+              <p className="text-sm text-neutral-400">
+                Logged in as <span className="text-white font-medium">{userInfo.username}</span>
+                {userInfo.role && <span className="ml-2 px-2 py-0.5 bg-blue-900/30 text-blue-400 rounded text-xs capitalize">{userInfo.role}</span>}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => { setShowPasswordChange(!showPasswordChange); setPasswordMessage(null); }}
+            className="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-sm rounded transition-colors"
+          >
+            {showPasswordChange ? 'Cancel' : 'Change Password'}
+          </button>
+        </div>
+
+        {showPasswordChange && (
+          <form onSubmit={handleChangePassword} className="space-y-4 mt-4 pt-4 border-t border-neutral-700">
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-2">
+                Current Password
+              </label>
+              <input
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter current password"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Min 6 characters"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Re-enter new password"
+                  required
+                />
+              </div>
+            </div>
+
+            {passwordMessage && (
+              <div className={`px-3 py-2 rounded text-sm ${
+                passwordMessage.type === 'success'
+                  ? 'bg-green-900/30 text-green-400'
+                  : 'bg-red-900/30 text-red-400'
+              }`}>
+                {passwordMessage.text}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors"
+            >
+              Update Password
+            </button>
+          </form>
+        )}
+      </div>
 
       {/* Auth Keys List */}
       <div className="grid gap-4">

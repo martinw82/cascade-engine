@@ -1,21 +1,25 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../lib/db';
-import { eq } from 'drizzle-orm';
-import { authKeys } from '../lib/schema';
+import { eq, and } from 'drizzle-orm';
+import { authKeys, users } from '../lib/schema';
 
 export async function authenticateRequest(request: FastifyRequest, reply: FastifyReply) {
-  // Skip authentication for health check
   if (request.url === '/health') {
     return;
   }
 
-  // Only trust x-internal from localhost
   const isLocalhost = request.ip === '127.0.0.1' || request.ip === '::1' || request.ip === '::ffff:127.0.0.1';
   if (request.headers['x-internal'] && isLocalhost) {
+    (request as any).auth = {
+      keyId: 'internal',
+      userId: 'default-user',
+      permissions: ['read', 'write', 'admin'],
+      clientIp: '127.0.0.1',
+      isInternal: true
+    };
     return;
   }
 
-  // Get API key from header
   const apiKey = request.headers['x-api-key'] as string;
 
   if (!apiKey) {
@@ -26,7 +30,6 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
   }
 
   try {
-    // Find the auth key in database
     const authKey = await db
       .select()
       .from(authKeys)
@@ -42,7 +45,6 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
 
     const key = authKey[0];
 
-    // Check if key is enabled
     if (!key.enabled) {
       return reply.code(403).send({
         error: 'Access denied',
@@ -50,7 +52,20 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
       });
     }
 
-    // Check IP restrictions if configured
+    // Get user info
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, key.userId))
+      .limit(1);
+
+    if (user.length === 0 || !user[0].enabled) {
+      return reply.code(403).send({
+        error: 'Access denied',
+        message: 'User account is disabled'
+      });
+    }
+
     if (key.allowedIps) {
       const allowedIps = JSON.parse(key.allowedIps);
       const clientIp = getClientIp(request);
@@ -63,9 +78,11 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
       }
     }
 
-    // Add authentication info to request
     (request as any).auth = {
       keyId: key.id,
+      userId: key.userId,
+      username: user[0].username,
+      role: user[0].role,
       permissions: JSON.parse(key.permissions || '["read"]'),
       clientIp: getClientIp(request)
     };
@@ -79,13 +96,22 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
   }
 }
 
+// Helper to get current user ID from request
+export function getUserId(request: FastifyRequest): string {
+  return (request as any).auth?.userId || 'default-user';
+}
+
+// Helper to check if user has required permission
+export function hasPermission(request: FastifyRequest, permission: string): boolean {
+  const permissions = (request as any).auth?.permissions || [];
+  return permissions.includes(permission) || permissions.includes('admin');
+}
+
 function getClientIp(request: FastifyRequest): string {
-  // Try various headers for client IP
   const forwardedFor = request.headers['x-forwarded-for'] as string;
   const realIp = request.headers['x-real-ip'] as string;
   const cfConnectingIp = request.headers['cf-connecting-ip'] as string;
 
-  // Use the first IP from x-forwarded-for if multiple
   if (forwardedFor) {
     return forwardedFor.split(',')[0].trim();
   }
@@ -98,14 +124,12 @@ function getClientIp(request: FastifyRequest): string {
     return cfConnectingIp;
   }
 
-  // Fallback to connection remote address
   return (request as any).ip || '127.0.0.1';
 }
 
 function isIpAllowed(clientIp: string, allowedIps: string[]): boolean {
   for (const allowedIp of allowedIps) {
     if (allowedIp.includes('/')) {
-      // CIDR notation - simple check (could be enhanced with proper CIDR library)
       const [network, mask] = allowedIp.split('/');
       const maskNum = parseInt(mask);
       if (clientIp.startsWith(network.split('.').slice(0, Math.ceil(maskNum/8)).join('.'))) {

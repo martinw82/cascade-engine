@@ -494,7 +494,8 @@ export class CascadeEngine {
   // Handle spillover logic when a model fails
   private async tryProviderWithSpillover(
     request: CascadeRequest,
-    excludedModels: Set<string> = new Set()
+    excludedModels: Set<string> = new Set(),
+    metadata?: { clientIp?: string; userAgent?: string; userId?: string }
   ): Promise<any> {
     const rule = this.detectTaskType(request);
     if (!rule) {
@@ -530,25 +531,21 @@ export class CascadeEngine {
 
       // Log the request
       const responseTime = Date.now() - startTime;
-      await this.logRequest(request, provider, response, 'success', responseTime, undefined, model.id);
+      await this.logRequest(request, provider, response, 'success', responseTime, undefined, model.id, metadata?.clientIp, metadata?.userAgent, metadata?.userId);
 
       return response;
     } catch (error: any) {
       console.log(`API call failed for ${provider.name} (${model.modelId}): ${error.message}, details: ${error.details}`);
 
-      // Mark model as having an issue (only for server errors or timeouts)
       if (error.statusCode === 429 || error.statusCode === 503) {
         model.status = 'cooldown';
-        // In reality, we'd set a timer to reset this after a cooldown period
       } else if (error.statusCode >= 500 || error.name === 'AbortError') {
-        // Server errors or timeouts disable the model
         model.status = 'errored';
       }
-      // 4xx errors (client issues like wrong model/key) don't disable the model
 
       // Log the failed request
       const responseTime = Date.now() - startTime;
-      await this.logRequest(request, provider, null, 'error', responseTime, error.message, model.id);
+      await this.logRequest(request, provider, null, 'error', responseTime, error.message, model.id, metadata?.clientIp, metadata?.userAgent, metadata?.userId);
 
       // Add to excluded models and try another
       excludedModels.add(model.id);
@@ -559,7 +556,7 @@ export class CascadeEngine {
       }
 
       // Try another model
-      return this.tryProviderWithSpillover(request, excludedModels);
+      return this.tryProviderWithSpillover(request, excludedModels, metadata);
     }
   }
 
@@ -570,16 +567,20 @@ export class CascadeEngine {
     status: string,
     responseTime: number,
     errorMessage?: string,
-    modelId?: string
+    modelId?: string,
+    clientIp?: string,
+    userAgent?: string,
+    userId?: string
   ) {
     if (!provider) return;
 
     try {
       const tokensUsed = response?.usage?.total_tokens || 0;
-      const costSaved = tokensUsed * 0.0001; // Simplified cost calculation
+      const costSaved = tokensUsed * 0.0001;
 
       await db.insert(requestLogs).values({
         id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: userId || 'default-user',
         providerId: provider.id,
         modelId: modelId || request.model || 'unknown',
         taskType: request.taskType || 'general',
@@ -587,7 +588,9 @@ export class CascadeEngine {
         responseTimeMs: responseTime,
         status,
         errorMessage,
-        costSaved
+        costSaved,
+        clientIp,
+        userAgent
       });
     } catch (error) {
       console.error('Failed to log request:', error);
@@ -595,13 +598,10 @@ export class CascadeEngine {
   }
 
   // Main handler for cascade requests
-  async handleRequest(request: CascadeRequest): Promise<any> {
-    // Reset counters periodically
+  async handleRequest(request: CascadeRequest, metadata?: { clientIp?: string; userAgent?: string; userId?: string }): Promise<any> {
     this.resetCounters();
 
-    // Check global concurrency limit
     if (this.activeRequests >= this.globalConcurrency) {
-      // Queue the request
       return new Promise((resolve, reject) => {
         this.requestQueue.push({
           resolve,
@@ -615,11 +615,21 @@ export class CascadeEngine {
     this.activeRequests++;
 
     try {
-      const result = await this.tryProviderWithSpillover(request);
+      const result = await this.tryProviderWithSpillover(request, new Set(), metadata);
       return result;
     } finally {
       this.activeRequests--;
     }
+  }
+
+  // Public method to refresh all caches from database
+  async refreshCaches() {
+    await this.initializeCaches();
+    return {
+      providers: this.providerCache.size,
+      models: this.modelCache.size,
+      rules: this.rulesCache.length
+    };
   }
 }
 
@@ -632,28 +642,85 @@ export const modelCache = cascadeEngine['modelCache'];
 export async function POST(request: FastifyRequest, reply: FastifyReply) {
   try {
     const body = request.body as CascadeRequest;
-    
-    // Validate required fields
+
     if (!body.messages || !Array.isArray(body.messages)) {
       return reply.code(400).send({ error: 'Invalid request: messages array required' });
     }
 
-    // Process through cascade engine
-    const result = await cascadeEngine.handleRequest(body);
-    
+    const userId = (request as any).auth?.userId || 'default-user';
+
+    const result = await cascadeEngine.handleRequest(body, {
+      clientIp: getClientIp(request),
+      userAgent: (request.headers['user-agent'] as string) || '',
+      userId
+    });
+
     return reply.send(result);
   } catch (error: any) {
     console.error('Cascade engine error:', error);
-    
-    // Return appropriate error response with details
+
     const statusCode = error.statusCode || 500;
     const message = error.message || 'Internal server error';
-    
+
     return reply.code(statusCode).send({
       error: message,
       details: error.details || ''
     });
   }
+}
+
+// Add schema to the route registration in index.ts
+export const cascadeSchema = {
+  schema: {
+    tags: ['cascade'],
+    summary: 'Send LLM request through cascade engine',
+    description: 'Routes your request through configured cascade rules. Automatically selects the best model based on task type/keywords, with automatic failover to backup models if the primary fails.',
+    body: {
+      type: 'object',
+      required: ['messages'],
+      properties: {
+        messages: {
+          type: 'array',
+          description: 'OpenAI-compatible messages array',
+          items: {
+            type: 'object',
+            properties: {
+              role: { type: 'string', enum: ['system', 'user', 'assistant'] },
+              content: { type: 'string' }
+            },
+            required: ['role', 'content']
+          }
+        },
+        taskType: { type: 'string', description: 'Optional task type for explicit rule matching (e.g., "coding", "summarization")' },
+        model: { type: 'string', description: 'Optional specific model to use (bypasses cascade rules)' }
+      }
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          choices: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                message: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }
+              }
+            }
+          },
+          usage: { type: 'object' }
+        }
+      }
+    }
+  }
+};
+
+function getClientIp(request: FastifyRequest): string {
+  const forwardedFor = request.headers['x-forwarded-for'] as string;
+  if (forwardedFor) return forwardedFor.split(',')[0].trim();
+  const realIp = request.headers['x-real-ip'] as string;
+  if (realIp) return realIp;
+  return (request as any).ip || 'unknown';
 }
 
 // GET handler for testing/status

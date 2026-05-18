@@ -48,6 +48,7 @@ export function Analytics() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<'overview' | 'logs'>('overview');
+  const [clearingLogs, setClearingLogs] = useState(false);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -74,7 +75,31 @@ export function Analytics() {
     return () => clearInterval(interval);
   }, [apiKey]);
 
-  if (loading) {
+  const clearLogs = async () => {
+    if (!confirm('Are you sure you want to delete ALL request logs? This cannot be undone.')) return;
+    setClearingLogs(true);
+    try {
+      const response = await fetch('/api/logs', {
+        method: 'DELETE',
+        headers: {
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+        }
+      });
+      if (response.ok) {
+        setData(prev => prev ? { ...prev, recentLogs: [], totalRequests: 0, totalSuccesses: 0, totalErrors: 0 } : null);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to clear logs: ' + (errorData.error || response.statusText));
+      }
+    } catch (error) {
+      console.error('Failed to clear logs:', error);
+      alert('Failed to clear logs');
+    } finally {
+      setClearingLogs(false);
+    }
+  };
+
+  if (!data) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-neutral-400">Loading analytics...</div>
@@ -82,7 +107,7 @@ export function Analytics() {
     );
   }
 
-  if (!data || data.providerStats.length === 0) {
+  if (data.totalRequests === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -93,7 +118,7 @@ export function Analytics() {
         </div>
         <div className="bg-neutral-800 rounded-lg p-12 text-center">
           <div className="text-6xl mb-4">📊</div>
-          <h3 className="text-xl font-semibold mb-2">No Data Yet</h3>
+          <h3 className="text-xl font-semibold mb-2">No Request Data Yet</h3>
           <p className="text-neutral-400 mb-4">
             Run some test requests or send API calls to see analytics here.
           </p>
@@ -139,6 +164,13 @@ export function Analytics() {
         </div>
         <div className="flex space-x-2">
           <button
+            onClick={clearLogs}
+            disabled={clearingLogs || !data || data.totalRequests === 0}
+            className="px-3 py-1 text-sm rounded bg-red-600 hover:bg-red-500 disabled:bg-neutral-600 disabled:opacity-50 text-white"
+          >
+            {clearingLogs ? 'Clearing...' : 'Clear Logs'}
+          </button>
+          <button
             onClick={() => setActiveView('overview')}
             className={`px-3 py-1 text-sm rounded ${
               activeView === 'overview'
@@ -156,7 +188,7 @@ export function Analytics() {
                 : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-300'
             }`}
           >
-            Request Logs ({data.recentLogs.length})
+            Request Logs ({data?.recentLogs.length || 0})
           </button>
         </div>
       </div>

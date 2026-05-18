@@ -11,13 +11,27 @@ sqlite.exec("PRAGMA journal_mode = WAL");
 // Create Drizzle instance
 export const db = drizzle(sqlite, { schema });
 
-// Run migrations (in a real app, you'd use proper migrations)
-// For now, we'll create tables manually
+// Run migrations
 function initializeDatabase() {
+  // Create users table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      email TEXT,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'user',
+      enabled INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // Create providers table
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS providers (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       base_url TEXT NOT NULL,
       api_key TEXT NOT NULL,
@@ -31,18 +45,18 @@ function initializeDatabase() {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS models (
       id TEXT PRIMARY KEY,
-      provider_id TEXT NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider_id TEXT NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
       model_id TEXT NOT NULL,
       context_window INTEGER NOT NULL,
       rpm_limit INTEGER NOT NULL,
       tpm_limit INTEGER NOT NULL,
       daily_quota INTEGER NOT NULL,
-      is_free BOOLEAN DEFAULT 1,
+      is_free INTEGER DEFAULT 1,
       cost_per_token REAL DEFAULT 0,
       status TEXT DEFAULT 'ready',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
@@ -50,73 +64,29 @@ function initializeDatabase() {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS cascade_rules (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       priority INTEGER NOT NULL,
-      trigger_type TEXT NOT NULL, -- 'task_type', 'keyword', 'header', 'custom'
+      trigger_type TEXT NOT NULL,
       trigger_value TEXT NOT NULL,
-      model_order TEXT NOT NULL, -- JSON array of model IDs
+      model_order TEXT NOT NULL,
       word_limit INTEGER DEFAULT 5,
-      enabled BOOLEAN DEFAULT 1,
+      enabled INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
-  // Add word_limit column if it doesn't exist (for existing databases)
-  try {
-    sqlite.exec(`ALTER TABLE cascade_rules ADD COLUMN word_limit INTEGER DEFAULT 5;`);
-  } catch (e) {
-    // Column might already exist, ignore
-  }
-
-  // Rename provider_order to model_order for existing databases
-  try {
-    sqlite.exec(`ALTER TABLE cascade_rules RENAME COLUMN provider_order TO model_order;`);
-  } catch (e) {
-    // Column might already be renamed or not exist, ignore
-  }
-
-  // Migrate existing provider_order data to model_order (convert provider IDs to model IDs)
-  try {
-    // Get all existing cascade rules
-    const existingRules = sqlite.prepare('SELECT id, model_order FROM cascade_rules').all() as Array<{id: string, model_order: string}>;
-
-    for (const rule of existingRules) {
-      try {
-        const providerOrder = JSON.parse(rule.model_order);
-        if (Array.isArray(providerOrder) && providerOrder.length > 0) {
-          // Convert provider IDs to model IDs (this is a simple mapping for common cases)
-          const modelOrder = providerOrder.map((providerId: string) => {
-            switch (providerId) {
-              case 'groq': return 'llama-3.1-8b-instant';
-              case 'nvidia-nim': return 'llama-3.1-70b';
-              case 'openrouter': return 'gemini-1.5-flash';
-              default: return providerId; // Keep as-is if not recognized
-            }
-          });
-
-          // Update the rule with new model order
-          sqlite.prepare('UPDATE cascade_rules SET model_order = ? WHERE id = ?').run(JSON.stringify(modelOrder), rule.id);
-        }
-      } catch (e) {
-        // Skip if parsing fails
-        console.log(`Skipping migration for rule ${rule.id}: ${e.message}`);
-      }
-    }
-  } catch (e) {
-    // Migration failed, but don't crash - user can recreate rules if needed
-    console.log('Data migration warning:', e.message);
-  }
-
   // Create auth_keys table
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS auth_keys (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       key_value TEXT NOT NULL UNIQUE,
-      allowed_ips TEXT, -- JSON array of allowed IP addresses
-      permissions TEXT DEFAULT '["read","write"]', -- JSON array of permissions
-      enabled BOOLEAN DEFAULT 1,
+      allowed_ips TEXT,
+      permissions TEXT DEFAULT '["read","write"]',
+      enabled INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -126,13 +96,14 @@ function initializeDatabase() {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS request_logs (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
       provider_id TEXT,
       model_id TEXT,
       task_type TEXT,
       tokens_used INTEGER DEFAULT 0,
       response_time_ms INTEGER,
-      status TEXT, -- 'success', 'error', 'rate_limit'
+      status TEXT,
       error_message TEXT,
       cost_saved REAL DEFAULT 0,
       client_ip TEXT,
@@ -140,14 +111,64 @@ function initializeDatabase() {
     );
   `);
 
+  // Migrate existing tables: add user_id column if not present
+  migrateAddUserIdColumn('providers', 'user_id');
+  migrateAddUserIdColumn('models', 'user_id');
+  migrateAddUserIdColumn('cascade_rules', 'user_id');
+  migrateAddUserIdColumn('auth_keys', 'user_id');
+  migrateAddUserIdColumn('request_logs', 'user_id');
+
+  // Assign existing data to default user if user_id is NULL
+  assignDataToDefaultUser();
+
   // Insert default data
   initializeDefaultData();
 }
 
+function migrateAddUserIdColumn(tableName: string, columnName: string) {
+  try {
+    sqlite.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} TEXT;`);
+  } catch (e) {
+    // Column might already exist, ignore
+  }
+}
+
+function assignDataToDefaultUser() {
+  const defaultUser = sqlite.prepare("SELECT id FROM users WHERE id = 'default-user'").get() as { id: string } | undefined;
+  if (!defaultUser) return;
+
+  const defaultUserId = defaultUser.id;
+
+  try {
+    sqlite.run(`UPDATE providers SET user_id = ? WHERE user_id IS NULL`, defaultUserId);
+    sqlite.run(`UPDATE models SET user_id = ? WHERE user_id IS NULL`, defaultUserId);
+    sqlite.run(`UPDATE cascade_rules SET user_id = ? WHERE user_id IS NULL`, defaultUserId);
+    sqlite.run(`UPDATE auth_keys SET user_id = ? WHERE user_id IS NULL`, defaultUserId);
+    sqlite.run(`UPDATE request_logs SET user_id = ? WHERE user_id IS NULL`, defaultUserId);
+  } catch (e) {
+    console.log('Migration warning: could not assign data to default user:', e.message);
+  }
+}
+
 function initializeDefaultData() {
-  // Check if we already have data
-  const providerCount = sqlite.prepare('SELECT COUNT(*) as count FROM providers').get() as { count: number };
-  if (providerCount.count > 0) return;
+  // Create settings table to track if defaults have been seeded
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+
+  // Check if we've seeded before
+  const seeded = sqlite.prepare("SELECT value FROM settings WHERE key = 'defaults_seeded'").get() as { value: string } | undefined;
+  if (seeded && seeded.value === 'true') return;
+
+  // Create default user
+  const defaultPasswordHash = hashPassword('admin123');
+  sqlite.prepare(`
+    INSERT OR IGNORE INTO users (id, username, email, password_hash, role, enabled)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run('default-user', 'admin', 'admin@localhost', defaultPasswordHash, 'admin', 1);
 
   // Insert default providers
   const providers = [
@@ -175,12 +196,12 @@ function initializeDefaultData() {
   ];
 
   const insertProvider = sqlite.prepare(`
-    INSERT INTO providers (id, name, base_url, api_key, status)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT OR IGNORE INTO providers (id, user_id, name, base_url, api_key, status)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
 
   for (const provider of providers) {
-    insertProvider.run(provider.id, provider.name, provider.base_url, provider.api_key, provider.status);
+    insertProvider.run(provider.id, 'default-user', provider.name, provider.base_url, provider.api_key, provider.status);
   }
 
   // Insert default models
@@ -224,13 +245,14 @@ function initializeDefaultData() {
   ];
 
   const insertModel = sqlite.prepare(`
-    INSERT INTO models (id, provider_id, model_id, context_window, rpm_limit, tpm_limit, daily_quota, is_free, cost_per_token, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR IGNORE INTO models (id, user_id, provider_id, model_id, context_window, rpm_limit, tpm_limit, daily_quota, is_free, cost_per_token, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const model of models) {
     insertModel.run(
       model.id,
+      'default-user',
       model.provider_id,
       model.model_id,
       model.context_window,
@@ -243,7 +265,7 @@ function initializeDefaultData() {
     );
   }
 
-  // Insert default cascade rules (only if none exist)
+  // Insert default cascade rules
   const ruleCount = sqlite.prepare('SELECT COUNT(*) as count FROM cascade_rules').get() as { count: number };
   if (ruleCount.count === 0) {
     const cascadeRules = [
@@ -280,13 +302,14 @@ function initializeDefaultData() {
     ];
 
     const insertRule = sqlite.prepare(`
-      INSERT INTO cascade_rules (id, name, priority, trigger_type, trigger_value, model_order, word_limit, enabled)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR IGNORE INTO cascade_rules (id, user_id, name, priority, trigger_type, trigger_value, model_order, word_limit, enabled)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const rule of cascadeRules) {
       insertRule.run(
         rule.id,
+        'default-user',
         rule.name,
         rule.priority,
         rule.trigger_type,
@@ -298,15 +321,14 @@ function initializeDefaultData() {
     }
   }
 
-  // Insert default auth key (only if none exist)
+  // Insert default auth key
   const authKeyCount = sqlite.prepare('SELECT COUNT(*) as count FROM auth_keys').get() as { count: number };
   if (authKeyCount.count === 0) {
     const insertAuthKey = sqlite.prepare(`
-      INSERT INTO auth_keys (id, name, key_value, allowed_ips, permissions, enabled)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT OR IGNORE INTO auth_keys (id, user_id, name, key_value, allowed_ips, permissions, enabled)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-    // Generate a cryptographically secure random key
     const randomBytes = new Uint8Array(32);
     crypto.getRandomValues(randomBytes);
     const defaultApiKey = 'cm-' + Array.from(randomBytes)
@@ -319,6 +341,7 @@ function initializeDefaultData() {
 
     insertAuthKey.run(
       'default-key',
+      'default-user',
       'Default Access Key',
       defaultApiKey,
       null,
@@ -326,6 +349,23 @@ function initializeDefaultData() {
       1
     );
   }
+
+  // Mark defaults as seeded
+  sqlite.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('defaults_seeded', 'true')").run();
+}
+
+// Simple password hashing using SHA-256 (for production, use bcrypt)
+export function hashPassword(password: string): string {
+  const salt = 'cascade-engine-salt-2026';
+  const data = new TextEncoder().encode(salt + password);
+  // Use Node.js crypto module for synchronous hashing
+  const { createHash } = require('crypto');
+  return createHash('sha256').update(data).digest('hex');
+}
+
+// Verify password against stored hash
+export function verifyPassword(password: string, hash: string): boolean {
+  return hashPassword(password) === hash;
 }
 
 // Initialize database on import

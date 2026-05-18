@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Cascade Master Installer
+# Cascade Engine Installer
 # One-click installation script
 
 set -e
 
-echo "🚀 Installing Cascade Master..."
+echo "Installing Cascade Engine..."
 
 # Check for Node.js
 if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is required. Please install Node.js 18+ first."
+    echo "Node.js is required. Please install Node.js 18+ first."
     exit 1
 fi
 
@@ -19,29 +19,28 @@ if command -v bun &> /dev/null; then
 elif command -v npm &> /dev/null; then
     PACKAGE_MANAGER="npm"
 else
-    echo "❌ No package manager found. Please install bun or npm."
+    echo "No package manager found. Please install bun or npm."
     exit 1
 fi
 
-echo "📦 Using $PACKAGE_MANAGER as package manager"
+echo "Using $PACKAGE_MANAGER as package manager"
 
 # Create installation directory
-INSTALL_DIR="$HOME/.cascade-master"
+INSTALL_DIR="$HOME/.cascade-engine"
 mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
 # Clone or download the project
 if command -v git &> /dev/null; then
-    echo "📥 Cloning Cascade Master..."
-    git clone https://github.com/your-repo/cascade-master.git .
+    echo "Cloning Cascade Engine..."
+    git clone https://github.com/YOUR_USERNAME/cascade-engine.git .
 else
-    echo "📥 Downloading Cascade Master..."
-    # Fallback to curl/wget download
-    curl -L https://github.com/your-repo/cascade-master/archive/main.tar.gz | tar -xz --strip-components=1
+    echo "Downloading Cascade Engine..."
+    curl -L https://github.com/YOUR_USERNAME/cascade-engine/archive/main.tar.gz | tar -xz --strip-components=1
 fi
 
 # Install dependencies
-echo "📦 Installing dependencies..."
+echo "Installing dependencies..."
 if [ "$PACKAGE_MANAGER" = "bun" ]; then
     bun install --production
 else
@@ -50,17 +49,17 @@ fi
 
 # Create systemd service (Linux)
 if command -v systemctl &> /dev/null && [ -d /etc/systemd/system ]; then
-    echo "🔧 Creating systemd service..."
-    cat > /tmp/cascade-master.service << EOF
+    echo "Creating systemd service..."
+    cat > /tmp/cascade-engine.service << EOF
 [Unit]
-Description=Cascade Master API Gateway
+Description=Cascade Engine API Gateway
 After=network.target
 
 [Service]
 Type=simple
 User=$USER
 WorkingDirectory=$INSTALL_DIR
-ExecStart=$PACKAGE_MANAGER start
+ExecStart=$PACKAGE_MANAGER run server
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production
@@ -70,21 +69,21 @@ Environment=PORT=3001
 WantedBy=multi-user.target
 EOF
 
-    sudo mv /tmp/cascade-master.service /etc/systemd/system/
+    sudo mv /tmp/cascade-engine.service /etc/systemd/system/
     sudo systemctl daemon-reload
-    sudo systemctl enable cascade-master
-    echo "✅ Service installed. Start with: sudo systemctl start cascade-master"
+    sudo systemctl enable cascade-engine
+    echo "Service installed. Start with: sudo systemctl start cascade-engine"
 fi
 
 # Create launch script
-cat > cascade-master << EOF
+cat > cascade-engine << EOF
 #!/bin/bash
 cd "$INSTALL_DIR"
 export NODE_ENV=production
 export PORT=3001
-exec $PACKAGE_MANAGER start
+exec $PACKAGE_MANAGER run server
 EOF
-chmod +x cascade-master
+chmod +x cascade-engine
 
 # Add to PATH
 SHELL_RC=""
@@ -96,29 +95,30 @@ fi
 
 if [ -n "$SHELL_RC" ]; then
     echo "export PATH=\"\$PATH:$INSTALL_DIR\"" >> "$SHELL_RC"
-    echo "✅ Added to PATH in $SHELL_RC"
+    echo "Added to PATH in $SHELL_RC"
 fi
 
 echo ""
-echo "🎉 Cascade Master installed successfully!"
+echo "Cascade Engine installed successfully!"
 echo ""
-echo "🚀 Quick Start:"
+echo "Quick Start:"
 echo "  cd $INSTALL_DIR"
-echo "  ./cascade-master"
+echo "  ./cascade-engine"
 echo ""
-echo "🌐 Web Interface: http://localhost:3001"
-echo "📖 API Endpoint: http://localhost:3001/api/cascade"
+echo "API Server: http://localhost:3001"
+echo "API Docs: http://localhost:3001/api/docs"
 echo ""
-echo "🔧 Management:"
+echo "Management:"
 if command -v systemctl &> /dev/null; then
-    echo "  sudo systemctl start cascade-master    # Start service"
-    echo "  sudo systemctl stop cascade-master     # Stop service"
-    echo "  sudo systemctl status cascade-master   # Check status"
+    echo "  sudo systemctl start cascade-engine    # Start service"
+    echo "  sudo systemctl stop cascade-engine     # Stop service"
+    echo "  sudo systemctl status cascade-engine   # Check status"
 fi
 echo ""
-echo "📝 Next Steps:"
-echo "  1. Configure your API providers in the web interface"
-echo "  2. Set up cascade rules for intelligent routing"
-echo "  3. Update your applications to use: http://localhost:3001/api/cascade"
+echo "Next Steps:"
+echo "  1. Start the server: bun run server"
+echo "  2. Open API docs: http://localhost:3001/api/docs"
+echo "  3. Register a user: POST /api/users/register"
+echo "  4. Configure providers, models, and cascade rules"
 echo ""
-echo "Happy cascading! 🎯"
+echo "Happy cascading!"

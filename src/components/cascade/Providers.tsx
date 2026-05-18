@@ -122,8 +122,24 @@ export function Providers() {
     setIsAdding(true);
   };
 
-  const handleDelete = (id: string) => {
-    setProviders(prev => prev.filter(p => p.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/providers/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+        }
+      });
+      if (response.ok) {
+        setProviders(prev => prev.filter(p => p.id !== id));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to delete provider: ' + (errorData.error || response.statusText));
+      }
+    } catch (error) {
+      console.error('Failed to delete provider:', error);
+      alert('Failed to delete provider: ' + (error as Error).message);
+    }
   };
 
   const handleDeleteAll = async () => {

@@ -941,10 +941,10 @@ function ModelDiscoveryModal({
                 </div>
               </div>
               <div className="max-h-64 overflow-y-auto bg-neutral-700 rounded p-2">
-                {discoveredModels.map(model => {
+                {discoveredModels.map((model, index) => {
                   const testResult = modelTestResults[model.id];
                   return (
-                    <div key={model.id} className="flex items-center space-x-3 py-1">
+                    <div key={`${model.id}-${index}`} className="flex items-center space-x-3 py-1">
                       <input
                         type="checkbox"
                         checked={selectedModels.has(model.id)}
