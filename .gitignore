@@ -54,3 +54,6 @@ ui.log
 # deploy artifacts (build artifacts, not source)
 cascade-deploy/
 cascade-deploy.tar.gz
+
+# local opencode config (contains API keys)
+opencode.json

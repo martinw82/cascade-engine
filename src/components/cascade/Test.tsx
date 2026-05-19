@@ -88,7 +88,7 @@ export function Test() {
     if (bypassCascade && (!selectedProvider || !selectedModel)) return;
 
     setLoading(true);
-    setError('');
+    setError(null);
     setResponse(null);
 
     try {

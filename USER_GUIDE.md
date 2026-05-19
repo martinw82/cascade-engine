@@ -14,7 +14,7 @@ This guide will take you from installation to advanced configuration in under 30
 
 ```bash
 # Download and install everything automatically
-curl -fsSL https://raw.githubusercontent.com/your-repo/cascade-master/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/martinw82/cascade-engine/main/install.sh | bash
 
 # That's it! Cascade Master is now installed and running.
 ```
@@ -31,14 +31,24 @@ curl -fsSL https://raw.githubusercontent.com/your-repo/cascade-master/main/insta
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/cascade-master.git
-cd cascade-master
+git clone https://github.com/martinw82/cascade-engine.git
+cd cascade-engine
 
-# Install dependencies
-bun install  # or npm install
+# Install dependencies (Bun is required)
+bun install
 
-# Start the integrated application (UI + API)
-PORT=3001 bun run dev  # or set custom port: PORT=58008 bun run dev
+# Start servers:
+# API server (port 3001)
+bun run server
+
+# UI dev server (port 3000) - in a separate terminal
+bun dev
+```
+
+**For network access:**
+```bash
+HOST=0.0.0.0 PORT=3000 bun dev  # UI
+PORT=3001 bun run server         # API (already binds to 0.0.0.0)
 ```
 
 ### Option 3: Docker Installation
@@ -52,12 +62,12 @@ docker run -p 3001:3001 cascade-master
 ### Verify Installation
 
 ```bash
-# Check if it's running
+# Check if API server is running
 curl http://localhost:3001/health
 # Should return: {"status":"ok","timestamp":"..."}
 
 # Open the web interface
-open http://localhost:3001
+open http://localhost:3000
 ```
 
 ---
@@ -66,14 +76,15 @@ open http://localhost:3001
 
 ### Step 1: Access the Web Interface
 
-Open [http://localhost:3001](http://localhost:3001) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You'll see a modern dark-themed interface with 5 main tabs:
+You'll see a modern dark-themed interface with 6 main tabs:
 - **📊 Dashboard** - Overview and live monitoring
 - **🔧 Providers** - Manage AI providers
 - **🤖 Models** - Configure available models
 - **🔀 Cascade** - Set up routing rules
 - **📈 Analytics** - View performance metrics
+- **🔐 Security** - Manage API keys and access control
 
 ### Step 2: Add Your First Provider
 
@@ -239,7 +250,7 @@ Free: ✅, Cost: 0
 {
   "api": {
     "baseURL": "http://localhost:3001/api/cascade",
-    "apiKey": "your-claude-key"
+    "apiKey": "your-cascade-api-key"
   }
 }
 ```
@@ -251,7 +262,7 @@ Update your configuration:
 ```yaml
 api:
   base_url: "http://localhost:3001/api/cascade"
-  api_key: "your-openclaw-key"
+  api_key: "your-cascade-api-key"
 ```
 
 ### Any OpenAI-Compatible Tool
@@ -266,7 +277,7 @@ const client = new OpenAI({
 // With this:
 const client = new OpenAI({
   baseURL: "http://localhost:3001/api/cascade",
-  apiKey: "your-existing-key"
+  apiKey: "your-cascade-api-key"
 });
 ```
 
@@ -275,6 +286,33 @@ const client = new OpenAI({
 ```bash
 # Configure Kilo to use Cascade Master
 kilo config set api.base_url "http://localhost:3001/api/cascade"
+```
+
+### opencode Integration
+
+Add to your `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "cascade-master": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Cascade Master",
+      "options": {
+        "baseURL": "http://localhost:3001/api",
+        "headers": {
+          "X-API-Key": "your-cascade-api-key"
+        }
+      },
+      "models": {
+        "cascade": {
+          "name": "Cascade Engine (Auto-Routing)"
+        }
+      }
+    }
+  }
+}
 ```
 
 ---
@@ -299,15 +337,18 @@ The **Analytics** tab provides:
 
 ### Log Analysis
 
+Logs are available in the web UI Dashboard tab:
+- **Live Log Feed** - Real-time request tracing with error details
+- **Analytics Tab** - Provider performance, hourly heatmaps, cost savings
+
 ```bash
-# View recent logs
-curl http://localhost:3001/api/logs
+# Get analytics data via API
+curl http://localhost:3001/api/analytics \
+  -H "X-API-Key: your-cascade-api-key"
 
-# Filter by provider
-curl "http://localhost:3001/api/logs?provider=nvidia-nim"
-
-# Get performance metrics
-curl http://localhost:3001/api/metrics
+# Export configuration backup (keys redacted)
+curl http://localhost:3001/api/config/backup \
+  -H "X-API-Key: your-cascade-api-key"
 ```
 
 ---
@@ -410,12 +451,15 @@ DATABASE_URL=./data/cascade.db
 ```bash
 # Check port availability
 lsof -i :3001
+lsof -i :3000
 
 # Kill conflicting processes
-pkill -f cascade-master
+pkill -f "bun.*server"
+pkill -f "next.*dev"
 
-# Check logs
-tail -f /tmp/cascade.log
+# Check if servers are running
+pgrep -f "bun.*server"
+pgrep -f "next.*dev"
 ```
 
 #### Database Issues
@@ -453,8 +497,9 @@ node --max-old-space-size=256 src/server/index.ts
 # Health check endpoint
 curl http://localhost:3001/health
 
-# Metrics endpoint
-curl http://localhost:3001/api/metrics
+# Analytics endpoint
+curl http://localhost:3001/api/analytics \
+  -H "X-API-Key: your-cascade-api-key"
 ```
 
 ---
@@ -636,7 +681,7 @@ Header: X-API-Key: your-access-key
 ## 📞 Support & Resources
 
 ### Getting Help
-1. **Check the logs:** `tail -f /tmp/cascade.log`
+1. **Check server status:** `pgrep -f "bun.*server"`
 2. **Test basic connectivity:** `curl http://localhost:3001/health`
 3. **Review configuration:** Check web UI settings
 4. **Community support:** Open GitHub issue
@@ -673,4 +718,4 @@ This guide covers everything from basic installation to advanced enterprise depl
 
 **Happy cascading!** 🚀
 
-*For the latest updates and advanced features, visit the [Cascade Master repository](https://github.com/your-repo/cascade-master).*"
+*For the latest updates and advanced features, visit the [Cascade Master repository](https://github.com/martinw82/cascade-engine).*

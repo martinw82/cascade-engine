@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- OpenAI-compatible endpoint `POST /api/chat/completions` for external agent integration (opencode, Claude Code, Cursor, etc.)
 - Model testing endpoint (`POST /api/models/test`) - validate models before adding them
 - Test button in model add/edit form with inline result display
 - Test button in model discovery modal with per-model and "Test All" options
@@ -30,6 +31,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added `.gitignore` entries for database files and logs
 
 ### Fixed
+- **Critical Drizzle ORM query bug**: chained `.where().where()` silently overwrites conditions; replaced with `and(eq(), eq())` across all server routes (providers, models, cascade rules, auth keys, user login)
+- Login page infinite "Loading..." hang by adding `setIsAuthenticated(false)` before redirect in `AuthWrapper`
+- Login endpoint path mismatch (`/api/login` → `/api/users/login`) in login page and `UIAuthContext`
+- API key not persisting to `localStorage` on successful login
+- Duplicate provider/model ID collisions by switching to `provider-${Date.now()}-${random}` generation
+- Model discovery logging for debugging provider model lookups
+- Cross-origin dev resource access by adding `101.32.162.2` to `allowedDevOrigins`
 - Login page loading issues
 - Provider creation (POST handles both update/create)
 - Model discovery for Mistral/Gemini/NVIDIA providers

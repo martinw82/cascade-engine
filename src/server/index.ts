@@ -386,7 +386,7 @@ fastify.post('/api/providers', async (request, reply) => {
       await cascadeEngine.refreshCaches();
       return reply.send(mapped);
     } else {
-      const newId = `provider-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newId = providerId || `provider-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const result = await db.insert(providers).values({
         id: newId,
         userId,

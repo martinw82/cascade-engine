@@ -77,11 +77,13 @@ const client = new OpenAI({
 ```
 
 **Works with any OpenAI-compatible client:**
-- opencode
+- opencode (see `opencode.json.example`)
 - Claude Code
 - Cursor
 - Continue
 - Any OpenAI SDK
+
+**Standard OpenAI endpoint:** Cascade Master also exposes `POST /api/chat/completions` for tools that expect the exact OpenAI API path.
 
 ### Direct API Usage
 
@@ -103,6 +105,7 @@ curl http://your-server-ip:3001/api/cascade \
 | GET | `/health` | Health check (no auth required) |
 | GET | `/api/cascade` | API status info |
 | POST | `/api/cascade` | Send LLM request through cascade engine |
+| POST | `/api/chat/completions` | OpenAI-compatible endpoint for external tools |
 | GET | `/api/providers` | List all providers |
 | POST | `/api/providers` | Create/update provider |
 | DELETE | `/api/providers` | Delete all providers and models |

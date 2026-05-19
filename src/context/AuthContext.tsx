@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     apiKey,
-    setApiKey: (key) => setApiKey(key),
+    setApiKey: (key: string | null) => setApiKey(key),
     isAuthenticated: !!apiKey
   };
 

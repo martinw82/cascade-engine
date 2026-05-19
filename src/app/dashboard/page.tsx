@@ -1,14 +1,14 @@
 'use client';
 
-import { AuthWrapper } from '@/auth-wrapper';
+import { AuthWrapper } from '@/app/auth-wrapper';
 import { useState, useEffect } from 'react';
-import { Dashboard } from '../components/cascade/Dashboard';
-import { Providers } from '../components/cascade/Providers';
-import { Models } from '../components/cascade/Models';
-import { Cascade } from '../components/cascade/Cascade';
-import { Analytics } from '../components/cascade/Analytics';
-import { Auth } from '../components/cascade/Auth';
-import { Test } from '../components/cascade/Test';
+import { Dashboard } from '../../components/cascade/Dashboard';
+import { Providers } from '../../components/cascade/Providers';
+import { Models } from '../../components/cascade/Models';
+import { Cascade } from '../../components/cascade/Cascade';
+import { Analytics } from '../../components/cascade/Analytics';
+import { Auth } from '../../components/cascade/Auth';
+import { Test } from '../../components/cascade/Test';
 
 type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test';
 

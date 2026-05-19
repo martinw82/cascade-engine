@@ -9,8 +9,10 @@ export function AuthWrapper({ children }: PropsWithChildren) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Read auth state from localStorage on mount
     const stored = localStorage.getItem('cascadeUIAuth');
     if (stored === 'true') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAuthenticated(true);
     } else {
       setIsAuthenticated(false);

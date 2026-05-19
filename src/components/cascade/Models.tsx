@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 interface Model {
@@ -47,7 +47,7 @@ export function Models() {
   });
   const { apiKey } = useAuth();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     console.log('Fetching models and providers...');
     try {
       const [modelsRes, providersRes] = await Promise.all([
@@ -91,11 +91,12 @@ export function Models() {
     } catch (error) {
       console.error('Failed to load data:', error);
     }
-  };
+  }, [apiKey]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
-  }, [apiKey]); // Re-fetch when API key changes
+  }, [fetchData]);
 
   const resetForm = () => {
     setFormData({
