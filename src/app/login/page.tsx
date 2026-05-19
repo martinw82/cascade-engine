@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -33,6 +33,7 @@ export default function LoginPage() {
         const data = await response.json();
         localStorage.setItem('cascadeUIAuth', 'true');
         localStorage.setItem('cascadeUser', JSON.stringify(data.user));
+        localStorage.setItem('cascadeApiKey', data.apiKey);
         // Force a full page reload to ensure auth state is picked up
         window.location.href = '/';
       } else {
@@ -98,7 +99,7 @@ export default function LoginPage() {
           </button>
 
           <div className="text-center text-xs text-neutral-500">
-            <p>Demo credentials: username: admin, password: myn3wp4ssw0rd</p>
+            <p>Demo credentials: username: admin, password: admin123</p>
           </div>
         </form>
       </div>

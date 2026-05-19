@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS
     ? process.env.ALLOWED_DEV_ORIGINS.split(',').map(o => o.trim())
-    : ['localhost', '127.0.0.1'],
+    : ['localhost', '127.0.0.1', '101.32.162.2'],
   async rewrites() {
     return [
       {

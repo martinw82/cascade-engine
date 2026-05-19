@@ -117,7 +117,7 @@ export function Models() {
 
     try {
       const modelData = {
-        id: editingId || Date.now().toString(),
+        id: editingId || `model-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         providerId: formData.providerId,
         modelId: formData.modelId,
         contextWindow: formData.contextWindow,
@@ -541,6 +541,7 @@ export function Models() {
         <ModelDiscoveryModal
           providers={providers}
           onClose={() => setIsDiscovering(false)}
+          apiKey={apiKey || ''}
           onDiscover={async (providerId) => {
             try {
               const response = await fetch(`/api/models/discover/${providerId}`, {
@@ -789,12 +790,14 @@ function ModelDiscoveryModal({
   providers,
   onClose,
   onDiscover,
-  onImport
+  onImport,
+  apiKey
 }: {
   providers: Provider[];
   onClose: () => void;
   onDiscover: (providerId: string) => Promise<any[]>;
   onImport: (models: any[]) => Promise<void>;
+  apiKey: string;
 }) {
   const [selectedProvider, setSelectedProvider] = useState('');
   const [discoveredModels, setDiscoveredModels] = useState<any[]>([]);
@@ -850,7 +853,7 @@ function ModelDiscoveryModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
         },
         body: JSON.stringify({ providerId: model.providerId, modelId: model.modelId })
       });

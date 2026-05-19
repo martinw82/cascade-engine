@@ -44,7 +44,7 @@ export function UIAuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,6 +56,7 @@ export function UIAuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setIsAuthenticated(true);
         setUser(data.user);
+        localStorage.setItem('cascadeApiKey', data.apiKey);
         return true;
       } else {
         return false;
@@ -71,6 +72,7 @@ export function UIAuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     localStorage.removeItem('cascadeUIAuth');
     localStorage.removeItem('cascadeUser');
+    localStorage.removeItem('cascadeApiKey');
   };
 
   const value = {

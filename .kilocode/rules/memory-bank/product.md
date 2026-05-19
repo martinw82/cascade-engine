@@ -1,44 +1,48 @@
-# Product Context: Next.js Starter Template
+# Product Context: Cascade Master
 
-## Why This Template Exists
+## Why This Exists
 
-Starting a new Next.js project involves boilerplate setup, configuration decisions, and establishing patterns. This template provides a clean, opinionated starting point that eliminates setup friction and establishes best practices from the start. It's optimized for AI-assisted development, where an AI can quickly extend the template based on user requirements.
+LLM API costs add up fast. Many providers offer generous free tiers (Mistral, Cerebras, Groq, NVIDIA) but each has different models, rate limits, and capabilities. Cascade Master is an intelligent API gateway that maximizes free-tier LLM usage by:
+
+1. Routing requests to the best free model for each task type
+2. Automatically failing over to backup models when one fails
+3. Tracking usage, costs saved, and provider performance
+4. Supporting multiple users with isolated data
 
 ## Problems It Solves
 
-1. **Setup Time**: Eliminates boilerplate configuration (TypeScript, Tailwind, ESLint)
-2. **Decision Fatigue**: Pre-made choices for tooling and patterns
-3. **AI Context**: Memory bank provides persistent context for AI assistants
-4. **Extensibility**: Recipe system for adding common features
-5. **Consistency**: Standardized project structure and conventions
+1. **Cost** — Routes to free models first, only uses paid when necessary
+2. **Reliability** — Automatic spillover across models if one fails or rate-limits
+3. **Task Optimization** — Coding tasks go to coding-optimized models, summarization to fast models
+4. **Multi-Provider Management** — Single interface to manage 7+ providers and 100+ models
+5. **Multi-Tenancy** — Each user has their own providers, models, rules, and API keys
 
-## How It Should Work (User Flow)
+## How It Works
 
-1. User starts with this template
-2. User describes what they want to build to AI assistant
-3. AI adds pages, components, and features as needed
-4. AI uses recipes for common additions (database, auth)
-5. User previews changes via hot reload
-6. Iterate until satisfied
-7. Deploy
+1. User configures LLM providers with their API keys
+2. User discovers and imports available models from each provider
+3. User creates cascade rules: "if request contains X keywords, try models A→B→C"
+4. External tools send requests to `POST /api/cascade` (OpenAI-compatible format)
+5. Cascade engine detects task type, matches rules, tries models in priority order
+6. If a model fails, automatically tries the next one (spillover)
+7. All requests logged with analytics, cost savings, and performance metrics
 
 ## Key User Experience Goals
 
-- **Zero to Feature Fast**: Get building immediately, no setup required
-- **AI-Friendly**: Memory bank and recipes make AI assistance effective
-- **Flexible Foundation**: Can become any type of application
-- **Best Practices Built-In**: TypeScript strict mode, ESLint, clean structure
+- **Zero Config Start** — Ships with 3 providers, default rules, and admin account
+- **Visual Management** — Full UI for providers, models, rules, analytics, and security
+- **Drop-in Replacement** — OpenAI-compatible endpoint works with any existing tool
+- **Transparent** — See exactly which model handled each request, response times, costs saved
 
-## What This Template Provides
+## Target Users
 
-1. **Clean App Structure**: Single page ready for expansion
-2. **Type Safety**: Full TypeScript setup with strict mode
-3. **Modern Styling**: Tailwind CSS 4 ready to use
-4. **Code Quality**: ESLint configured
-5. **Extensibility**: Recipe system for common features
+- Developers wanting to maximize free-tier LLM usage
+- Teams managing multiple LLM providers
+- Anyone building AI-powered tools who wants intelligent model routing
 
-## Integration Points
+## Integration
 
-- **Database**: Use add-database recipe for Drizzle + SQLite
-- **Styling**: Tailwind CSS pre-configured
-- **AI Assistance**: Memory bank for context persistence
+Cascade Master exposes an OpenAI-compatible endpoint (`POST /api/chat/completions`) so any tool that supports OpenAI can use it as a provider:
+- OpenCode (configured via `opencode.json`)
+- Cursor, Continue, Copilot-compatible tools
+- Any SDK that supports OpenAI format

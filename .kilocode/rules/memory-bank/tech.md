@@ -1,143 +1,125 @@
-# Technical Context: Next.js Starter Template
+# Technical Context: Cascade Master
 
 ## Technology Stack
 
-| Technology   | Version | Purpose                         |
-| ------------ | ------- | ------------------------------- |
-| Next.js      | 16.x    | React framework with App Router |
-| React        | 19.x    | UI library                      |
-| TypeScript   | 5.9.x   | Type-safe JavaScript            |
-| Tailwind CSS | 4.x     | Utility-first CSS               |
-| Bun          | Latest  | Package manager & runtime       |
+| Technology   | Purpose |
+| ------------ | ------- |
+| Next.js 16   | React framework with App Router (UI) |
+| Fastify      | High-performance API server |
+| React 19     | UI library |
+| TypeScript 5.9 | Type-safe JavaScript |
+| Tailwind CSS 4 | Utility-first CSS |
+| Bun          | Package manager + runtime |
+| SQLite       | File-based database |
+| Drizzle ORM  | Type-safe SQL queries |
 
-## Development Environment
-
-### Prerequisites
-
-- Bun installed (`curl -fsSL https://bun.sh/install | bash`)
-- Node.js 20+ (for compatibility)
-
-### Commands
+## Development Commands
 
 ```bash
-bun install        # Install dependencies
-bun dev            # Start dev server (http://localhost:3000)
-bun build          # Production build
-bun start          # Start production server
-bun lint           # Run ESLint
-bun typecheck      # Run TypeScript type checking
+bun install              # Install dependencies
+bun dev                  # Next.js dev server (port 3000)
+bun run server           # Fastify API server (port 3001)
+bun run test             # Integration tests (test.sh)
+bun run lint             # ESLint
+bun run typecheck        # tsc --noEmit (excludes src/server/**)
+bun run build            # next build + server build
 ```
 
-## Project Configuration
+## Server Startup
 
-### Next.js Config (`next.config.ts`)
+```bash
+# Terminal 1: API server
+NODE_ENV=development bun run server
 
-- App Router enabled
-- Default settings for flexibility
+# Terminal 2: UI server
+NODE_ENV=development HOST=0.0.0.0 PORT=3000 bun dev
+```
 
-### TypeScript Config (`tsconfig.json`)
+## Environment Variables
 
-- Strict mode enabled
-- Path alias: `@/*` → `src/*`
-- Target: ESNext
-
-### Tailwind CSS 4 (`postcss.config.mjs`)
-
-- Uses `@tailwindcss/postcss` plugin
-- CSS-first configuration (v4 style)
-
-### ESLint (`eslint.config.mjs`)
-
-- Uses `eslint-config-next`
-- Flat config format
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `PORT` | `3001` | Fastify server port |
+| `NODE_ENV` | — | Set to `development` to bypass auth |
+| `NVIDIA_API_KEY` | — | Provider key (also settable in UI) |
+| `GROQ_API_KEY` | — | Provider key (also settable in UI) |
+| `OPENROUTER_API_KEY` | — | Provider key (also settable in UI) |
 
 ## Key Dependencies
 
-### Production Dependencies
+### Server
+- `fastify` — API framework
+- `@fastify/cors` — CORS handling
+- `@fastify/rate-limit` — Rate limiting
+- `@fastify/swagger` + `@fastify/swagger-ui` — API docs
+- `@fastify/static` — Serve Next.js build
+- `drizzle-orm` + `bun:sqlite` — Database
+- `@fastify/sensible` — Error handling
 
-```json
-{
-  "next": "^16.1.3", // Framework
-  "react": "^19.2.3", // UI library
-  "react-dom": "^19.2.3" // React DOM
-}
+### UI
+- `next` — Framework
+- `react` + `react-dom` — UI
+- `tailwindcss` — Styling
+
+## TypeScript Quirks
+
+- `tsconfig.json` excludes `src/server/**/*` — server code is only typechecked by Bun at runtime
+- `tsc --noEmit` only checks `src/app/` and non-server TS files
+- Server uses Bun-native features (`bun:sqlite`, `import.meta.url`)
+
+## Drizzle ORM Gotcha
+
+**Chained `.where()` calls overwrite each other.** Always use `and()`:
+
+```ts
+// WRONG — only the second condition applies
+db.select().from(table).where(eq(table.a, x)).where(eq(table.b, y))
+
+// CORRECT — both conditions applied
+db.select().from(table).where(and(eq(table.a, x), eq(table.b, y)))
 ```
 
-### Dev Dependencies
+## Database
 
-```json
-{
-  "typescript": "^5.9.3",
-  "@types/node": "^24.10.2",
-  "@types/react": "^19.2.7",
-  "@types/react-dom": "^19.2.3",
-  "@tailwindcss/postcss": "^4.1.17",
-  "tailwindcss": "^4.1.17",
-  "eslint": "^9.39.1",
-  "eslint-config-next": "^16.0.0"
-}
-```
+- SQLite via `bun:sqlite`, Drizzle ORM
+- File: `./cascade.db` (in `.gitignore`)
+- Auto-initializes on import: creates tables + seeds default data
+- WAL mode enabled for concurrency
+- Default user: `admin` / `admin123`
 
-## File Structure
+## API Endpoints
 
-```
-/
-├── .gitignore              # Git ignore rules
-├── package.json            # Dependencies and scripts
-├── bun.lock                # Bun lockfile
-├── next.config.ts          # Next.js configuration
-├── tsconfig.json           # TypeScript configuration
-├── postcss.config.mjs      # PostCSS (Tailwind) config
-├── eslint.config.mjs       # ESLint configuration
-├── public/                 # Static assets
-│   └── .gitkeep
-└── src/                    # Source code
-    └── app/                # Next.js App Router
-        ├── layout.tsx      # Root layout
-        ├── page.tsx        # Home page
-        ├── globals.css     # Global styles
-        └── favicon.ico     # Site icon
-```
+### Core
+- `POST /api/cascade` — Cascade LLM request (OpenAI-compatible)
+- `POST /api/chat/completions` — OpenAI-compatible endpoint (for external tools)
+- `GET /api/cascade` — Engine status
+- `GET /health` — Health check (no auth)
 
-## Technical Constraints
+### Users
+- `POST /api/users/register` — Create user + API key
+- `POST /api/users/login` — Authenticate, get API key
+- `GET /api/users/me` — Current user info
+- `POST /api/users/change-password` — Change password
 
-### Starting Point
+### Providers/Models/Rules
+- `GET/POST /api/providers` — CRUD
+- `GET/POST /api/models` — CRUD
+- `POST /api/models/test` — Test a model
+- `GET /api/models/discover/:providerId` — Discover available models
+- `POST /api/models/bulk` — Bulk import
+- `GET/POST/PUT/DELETE /api/cascade-rules` — CRUD
 
-- Minimal structure - expand as needed
-- No database by default (use recipe to add)
-- No authentication by default (add when needed)
-
-### Browser Support
-
-- Modern browsers (ES2020+)
-- No IE11 support
-
-## Performance Considerations
-
-### Image Optimization
-
-- Use Next.js `Image` component for optimization
-- Place images in `public/` directory
-
-### Bundle Size
-
-- Tree-shaking enabled by default
-- Tailwind CSS purges unused styles
-
-### Core Web Vitals
-
-- Server Components reduce client JavaScript
-- Streaming and Suspense for better UX
+### Auth/Analytics
+- `GET/POST/DELETE /api/auth-keys` — API key management
+- `GET /api/analytics` — Analytics + stats
+- `POST /api/cache/refresh` — Reload caches from DB
+- `DELETE /api/logs` — Delete request logs
+- `GET /api/docs` — Swagger UI
 
 ## Deployment
 
-### Build Output
-
-- Server-rendered pages by default
-- Can be configured for static export
-
-### Environment Variables
-
-- None required for base template
-- Add as needed for features
-- Use `.env.local` for local development
+- Dockerfile included
+- `render.yaml` for Render.com
+- `cascade-master.service` for systemd
+- `ecosystem.config.js` for PM2
+- `install.sh` for one-click setup

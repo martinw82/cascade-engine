@@ -1,146 +1,85 @@
-# Active Context: Cascade Master
+# Active Context: Cascade Master v2.0
 
 ## Current State
 
 **Project Status**: 🚀 Cascade Master - Universal AI Traffic Controller
+**Version**: 2.0 (multi-user, security hardened, OpenAI-compatible)
 
-The template has been expanded to include a basic implementation of Cascade Master - a lightweight, intelligent API gateway designed to maximize free-tier LLM usage through sophisticated rotation, task-awareness, and real-time monitoring.
+Intelligent API gateway that routes LLM requests through cascading model chains with task-aware routing, automatic failover, multi-user auth, and real-time analytics.
 
-## Recently Completed
+## Recently Completed (2026-05-18 Session)
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
-- [x] Tailwind CSS 4 integration
-- [x] ESLint configuration
-- [x] Memory bank documentation
-- [x] Recipe system for common features
-- [x] Created Fastify server implementation for Cascade Master API gateway
-- [x] Implemented cascade engine with task-aware routing and spillover logic
-- [x] Added API routes for handling LLM requests through provider cascade
-- [x] Updated home page with tabbed interface for management UI
-- [x] Created provider management UI (add/edit/delete providers with API keys)
-- [x] Created model configuration UI (add/edit models per provider with limits)
-- [x] Added analytics dashboard with provider success rate heatmaps
-- [x] Added money saved calculations against GPT-4o pricing
-- [x] Created server directory structure with proper TypeScript types
-- [x] Upgraded cascade logic from provider-specific to model-specific routing
-- [x] Updated database schema to use modelOrder instead of providerOrder
-- [x] Modified UI to select models instead of providers for cascade rules
-- [x] Updated server cascade engine to iterate through modelOrder with proper provider validation
-- [x] Added bulk model import feature with JSON template support
-- [x] Implemented model discovery API for automatic model fetching from providers
-- [x] Created model discovery UI with provider selection and selective import
-- [x] Fixed TypeScript compilation issue by excluding cascade-deploy directory from tsconfig
-- [x] Built Next.js application with standalone output for deployment
-- [x] Set up cascade-deploy directory with built files for production deployment
+### Bug Fixes
+- [x] Fixed auth-wrapper infinite "Loading..." hang — added `setIsAuthenticated(false)` before redirect
+- [x] Fixed login API endpoint mismatch — frontend called `/api/login`, server had `/api/users/login`
+- [x] Fixed login page password hint — showed wrong password (`myn3wp4ssw0rd` vs actual `admin123`)
+- [x] Fixed API key not stored on login — login now saves to `cascadeApiKey` localStorage key
+- [x] Fixed provider creation overwriting existing — Drizzle chained `.where()` bug across ALL endpoints
+- [x] Fixed model discovery returning wrong provider's models — same `.where()` bug
+- [x] Fixed model bulk import only adding first model — same `.where()` bug
+- [x] Fixed discovery modal test using hardcoded API key — now uses user's actual key
+- [x] Fixed model ID collisions — unique IDs with `provider-${Date.now()}-${random}`
+- [x] Fixed Turbopack cache corruption — full `.next` cleanup required on restarts
+- [x] Fixed `allowedDevOrigins` — added external IP for remote access
+
+### Drizzle ORM `.where()` Bug (Root Cause)
+Chained `.where()` calls in Drizzle ORM **overwrite** each other instead of combining. The fix: replace all `.where(eq()).where(eq())` with `.where(and(eq(), eq()))`. Affected 13+ endpoints across providers, models, cascade rules, auth keys, and discovery.
+
+### New Features
+- [x] OpenAI-compatible endpoint: `POST /api/chat/completions`
+- [x] Cascade rules created: Coding (Codestral→Qwen→Groq70B), Summarization (Cerebras→Mistral→Groq70B), General (Mistral→Cerebras→Groq8B)
+- [x] opencode.json config created for using Cascade Master as a provider in OpenCode
+- [x] End-to-end cascade routing tested and verified working
 
 ## Current Structure
 
-| File/Directory | Purpose | Status |
-|----------------|---------|--------|
-| `src/app/page.tsx` | Home page with tabbed UI | ✅ Ready |
-| `src/app/layout.tsx` | Root layout | ✅ Ready |
-| `src/app/globals.css` | Global styles | ✅ Ready |
-| `src/components/cascade/Dashboard.tsx` | Live dashboard with logs | ✅ Ready |
-| `src/components/cascade/Providers.tsx` | Provider management UI | ✅ Ready |
-| `src/components/cascade/Models.tsx` | Model configuration UI | ✅ Ready |
-| `src/components/cascade/Cascade.tsx` | Cascade rules management | ✅ Ready |
-| `src/components/cascade/Analytics.tsx` | Analytics dashboard | ✅ Ready |
-| `src/components/cascade/Auth.tsx` | Authentication management | ✅ Ready |
-| `src/server/index.ts` | Fastify server with auth | ✅ Ready |
-| `src/server/lib/db.ts` | SQLite database setup | ✅ Ready |
-| `src/server/lib/schema.ts` | Database schema definitions | ✅ Ready |
-| `src/server/middleware/auth.ts` | IP + key authentication | ✅ Ready |
-| `src/server/routes/api/cascade.ts` | Enhanced cascade engine | ✅ Ready |
-
-## Current Focus
-
-Security hardening is mostly complete. All changes committed. Test suite was updated but couldn't be verified due to shell hanging issue (likely leftover server process).
-
-## Next Steps
-
-- Fix shell hanging issue (stale server process) and run `bun run test` to verify all security changes
-- Consider adding per-endpoint rate limiting (stricter for auth endpoints)
-- Consider adding request audit logging middleware
-- Update UI components to work with new API key management endpoints (rotate/revoke/delete)
-
-## Current State
-
-- ✅ Model-specific cascade engine working
-- ✅ Database schema updated for modelOrder
-- ✅ UI updated to manage models in cascade rules
-- ✅ API endpoints functional
-- ✅ Authentication and security in place
+| File/Directory | Purpose |
+|----------------|---------|
+| `src/app/page.tsx` | Home page with tabbed UI (7 tabs) |
+| `src/app/login/page.tsx` | Login page |
+| `src/app/auth-wrapper.tsx` | Auth guard with redirect |
+| `src/app/layout.tsx` | Root layout with auth providers |
+| `src/context/AuthContext.tsx` | API key context (for components) |
+| `src/context/UIAuthContext.tsx` | UI auth context (login/logout) |
+| `src/components/cascade/Dashboard.tsx` | Live request trace + stats |
+| `src/components/cascade/Providers.tsx` | Provider CRUD |
+| `src/components/cascade/Models.tsx` | Model CRUD + discovery + bulk import |
+| `src/components/cascade/Cascade.tsx` | Cascade rules management |
+| `src/components/cascade/Analytics.tsx` | Real analytics dashboard |
+| `src/components/cascade/Auth.tsx` | API key management |
+| `src/components/cascade/Test.tsx` | Test interface |
+| `src/server/index.ts` | Fastify API server (all routes) |
+| `src/server/lib/db.ts` | SQLite init + migrations + seeding |
+| `src/server/lib/schema.ts` | Drizzle schema (users, providers, models, rules, auth_keys, logs) |
+| `src/server/lib/env.ts` | Environment validation |
+| `src/server/middleware/auth.ts` | Multi-user auth + permissions |
+| `src/server/middleware/validation.ts` | Input sanitization + validation |
+| `src/server/middleware/audit.ts` | Audit logging |
+| `src/server/middleware/security.ts` | Security headers |
+| `src/server/routes/api/cascade.ts` | Cascade engine + routing logic |
+| `opencode.json` | OpenCode provider config |
 
 ## Next Steps
 
-The implementation is complete. Users can now:
+- [ ] Full documentation run (README, USER_GUIDE, API docs)
+- [ ] Prepare for public GitHub release
+- [ ] Consider: per-endpoint rate limiting UI, audit log viewer in UI
+- [ ] Consider: password reset flow, email notifications
 
-1. Configure cascade rules with specific model priorities
-2. Monitor request routing through analytics
-3. Test cascade behavior with the test interface
-4. Deploy the system for production use
+## Default Credentials
 
-## Quick Start Guide
+- **Username**: `admin`
+- **Password**: `admin123`
+- **Default API Key**: auto-generated on first run (check Security tab in UI)
 
-### To add a new page:
+## Server URLs
 
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
-```
-
-### To add components:
-
-Create `src/components/` directory and add components:
-```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
-```
-
-### To add a database:
-
-Follow `.kilocode/recipes/add-database.md`
-
-### To add API routes:
-
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
-
-## Available Recipes
-
-| Recipe | File | Use Case |
-|--------|------|----------|
-| Add Database | `.kilocode/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
-
-## Pending Improvements
-
-- [ ] Add more recipes (auth, email, etc.)
-- [ ] Add example components
-- [ ] Add testing setup recipe
+- **UI**: `http://localhost:3000` (or `http://<external-ip>:3000`)
+- **API**: `http://localhost:3001` (or `http://<external-ip>:3001`)
+- **Swagger Docs**: `http://localhost:3001/api/docs`
 
 ## Session History
 
 | Date | Changes |
 |------|---------|
-| Initial | Template created with base setup |
-| 2026-04-29 AM | Implemented Cascade Master API gateway with Fastify server, cascade engine with task-aware routing, and basic dashboard UI |
-| 2026-04-29 PM | Added complete management UI (Providers, Models, Cascade Rules, Analytics, Security), SQLite persistence, authentication system, enhanced cascade engine with queuing, and configurable keyword word limits |
-| 2026-04-29 CLI | Created one-click installation script, CLI binary, systemd service, PM2 config, comprehensive README, and plugin integration guides for Kilo CLI and other tools |
-| 2026-05-02 | Upgraded cascade system from provider-level to model-specific routing, updated database schema, UI components, and server logic for granular model prioritization |
-| 2026-05-02 PM | Added bulk model import with JSON templates and model discovery API with automatic fetching from OpenRouter, Groq, and NVIDIA providers |
-| 2026-05-03 | Fixed build issues for standalone deployment, updated tsconfig excludes, and prepared cascade-deploy package |
-| 2026-05-16 AM | Fixed login page loading issues, added logout button, fixed provider creation, fixed model discovery for Mistral/Gemini/NVIDIA, added multi-format API support, added DELETE/PUT endpoints for cascade rules, replaced hardcoded Analytics with real data, added detailed error reporting, fixed test suite, added standalone makeApiCall function |
-| 2026-05-16 PM | Added drag-and-drop model reordering in cascade rules, added model testing endpoint and UI buttons, added bulk delete operations (all providers, all models, by provider), fixed baseURL field name mismatch, removed runtime files from git, updated README/LICENSE/CHANGELOG/SESSION_LOG/PRODUCTION_READINESS documentation |
-| 2026-05-17 AM | Security hardening phase 1: Added rate limiting (@fastify/rate-limit), CORS hardening with configurable ALLOWED_ORIGINS, replaced /api/login with /api/validate-key, x-internal only trusted from localhost, graceful shutdown (SIGTERM/SIGINT), cryptographically secure random API key generation, conditional default data seeding. Phase 2: Added security headers middleware (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS in prod), request body size limits, comprehensive input validation/sanitization for providers/models/cascade-rules/auth-keys, API key management endpoints (create/rotate/revoke/delete), API key redaction in GET responses, global error handler (sanitized in production), environment variable validation on startup, client IP + user agent logging in request logs, updated test suite with security validation tests |
-| 2026-05-18 | **Major refactor - v2.0**: Fixed data deletion bug (DELETE /api/logs SQL crash, Analytics empty state false positive). Fixed seeding logic (INSERT OR IGNORE prevents restart crashes). Added cascade cache refresh endpoint + auto-refresh on all CRUD operations. Cleaned repo (removed cascade-deploy/, added to .gitignore). Added multi-user support: users table, per-user data isolation via userId FK on all tables, POST /api/users/register, POST /api/users/login, GET /api/users/me, POST /api/users/change-password. Default login: admin/admin123. Added OpenAPI/Swagger docs at /api/docs. Created Dockerfile, render.yaml, .dockerignore. Fixed next.config.ts hardcoded IPs. Updated install.sh. All 25/25 tests passing. |
+| 2026-05-18 PM | User testing session: fixed auth-wrapper hang, login endpoint mismatch, API key storage, Drizzle `.where()` bug (13+ endpoints), model discovery, bulk import, unique ID generation. Created cascade rules. Added OpenAI-compatible endpoint. Tested cascade routing end-to-end. Created opencode.json config. |

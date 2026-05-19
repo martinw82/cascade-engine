@@ -85,7 +85,7 @@ export function Providers() {
           'X-API-Key': apiKey || 'cascade-master-default-key-2026'
         },
         body: JSON.stringify({
-          id: editingId || Date.now().toString(),
+          ...(editingId && { id: editingId }),
           name: formData.name,
           base_url: formData.baseURL,
           api_key: formData.apiKey,

@@ -13,6 +13,7 @@ export function AuthWrapper({ children }: PropsWithChildren) {
     if (stored === 'true') {
       setIsAuthenticated(true);
     } else {
+      setIsAuthenticated(false);
       router.push('/login');
     }
   }, [router]);

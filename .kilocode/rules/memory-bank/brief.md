@@ -1,48 +1,57 @@
-# Project Brief: Next.js Starter Template
+# Project Brief: Cascade Master
 
 ## Purpose
 
-This is a minimal Next.js starter template designed for AI-assisted development. It provides a clean foundation that can be extended to build any type of web application through interaction with an AI assistant.
+Cascade Master is an intelligent AI traffic controller — a lightweight API gateway that maximizes free-tier LLM usage through model-specific cascade routing, automatic failover, and real-time analytics.
 
 ## Target Users
 
-- Developers wanting a clean Next.js starting point
-- Users building applications through AI-assisted coding
-- Teams needing a standardized, modern Next.js setup
+- Developers who want to maximize free-tier LLM usage across multiple providers
+- Teams managing multiple LLM providers and models
+- Anyone building AI-powered tools who needs intelligent model routing with fallback
 
 ## Core Use Case
 
-Users describe what they want to build to an AI assistant, which then expands this template by:
-
-1. Adding components and pages as needed
-2. Installing additional dependencies
-3. Setting up databases, authentication, etc. using recipes
-4. Customizing styling and branding
+1. User adds LLM providers (Mistral, Cerebras, Groq, NVIDIA, etc.) with API keys
+2. User discovers and imports models from each provider
+3. User creates cascade rules mapping task types/keywords to model priority chains
+4. External tools send requests via OpenAI-compatible endpoint
+5. Cascade engine routes to the best model, with automatic spillover on failure
+6. Analytics track usage, success rates, response times, and cost savings
 
 ## Key Requirements
 
 ### Must Have
 
-- Modern Next.js 16 setup with App Router
-- TypeScript for type safety
-- Tailwind CSS 4 for styling
-- ESLint for code quality
-- Clean, minimal starting structure
-- Bun as package manager
+- Multi-provider LLM management with API key storage
+- Model discovery and bulk import from provider APIs
+- Task-aware cascade routing with keyword detection
+- Automatic spillover/failover across models
+- Multi-user authentication with per-user data isolation
+- OpenAI-compatible API endpoint
+- Real-time analytics and request logging
+- Input validation and rate limiting
+- Web-based management UI
 
 ### Nice to Have
 
-- Recipe system for common additions (database, auth)
-- Memory bank for AI context persistence
-- Clear development guidelines
+- Docker deployment
+- Systemd/PM2 service management
+- Swagger/OpenAPI documentation
+- Plugin system for external integrations
 
 ## Success Metrics
 
-- Clean, zero-error TypeScript setup
-- Passing lint and type checks
+- All cascade rules correctly route to appropriate models
+- Automatic failover works when primary model fails
+- OpenAI-compatible endpoint works with external tools (OpenCode, etc.)
+- Multi-user isolation prevents data leakage between users
+- Zero unhandled errors in production
 
 ## Constraints
 
-- Minimal dependencies by default
-- Framework: Next.js 16 + React 19 + Tailwind CSS 4
+- Runtime: Bun (required for `bun:sqlite`)
+- Database: SQLite (file-based, single-file deployment)
+- UI: Next.js 16 + React 19 + Tailwind CSS 4
+- API: Fastify on port 3001
 - Package manager: Bun

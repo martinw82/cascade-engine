@@ -360,7 +360,11 @@ fastify.post('/api/providers', async (request, reply) => {
     }
     const sanitized = validation.sanitized;
 
-    const existing = await db.select().from(providers).where(eq(providers.id, sanitized.id || data.id)).where(eq(providers.userId, userId)).limit(1);
+    // Only check for existing provider if an ID was provided (update path)
+    const providerId = sanitized.id || data.id;
+    const existing = providerId
+      ? await db.select().from(providers).where(and(eq(providers.id, providerId), eq(providers.userId, userId))).limit(1)
+      : [];
 
     if (existing.length > 0) {
       const updateData: any = {};
@@ -382,7 +386,7 @@ fastify.post('/api/providers', async (request, reply) => {
       await cascadeEngine.refreshCaches();
       return reply.send(mapped);
     } else {
-      const newId = sanitized.id || `provider-${Date.now()}`;
+      const newId = `provider-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const result = await db.insert(providers).values({
         id: newId,
         userId,
@@ -428,8 +432,8 @@ fastify.delete('/api/providers/:id', async (request, reply) => {
   try {
     const userId = getUserId(request);
     const { id } = request.params as { id: string };
-    await db.delete(modelsTable).where(eq(modelsTable.providerId, id)).where(eq(modelsTable.userId, userId));
-    await db.delete(providers).where(eq(providers.id, id)).where(eq(providers.userId, userId));
+    await db.delete(modelsTable).where(and(eq(modelsTable.providerId, id), eq(modelsTable.userId, userId)));
+    await db.delete(providers).where(and(eq(providers.id, id), eq(providers.userId, userId)));
     await cascadeEngine.refreshCaches();
     return reply.send({ success: true, message: `Provider "${id}" and its models deleted` });
   } catch (error) {
@@ -464,7 +468,7 @@ fastify.post('/api/models', async (request, reply) => {
     }
     const sanitized = validation.sanitized;
 
-    const existing = await db.select().from(modelsTable).where(eq(modelsTable.id, sanitized.id)).where(eq(modelsTable.userId, userId)).limit(1);
+    const existing = await db.select().from(modelsTable).where(and(eq(modelsTable.id, sanitized.id), eq(modelsTable.userId, userId))).limit(1);
 
     let result;
     if (existing.length > 0) {
@@ -509,7 +513,7 @@ fastify.delete('/api/models/provider/:providerId', async (request, reply) => {
   try {
     const userId = getUserId(request);
     const { providerId } = request.params as { providerId: string };
-    await db.delete(modelsTable).where(eq(modelsTable.providerId, providerId)).where(eq(modelsTable.userId, userId));
+    await db.delete(modelsTable).where(and(eq(modelsTable.providerId, providerId), eq(modelsTable.userId, userId)));
     await cascadeEngine.refreshCaches();
     return reply.send({ success: true, message: `All models for provider ${providerId} deleted` });
   } catch (error) {
@@ -551,7 +555,7 @@ fastify.delete('/api/cascade-rules', async (request, reply) => {
     if (!data.id) {
       return reply.code(400).send({ error: 'Rule ID is required' });
     }
-    await db.delete(cascadeRules).where(eq(cascadeRules.id, data.id)).where(eq(cascadeRules.userId, userId));
+    await db.delete(cascadeRules).where(and(eq(cascadeRules.id, data.id), eq(cascadeRules.userId, userId)));
     await cascadeEngine.refreshCaches();
     return reply.send({ success: true });
   } catch (error) {
@@ -580,7 +584,7 @@ fastify.put('/api/cascade-rules', async (request, reply) => {
     if (validation.sanitized.enabled !== undefined) updateData.enabled = validation.sanitized.enabled;
     updateData.updatedAt = new Date().toISOString();
 
-    const result = await db.update(cascadeRules).set(updateData).where(eq(cascadeRules.id, data.id)).where(eq(cascadeRules.userId, userId)).returning();
+    const result = await db.update(cascadeRules).set(updateData).where(and(eq(cascadeRules.id, data.id), eq(cascadeRules.userId, userId))).returning();
     await cascadeEngine.refreshCaches();
     return reply.send(result[0]);
   } catch (error) {
@@ -654,7 +658,7 @@ fastify.post('/api/auth-keys/:id/rotate', {
     const userId = getUserId(request);
     const { id } = request.params as { id: string };
 
-    const existing = await db.select().from(authKeys).where(eq(authKeys.id, id)).where(eq(authKeys.userId, userId)).limit(1);
+    const existing = await db.select().from(authKeys).where(and(eq(authKeys.id, id), eq(authKeys.userId, userId))).limit(1);
     if (existing.length === 0) {
       return reply.code(404).send({ error: 'Auth key not found' });
     }
@@ -667,7 +671,7 @@ fastify.post('/api/auth-keys/:id/rotate', {
 
     const result = await db.update(authKeys)
       .set({ keyValue: newKeyValue, updatedAt: new Date().toISOString() })
-      .where(eq(authKeys.id, id))
+      .where(and(eq(authKeys.id, id), eq(authKeys.userId, userId)))
       .returning();
 
     return reply.send({
@@ -688,14 +692,14 @@ fastify.post('/api/auth-keys/:id/revoke', {
     const userId = getUserId(request);
     const { id } = request.params as { id: string };
 
-    const existing = await db.select().from(authKeys).where(eq(authKeys.id, id)).where(eq(authKeys.userId, userId)).limit(1);
+    const existing = await db.select().from(authKeys).where(and(eq(authKeys.id, id), eq(authKeys.userId, userId))).limit(1);
     if (existing.length === 0) {
       return reply.code(404).send({ error: 'Auth key not found' });
     }
 
     const result = await db.update(authKeys)
       .set({ enabled: false, updatedAt: new Date().toISOString() })
-      .where(eq(authKeys.id, id))
+      .where(and(eq(authKeys.id, id), eq(authKeys.userId, userId)))
       .returning();
 
     return reply.send({ success: true, message: `Key "${result[0].name}" has been revoked`, key: result[0] });
@@ -712,7 +716,7 @@ fastify.delete('/api/auth-keys/:id', {
     const userId = getUserId(request);
     const { id } = request.params as { id: string };
 
-    const existing = await db.select().from(authKeys).where(eq(authKeys.id, id)).where(eq(authKeys.userId, userId)).limit(1);
+    const existing = await db.select().from(authKeys).where(and(eq(authKeys.id, id), eq(authKeys.userId, userId))).limit(1);
     if (existing.length === 0) {
       return reply.code(404).send({ error: 'Auth key not found' });
     }
@@ -721,7 +725,7 @@ fastify.delete('/api/auth-keys/:id', {
       return reply.code(400).send({ error: 'Cannot delete default key. Use revoke instead.' });
     }
 
-    await db.delete(authKeys).where(eq(authKeys.id, id));
+    await db.delete(authKeys).where(and(eq(authKeys.id, id), eq(authKeys.userId, userId)));
     return reply.send({ success: true, message: 'Auth key deleted' });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to delete auth key' });
@@ -740,7 +744,7 @@ fastify.post('/api/models/test', {
       return reply.code(400).send({ error: 'providerId and modelId are required' });
     }
 
-    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).where(eq(providers.userId, userId)).limit(1);
+    const provider = await db.select().from(providers).where(and(eq(providers.id, providerId), eq(providers.userId, userId))).limit(1);
     if (!provider.length) {
       return reply.code(404).send({ error: 'Provider not found' });
     }
@@ -814,12 +818,13 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
     const userId = getUserId(request);
     const { providerId } = request.params as { providerId: string };
 
-    const provider = await db.select().from(providers).where(eq(providers.id, providerId)).where(eq(providers.userId, userId)).limit(1);
+    const provider = await db.select().from(providers).where(and(eq(providers.id, providerId), eq(providers.userId, userId))).limit(1);
     if (!provider.length) {
       return reply.code(404).send({ error: 'Provider not found' });
     }
 
     const p = provider[0];
+    console.log(`[DISCOVERY] Looking up: ${providerId}, Found: ${p.id} (${p.name}), Base URL: ${p.baseUrl}`);
     let models: any[] = [];
 
     try {
@@ -951,6 +956,7 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
         // Generic OpenAI-compatible provider discovery
         // Try the standard OpenAI /models endpoint
         const modelsUrl = p.baseUrl.endsWith('/') ? `${p.baseUrl}models` : `${p.baseUrl}/models`;
+        console.log(`[DISCOVERY] Provider: ${p.id}, Base URL: ${p.baseUrl}, Models URL: ${modelsUrl}`);
         const response = await fetch(modelsUrl, {
           headers: {
             'Authorization': `Bearer ${p.apiKey}`,
@@ -1009,9 +1015,11 @@ fastify.post('/api/models/bulk', {
         }
 
         const existing = await db.select().from(modelsTable)
-          .where(eq(modelsTable.providerId, modelData.providerId))
-          .where(eq(modelsTable.modelId, modelData.modelId))
-          .where(eq(modelsTable.userId, userId))
+          .where(and(
+            eq(modelsTable.providerId, modelData.providerId),
+            eq(modelsTable.modelId, modelData.modelId),
+            eq(modelsTable.userId, userId)
+          ))
           .limit(1);
 
         if (existing.length > 0) {
@@ -1335,7 +1343,7 @@ fastify.post('/api/users/login', {
       return reply.code(403).send({ error: 'Account is disabled' });
     }
 
-    const apiKey = await db.select().from(authKeys).where(eq(authKeys.userId, user[0].id)).where(eq(authKeys.enabled, true)).limit(1);
+    const apiKey = await db.select().from(authKeys).where(and(eq(authKeys.userId, user[0].id), eq(authKeys.enabled, true))).limit(1);
 
     return reply.send({
       success: true,
@@ -1484,6 +1492,14 @@ fastify.register(async (fastify) => {
     }
   }, cascadeRoutes.GET);
 }, { prefix: '' });
+
+// OpenAI-compatible endpoint for external tools (opencode, etc.)
+fastify.post('/api/chat/completions', {
+  preHandler: [
+    createEndpointRateLimiter(30, '1 minute'),
+    validateRequest,
+  ],
+}, cascadeRoutes.POST);
 
 // Catch-all route to serve Next.js app for client-side routing
 fastify.get('/*', async (request, reply) => {
