@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "Cascade Master API",
+    "description": "API collection for Cascade Master - Universal AI Traffic Controller\n\nBase URL: http://localhost:3001\n\nAuthentication: Add X-API-Key header to all requests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key", "value": "X-API-Key", "type": "string" },
+      { "key": "value", "value": "cascade-master-default-key-2026", "type": "string" },
+      { "key": "in", "value": "header", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "Cascade - Send Request",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello, what can you do?\"\n    }\n  ],\n  \"stream\": false\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/cascade", "host": ["{{baseUrl}}"], "path": ["api", "cascade"] }
+      }
+    },
+    {
+      "name": "Cascade - Streaming",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a poem about AI\"\n    }\n  ],\n  \"stream\": true\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/cascade", "host": ["{{baseUrl}}"], "path": ["api", "cascade"] }
+      }
+    },
+    {
+      "name": "Cascade - Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/cascade", "host": ["{{baseUrl}}"], "path": ["api", "cascade"] }
+      }
+    },
+    {
+      "name": "OpenAI Compatible",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"model\": \"any\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello!\"\n    }\n  ]\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/chat/completions", "host": ["{{baseUrl}}"], "path": ["api", "chat", "completions"] }
+      }
+    },
+    {
+      "name": "Providers - List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/providers", "host": ["{{baseUrl}}"], "path": ["api", "providers"] }
+      }
+    },
+    {
+      "name": "Models - List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/models", "host": ["{{baseUrl}}"], "path": ["api", "models"] }
+      }
+    },
+    {
+      "name": "Models - Benchmark",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"modelIds\": [\"model-id-1\", \"model-id-2\"],\n  \"prompt\": \"What is 2+2?\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/models/benchmark", "host": ["{{baseUrl}}"], "path": ["api", "models", "benchmark"] }
+      }
+    },
+    {
+      "name": "Cascade Rules - List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/cascade-rules", "host": ["{{baseUrl}}"], "path": ["api", "cascade-rules"] }
+      }
+    },
+    {
+      "name": "Analytics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/analytics", "host": ["{{baseUrl}}"], "path": ["api", "analytics"] }
+      }
+    },
+    {
+      "name": "Auth Keys - List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/auth-keys", "host": ["{{baseUrl}}"], "path": ["api", "auth-keys"] }
+      }
+    },
+    {
+      "name": "Admin - Users",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/admin/users", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users"] }
+      }
+    },
+    {
+      "name": "Admin - Audit Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/admin/audit-logs", "host": ["{{baseUrl}}"], "path": ["api", "admin", "audit-logs"] }
+      }
+    },
+    {
+      "name": "Admin - Rate Limits",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/admin/rate-limits", "host": ["{{baseUrl}}"], "path": ["api", "admin", "rate-limits"] }
+      }
+    },
+    {
+      "name": "Admin - Backup",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/admin/backup", "host": ["{{baseUrl}}"], "path": ["api", "admin", "backup"] }
+      }
+    },
+    {
+      "name": "Webhooks - List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/webhooks", "host": ["{{baseUrl}}"], "path": ["api", "webhooks"] }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "noauth" },
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/users/login", "host": ["{{baseUrl}}"], "path": ["api", "users", "login"] }
+      }
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "noauth" },
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/users/register", "host": ["{{baseUrl}}"], "path": ["api", "users", "register"] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001", "type": "string" }
+  ]
+}

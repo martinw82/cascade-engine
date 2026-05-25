@@ -1094,6 +1094,113 @@ fastify.post('/api/models/test', {
   }
 });
 
+// Model benchmark endpoint
+fastify.post('/api/models/benchmark', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { modelIds, prompt } = request.body as { modelIds: string[]; prompt: string };
+
+    if (!modelIds || !Array.isArray(modelIds) || modelIds.length === 0) {
+      return reply.code(400).send({ error: 'modelIds array is required' });
+    }
+    if (!prompt) {
+      return reply.code(400).send({ error: 'prompt is required' });
+    }
+
+    // Get models from DB
+    const allModels = await db.select().from(modelsTable).where(eq(modelsTable.userId, userId));
+    const providerMap = await db.select().from(providers).where(eq(providers.userId, userId));
+    const providerById = new Map(providerMap.map(p => [p.id, p]));
+
+    const selectedModels = allModels.filter(m => modelIds.includes(m.id));
+
+    // Run all models in parallel
+    const results = await Promise.allSettled(selectedModels.map(async (model) => {
+      const provider = providerById.get(model.providerId);
+      if (!provider) return { modelId: model.id, modelName: model.modelId, error: 'Provider not found' };
+
+      const startTime = Date.now();
+      try {
+        const baseUrl = provider.baseUrl.endsWith('/') ? provider.baseUrl.slice(0, -1) : provider.baseUrl;
+        const response = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${provider.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: model.modelId,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 100,
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+
+        const responseTime = Date.now() - startTime;
+        const data = await response.json();
+
+        if (!response.ok) {
+          return {
+            modelId: model.id,
+            modelName: model.modelId,
+            success: false,
+            responseTime,
+            error: data.error?.message || `HTTP ${response.status}`,
+          };
+        }
+
+        return {
+          modelId: model.id,
+          modelName: model.modelId,
+          success: true,
+          responseTime,
+          tokensUsed: data.usage?.total_tokens || 0,
+          promptTokens: data.usage?.prompt_tokens || 0,
+          completionTokens: data.usage?.completion_tokens || 0,
+          responsePreview: data.choices?.[0]?.message?.content?.slice(0, 200) || '',
+          costEstimate: model.costPerToken ? (data.usage?.total_tokens || 0) * model.costPerToken : 0,
+        };
+      } catch (error: any) {
+        return {
+          modelId: model.id,
+          modelName: model.modelId,
+          success: false,
+          responseTime: Date.now() - startTime,
+          error: error.name === 'AbortError' ? 'Timeout' : error.message,
+        };
+      }
+    }));
+
+    const benchmarkResults = results.map((r, i) => {
+      if (r.status === 'fulfilled') return r.value;
+      return { modelId: selectedModels[i]?.id || 'unknown', modelName: selectedModels[i]?.modelId || 'unknown', success: false, error: 'Execution failed' };
+    });
+
+    // Calculate cost comparison vs GPT-4o baseline
+    const gpt4oCostPerToken = 0.00001; // $0.01 per 1K tokens (approx)
+    const totalTokens = benchmarkResults.reduce((sum, r: any) => sum + (r.tokensUsed || 0), 0);
+    const gpt4oCost = totalTokens * gpt4oCostPerToken;
+    const actualCost = benchmarkResults.reduce((sum, r: any) => sum + (r.costEstimate || 0), 0);
+    const savings = gpt4oCost - actualCost;
+
+    return reply.send({
+      prompt,
+      modelCount: selectedModels.length,
+      results: benchmarkResults.sort((a: any, b: any) => (a.responseTime || Infinity) - (b.responseTime || Infinity)),
+      costComparison: {
+        gpt4oCost: gpt4oCost.toFixed(6),
+        actualCost: actualCost.toFixed(6),
+        savings: savings.toFixed(6),
+        savingsPercentage: gpt4oCost > 0 ? ((savings / gpt4oCost) * 100).toFixed(1) : '0.0',
+      },
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Benchmark failed' });
+  }
+});
+
 // Model discovery routes
 fastify.get('/api/models/discover/:providerId', async (request, reply) => {
   try {

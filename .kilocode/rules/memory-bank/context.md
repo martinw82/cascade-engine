@@ -110,3 +110,44 @@ Chained `.where()` calls in Drizzle ORM **overwrite** each other instead of comb
 - Verified file paths and project structure
 - Confirmed cascade engine logic resides in `src/server/routes/api/cascade.ts`
 
+
+## Latest Session (2026-05-25 PM)
+
+### Completed: cascade-engine-v0.9 Pre-Release Features
+
+**High Priority (ALL DONE)**
+- ✅ Rate limiting: per-user/per-API key with configurable limits and windows, in-memory store with cleanup, management API endpoints, UI form integration
+- ✅ Audit logging: full database-backed (`audit_logs` table) with severity levels (info/warning/error/critical), auto-cleanup (30 day retention), admin API endpoints with pagination/filtering, `createAuditLog()` helper for manual logging
+- ✅ Enterprise security: JWT auth via Bearer token support, `Authorization: Bearer <token>` alongside existing API key auth, AES-256-GCM encryption for provider API keys at rest, proper CIDR-based IP restriction matching, enhanced auth helpers (`isAdmin`, `getUsername`, `getUserRole`)
+- ✅ Admin panel: User management UI with CRUD, per-user analytics (provider usage, cascade rule usage, success rates, cost savings), system overview dashboard, role badge indicators
+- ✅ Monitoring dashboard: System health metrics (uptime, memory heap/RSS, platform info), enhanced Analytics component with System Health tab, request rate overview
+
+**Medium Priority (ALL DONE)**
+- ✅ Webhook system: webhooks table in schema, CRUD API endpoints, event-driven `triggerWebhooks()` service with validation (8 event types: cascade.success/error/fallback, provider.error, rate_limit.exceeded, auth.failure), configurable retry/timeout/secret, test endpoint
+- ✅ Backup/Restore: export full config backup (users, providers, models, cascade rules, auth keys, webhooks), selective restore (providers/models/rules only for safety), admin-only access
+- ✅ CLI tool enhancement: status, health, providers list, models list, backup commands with colored output
+- ✅ Rate limit management API endpoints (GET/PUT per-key, GET admin stats)
+- ✅ OpenAPI spec updates for all new endpoints
+
+**Deferred (Post-v0.9)**
+- ❌ Multi-tenant
+- ❌ SSO
+- ❌ Business monetization
+- ❌ Infrastructure scaling
+- ❌ Platform ecosystem
+
+**Pending (v0.9 Medium/Low)**
+- ⏳ SDK libraries (Python, JavaScript, Go)
+- ⏳ Model benchmarking interface
+- ⏳ Cost calculator
+- ⏳ A/B testing framework
+- ⏳ Community marketplace
+- ⏳ Plugin ecosystem
+- ⏳ Rollback capabilities
+- ⏳ Postman collection
+
+### Git Status
+- Commit `e00fd14` ready with v0.9 changes
+- 13 files changed, 2095 insertions, 104 deletions
+- Push blocked by GitHub internal server error (transient)
+- To push: `git push origin main`

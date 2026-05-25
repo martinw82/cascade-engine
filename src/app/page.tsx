@@ -12,8 +12,11 @@ import { Analytics } from '../components/cascade/Analytics';
 import { Auth } from '../components/cascade/Auth';
 import { Test } from '../components/cascade/Test';
 import { Admin } from '../components/cascade/Admin';
+import { Benchmark } from '../components/cascade/Benchmark';
+import { CostCalculator } from '../components/cascade/CostCalculator';
+import { ABTest } from '../components/cascade/ABTest';
 
-type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test' | 'admin';
+type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test' | 'benchmark' | 'cost' | 'abtest' | 'admin';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -33,6 +36,9 @@ export default function Home() {
     { id: 'analytics' as TabType, label: 'Analytics', icon: '📈' },
     { id: 'auth' as TabType, label: 'Security', icon: '🔐' },
     { id: 'test' as TabType, label: 'Test', icon: '🧪' },
+    { id: 'benchmark' as TabType, label: 'Benchmark', icon: '🏆' },
+    { id: 'cost' as TabType, label: 'Cost Calc', icon: '💰' },
+    { id: 'abtest' as TabType, label: 'A/B Test', icon: '🔬' },
     { id: 'admin' as TabType, label: 'Admin', icon: '⚙️' },
   ];
 
@@ -87,6 +93,9 @@ export default function Home() {
           {activeTab === 'analytics' && <Analytics />}
           {activeTab === 'auth' && <Auth />}
           {activeTab === 'test' && <Test />}
+          {activeTab === 'benchmark' && <Benchmark />}
+          {activeTab === 'cost' && <CostCalculator />}
+          {activeTab === 'abtest' && <ABTest />}
           {activeTab === 'admin' && <Admin />}
         </div>
       </main>
