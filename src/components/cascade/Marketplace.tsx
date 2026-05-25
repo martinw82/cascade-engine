@@ -2,20 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 
 const FALLBACK_KEY = 'cascade-master-default-key-2026';
 const CATEGORIES = ['general', 'coding', 'summarization', 'translation', 'analysis', 'creative', 'custom'];
 
 export function Marketplace() {
   const { apiKey } = useAuth();
+  const { addToast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [myItems, setMyItems] = useState<any[]>([]);
   const [tab, setTab] = useState<'browse' | 'publish'>('browse');
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
   // Publish form
   const [form, setForm] = useState({
     name: '', description: '', triggerType: 'keyword', triggerValue: '',
@@ -69,21 +69,21 @@ export function Marketplace() {
       });
       if (response.ok) {
         const data = await response.json();
-        setMessage({ type: 'success', text: data.message });
+        addToast('success', data.message);
         fetchItems();
       } else {
         const err = await response.json();
-        setMessage({ type: 'error', text: err.error || 'Download failed' });
+        addToast('error', err.error || 'Download failed');
       }
     } catch {
-      setMessage({ type: 'error', text: 'Download failed' });
+      addToast('error', 'Download failed');
     }
   };
 
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.triggerValue || !form.modelOrder) {
-      setMessage({ type: 'error', text: 'Name, trigger value, and model order are required' });
+      addToast('error', 'Name, trigger value, and model order are required');
       return;
     }
 
@@ -102,23 +102,23 @@ export function Marketplace() {
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Published to marketplace!' });
+        addToast('success', 'Published to marketplace!');
         setForm({ name: '', description: '', triggerType: 'keyword', triggerValue: '', modelOrder: '', wordLimit: 5, category: 'general', tags: '', published: false });
         fetchMyItems();
       } else {
         const err = await response.json();
-        setMessage({ type: 'error', text: err.error || 'Publish failed' });
+        addToast('error', err.error || 'Publish failed');
       }
     } catch {
-      setMessage({ type: 'error', text: 'Publish failed' });
+      addToast('error', 'Publish failed');
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Marketplace</h2>
+          <h2 className="text-2xl font-bold gradient-text">Marketplace</h2>
           <p className="text-neutral-400 mt-1">Discover and share cascade rule templates</p>
         </div>
         <div className="flex space-x-2">
@@ -126,13 +126,6 @@ export function Marketplace() {
           <button onClick={() => setTab('publish')} className={`px-3 py-1 text-sm rounded ${tab === 'publish' ? 'bg-blue-600 text-white' : 'bg-neutral-700 text-neutral-300'}`}>Publish</button>
         </div>
       </div>
-
-      {message && (
-        <div className={`px-4 py-2 rounded text-sm ${message.type === 'success' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-          {message.text}
-          <button onClick={() => setMessage(null)} className="ml-2 text-xs">✕</button>
-        </div>
-      )}
 
       {tab === 'browse' ? (
         <>
@@ -154,10 +147,10 @@ export function Marketplace() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {items.map((item) => (
-                <div key={item.id} className="bg-neutral-800 rounded-lg p-5 hover:bg-neutral-750 transition-colors">
+                <div key={item.id} className="glass rounded-xl p-5 hover:bg-white/5 transition-all duration-200">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold text-white">{item.name}</h3>
-                    <span className="px-2 py-0.5 bg-neutral-700 rounded text-xs text-neutral-300">{item.category}</span>
+                    <span className="px-2 py-0.5 glass-light rounded text-xs text-neutral-300">{item.category}</span>
                   </div>
                   {item.description && <p className="text-sm text-neutral-400 mb-3">{item.description}</p>}
                   <div className="text-xs text-neutral-500 mb-3">
@@ -178,7 +171,7 @@ export function Marketplace() {
       ) : (
         <>
           {/* Publish Form */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Publish Cascade Rule</h3>
             <form onSubmit={handlePublish} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -234,14 +227,14 @@ export function Marketplace() {
           </div>
 
           {/* My Listings */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">My Listings ({myItems.length})</h3>
             {myItems.length === 0 ? (
               <p className="text-neutral-500 text-sm">You haven't published any rules yet.</p>
             ) : (
               <div className="space-y-2">
                 {myItems.map((item) => (
-                  <div key={item.id} className="bg-neutral-700 rounded p-3 flex items-center justify-between">
+                  <div key={item.id} className="glass-light rounded-lg p-3 flex items-center justify-between">
                     <div>
                       <span className="font-medium text-sm">{item.name}</span>
                       <span className={`ml-2 px-2 py-0.5 rounded text-xs ${item.published ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}`}>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { ListSkeleton } from './Skeleton';
 
 const FALLBACK_KEY = 'cascade-master-default-key-2026';
 
@@ -17,6 +19,7 @@ interface Provider {
 export function Providers() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const { apiKey, setApiKey } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -78,7 +81,7 @@ export function Providers() {
       setProviders(prev => prev.map(p => p.id === id ? { ...p, status: 'ready' } : p));
     } catch (error) {
       console.error('Failed to reset provider:', error);
-      alert('Failed to reset provider');
+      addToast('error', 'Failed to reset provider');
     }
   };
 
@@ -106,17 +109,19 @@ export function Providers() {
         const newProvider = await response.json();
         if (editingId) {
           setProviders(prev => prev.map(p => p.id === editingId ? newProvider : p));
+          addToast('success', 'Provider updated');
         } else {
           setProviders(prev => [...prev, newProvider]);
+          addToast('success', 'Provider added');
         }
         resetForm();
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to save provider: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to save provider: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
       console.error('Error saving provider:', error);
-      alert('Error saving provider: ' + (error as Error).message);
+      addToast('error', 'Error saving provider: ' + (error as Error).message);
     }
   };
 
@@ -140,13 +145,14 @@ export function Providers() {
       });
       if (response.ok) {
         setProviders(prev => prev.filter(p => p.id !== id));
+        addToast('success', 'Provider deleted');
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to delete provider: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to delete provider: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
       console.error('Failed to delete provider:', error);
-      alert('Failed to delete provider: ' + (error as Error).message);
+      addToast('error', 'Failed to delete provider: ' + (error as Error).message);
     }
   };
 
@@ -161,12 +167,13 @@ export function Providers() {
       });
       if (response.ok) {
         setProviders([]);
+        addToast('success', 'All providers deleted');
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to delete all providers: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to delete all providers: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
-      alert('Failed to delete all providers: ' + (error as Error).message);
+      addToast('error', 'Failed to delete all providers: ' + (error as Error).message);
     }
   };
 
@@ -180,10 +187,10 @@ export function Providers() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Provider Management</h2>
+          <h2 className="text-2xl font-bold gradient-text">Provider Management</h2>
           <p className="text-neutral-400 mt-1">
             Configure LLM providers with their base URLs and API keys
           </p>
@@ -232,7 +239,7 @@ export function Providers() {
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4">
             {editingId ? 'Edit Provider' : 'Add New Provider'}
           </h3>
@@ -301,7 +308,7 @@ export function Providers() {
       {/* Providers List */}
       <div className="grid gap-4">
         {providers.map((provider) => (
-          <div key={provider.id} className="bg-neutral-800 rounded-lg p-6">
+          <div key={provider.id} className="glass rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <h3 className="text-lg font-semibold">{provider.name}</h3>
@@ -334,13 +341,13 @@ export function Providers() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-neutral-400">Base URL:</span>
-                <div className="text-neutral-200 font-mono bg-neutral-900 px-2 py-1 rounded mt-1">
+                <div className="text-neutral-200 font-mono glass rounded px-2 py-1 mt-1">
                   {provider.baseURL}
                 </div>
               </div>
               <div>
                 <span className="text-neutral-400">API Key:</span>
-                <div className="text-neutral-200 font-mono bg-neutral-900 px-2 py-1 rounded mt-1">
+                <div className="text-neutral-200 font-mono glass rounded px-2 py-1 mt-1">
                   {provider.apiKey ? '••••••••••••••••' : 'Not set'}
                 </div>
               </div>
@@ -353,7 +360,7 @@ export function Providers() {
         ))}
 
         {providers.length === 0 && (
-          <div className="bg-neutral-800 rounded-lg p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <div className="text-4xl mb-4">🔧</div>
             <h3 className="text-lg font-semibold mb-2">No Providers Configured</h3>
             <p className="text-neutral-400 mb-4">

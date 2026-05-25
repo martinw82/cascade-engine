@@ -94,10 +94,10 @@ export function Dashboard() {
   }, [apiKey]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       {/* Status Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-neutral-400 text-sm">Requests Today</p>
@@ -107,7 +107,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-neutral-400 text-sm">Success Rate</p>
@@ -117,7 +117,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-neutral-400 text-sm">Money Saved</p>
@@ -127,7 +127,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-neutral-400 text-sm">Uptime</p>
@@ -139,7 +139,7 @@ export function Dashboard() {
       </div>
 
       {/* Live Log Feed */}
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Live Request Trace</h2>
           <button
@@ -150,7 +150,7 @@ export function Dashboard() {
           </button>
         </div>
 
-        <div className="h-96 overflow-y-auto bg-neutral-900 rounded p-4 font-mono text-sm">
+        <div className="h-96 overflow-y-auto glass rounded-lg p-4 font-mono text-sm">
           {logs.length === 0 ? (
             <div className="text-neutral-400">Waiting for requests...</div>
           ) : (

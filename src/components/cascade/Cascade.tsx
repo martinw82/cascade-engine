@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { ListSkeleton } from './Skeleton';
 
 const FALLBACK_KEY = 'cascade-master-default-key-2026';
 
@@ -38,6 +40,7 @@ export function Cascade() {
     enabled: true
   });
   const { apiKey } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,6 +126,7 @@ export function Cascade() {
         });
 
         if (response.ok) {
+          addToast('success', 'Rule updated');
           const updatedRule = await response.json();
           setRules(prev =>
             prev.map(r =>
@@ -153,6 +157,7 @@ export function Cascade() {
         });
 
         if (response.ok) {
+          addToast('success', 'Rule created');
           const newRule = await response.json();
           const mappedRule: CascadeRule = {
             id: newRule.id,
@@ -204,11 +209,11 @@ export function Cascade() {
         setRules(prev => prev.filter(r => r.id !== id));
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to delete rule: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to delete rule: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
       console.error('Failed to delete cascade rule:', error);
-      alert('Failed to delete rule');
+      addToast('error', 'Failed to delete rule');
     }
   };
 
@@ -268,10 +273,10 @@ export function Cascade() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Cascade Management</h2>
+          <h2 className="text-2xl font-bold gradient-text">Cascade Management</h2>
           <p className="text-neutral-400 mt-1">
             Configure routing rules and provider priority for intelligent request cascading
           </p>
@@ -286,7 +291,7 @@ export function Cascade() {
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4">
             {editingId ? 'Edit Cascade Rule' : 'Add New Cascade Rule'}
           </h3>
@@ -392,7 +397,7 @@ export function Cascade() {
                 ))}
               </div>
               {formData.modelOrder.length > 0 && (
-                <div className="mt-3 p-3 bg-neutral-700 rounded">
+                <div className="mt-3 p-3 glass-light rounded-lg">
                   <div className="text-sm text-neutral-400 mb-2">Current Order (drag to reorder):</div>
                   <div className="space-y-1">
                     {formData.modelOrder.map((modelId, index) => (
@@ -402,7 +407,7 @@ export function Cascade() {
                         onDragStart={() => handleDragStart(index)}
                         onDragOver={(e) => handleDragOver(e, index)}
                         onDragEnd={handleDragEnd}
-                        className={`flex items-center justify-between bg-neutral-600 px-3 py-2 rounded cursor-move transition-opacity ${
+                        className={`flex items-center justify-between bg-neutral-700/50 px-3 py-2 rounded cursor-move transition-opacity ${
                           dragIndex === index ? 'opacity-50' : ''
                         }`}
                       >
@@ -472,7 +477,7 @@ export function Cascade() {
         {rules
           .sort((a, b) => a.priority - b.priority)
           .map((rule) => (
-            <div key={rule.id} className="bg-neutral-800 rounded-lg p-6">
+            <div key={rule.id} className="glass rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <h3 className="text-lg font-semibold">{rule.name}</h3>
@@ -507,10 +512,10 @@ export function Cascade() {
                 <div>
                   <span className="text-neutral-400">Trigger:</span>
                   <div className="text-neutral-200 mt-1">
-                    <span className="bg-neutral-700 px-2 py-1 rounded text-xs mr-2">
+                    <span className="glass-light rounded px-2 py-1 text-xs mr-2">
                       {getTriggerTypeLabel(rule.triggerType)}
                     </span>
-                    <code className="bg-neutral-900 px-2 py-1 rounded text-xs">
+                    <code className="glass rounded px-2 py-1 text-xs">
                       {rule.triggerValue}
                     </code>
                     {rule.triggerType === 'keyword' && (
@@ -524,7 +529,7 @@ export function Cascade() {
                   <span className="text-neutral-400">Model Order:</span>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {rule.modelOrder.map((modelId, index) => (
-                      <span key={modelId} className="bg-neutral-700 px-2 py-1 rounded text-xs">
+                      <span key={modelId} className="glass-light rounded px-2 py-1 text-xs">
                         {index + 1}. {getModelName(modelId)}
                       </span>
                     ))}
@@ -539,7 +544,7 @@ export function Cascade() {
           ))}
 
         {rules.length === 0 && (
-          <div className="bg-neutral-800 rounded-lg p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <div className="text-4xl mb-4">🔀</div>
             <h3 className="text-lg font-semibold mb-2">No Cascade Rules</h3>
             <p className="text-neutral-400 mb-4">

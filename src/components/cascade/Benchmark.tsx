@@ -101,14 +101,14 @@ export function Benchmark() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div>
-        <h2 className="text-2xl font-bold">Model Benchmark</h2>
+        <h2 className="text-2xl font-bold gradient-text">Model Benchmark</h2>
         <p className="text-neutral-400 mt-1">Compare model performance, speed, and cost side-by-side</p>
       </div>
 
       {/* Model Selection */}
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Select Models to Compare</h3>
         {models.length === 0 ? (
           <p className="text-neutral-400">No models configured. Add models first.</p>
@@ -120,7 +120,7 @@ export function Benchmark() {
                 className={`flex items-center p-2 rounded cursor-pointer transition-colors ${
                   selectedModels.includes(model.id)
                     ? 'bg-blue-600/20 border border-blue-500/50'
-                    : 'bg-neutral-700 hover:bg-neutral-600 border border-transparent'
+                    : 'glass-light hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <input
@@ -143,7 +143,7 @@ export function Benchmark() {
       </div>
 
       {/* Prompt Input */}
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Test Prompt</h3>
         <textarea
           value={prompt}
@@ -174,29 +174,29 @@ export function Benchmark() {
       </button>
 
       {error && (
-        <div className="bg-red-900/20 text-red-400 p-4 rounded-lg">{error}</div>
+        <div className="glass rounded-lg p-4 text-red-400 border border-red-500/30">{error}</div>
       )}
 
       {/* Results */}
       {result && (
         <div className="space-y-6">
           {/* Cost Comparison */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Cost Comparison</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-neutral-700 rounded p-3">
+              <div className="glass-light rounded-lg p-3">
                 <p className="text-neutral-400 text-xs">GPT-4o Estimated Cost</p>
                 <p className="text-xl font-bold text-red-400">${parseFloat(result.costComparison.gpt4oCost).toFixed(4)}</p>
               </div>
-              <div className="bg-neutral-700 rounded p-3">
+              <div className="glass-light rounded-lg p-3">
                 <p className="text-neutral-400 text-xs">Actual Cost (Selected)</p>
                 <p className="text-xl font-bold text-blue-400">${parseFloat(result.costComparison.actualCost).toFixed(4)}</p>
               </div>
-              <div className="bg-neutral-700 rounded p-3">
+              <div className="glass-light rounded-lg p-3">
                 <p className="text-neutral-400 text-xs">Savings</p>
                 <p className="text-xl font-bold text-green-400">${parseFloat(result.costComparison.savings).toFixed(4)}</p>
               </div>
-              <div className="bg-neutral-700 rounded p-3">
+              <div className="glass-light rounded-lg p-3">
                 <p className="text-neutral-400 text-xs">Savings %</p>
                 <p className="text-xl font-bold text-green-400">{result.costComparison.savingsPercentage}%</p>
               </div>
@@ -204,7 +204,7 @@ export function Benchmark() {
           </div>
 
           {/* Results Table */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Benchmark Results</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

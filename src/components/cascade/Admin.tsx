@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { CardSkeleton, TableSkeleton } from './Skeleton';
 
 const FALLBACK_KEY = 'cascade-master-default-key-2026';
 
@@ -19,6 +21,7 @@ interface User {
 
 export function Admin() {
   const { apiKey } = useAuth();
+  const { addToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,10 +114,10 @@ export function Admin() {
         fetchUsers();
       } else {
         const err = await response.json();
-        alert(err.error || 'Failed to delete user');
+        addToast('error', err.error || 'Failed to delete user');
       }
     } catch {
-      alert('Failed to delete user');
+      addToast('error', 'Failed to delete user');
     }
   };
 
@@ -128,7 +131,7 @@ export function Admin() {
         setSelectedUserAnalytics(data);
       }
     } catch {
-      alert('Failed to fetch user analytics');
+      addToast('error', 'Failed to fetch user analytics');
     }
   };
 
@@ -141,14 +144,19 @@ export function Admin() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-neutral-400">Loading admin panel...</div></div>;
+    return (
+      <div className="space-y-6">
+        <div className="skeleton h-8 w-48" />
+        <TableSkeleton rows={4} cols={8} />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
         <h2 className="text-2xl font-bold">Admin Panel</h2>
-        <div className="bg-red-900/20 rounded-lg p-6 text-center">
+        <div className="glass rounded-xl p-6 text-center">
           <div className="text-4xl mb-4">🔒</div>
           <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
           <p className="text-neutral-400">{error}</p>
@@ -162,7 +170,7 @@ export function Admin() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Admin Panel</h2>
+<h2 className="text-2xl font-bold gradient-text">Admin Panel</h2>
           <p className="text-neutral-400 mt-1">User management, per-user analytics, and system configuration</p>
         </div>
         <button
@@ -174,7 +182,7 @@ export function Admin() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-neutral-800 rounded-lg overflow-hidden">
+      <div className="glass rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-neutral-700">
           <h3 className="text-lg font-semibold">Users ({users.length})</h3>
         </div>
@@ -308,7 +316,7 @@ export function Admin() {
 
       {/* User Analytics Modal */}
       {selectedUserAnalytics && (
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">User Analytics</h3>
             <button
@@ -319,19 +327,19 @@ export function Admin() {
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-neutral-700 rounded p-3">
+            <div className="glass-light rounded-lg p-3">
               <p className="text-neutral-400 text-xs">Total Requests</p>
               <p className="text-xl font-bold">{selectedUserAnalytics.totalRequests}</p>
             </div>
-            <div className="bg-neutral-700 rounded p-3">
+            <div className="glass-light rounded-lg p-3">
               <p className="text-neutral-400 text-xs">Success Rate</p>
               <p className="text-xl font-bold text-green-400">{selectedUserAnalytics.successRate}%</p>
             </div>
-            <div className="bg-neutral-700 rounded p-3">
+            <div className="glass-light rounded-lg p-3">
               <p className="text-neutral-400 text-xs">Errors</p>
               <p className="text-xl font-bold text-red-400">{selectedUserAnalytics.totalErrors}</p>
             </div>
-            <div className="bg-neutral-700 rounded p-3">
+            <div className="glass-light rounded-lg p-3">
               <p className="text-neutral-400 text-xs">Cost Saved</p>
               <p className="text-xl font-bold text-green-400">${selectedUserAnalytics.totalCostSaved}</p>
             </div>
@@ -341,7 +349,7 @@ export function Admin() {
               <h4 className="text-sm font-semibold text-neutral-300 mb-2">Provider Usage</h4>
               <div className="space-y-1">
                 {selectedUserAnalytics.providerUsage.map((p: any, i: number) => (
-                  <div key={i} className="flex justify-between bg-neutral-700 rounded px-3 py-1 text-sm">
+                  <div key={i} className="flex justify-between glass-light rounded-lg px-3 py-1 text-sm">
                     <span className="text-neutral-300">{p.provider}</span>
                     <span className="text-neutral-400">{p.count} requests</span>
                   </div>
@@ -352,7 +360,7 @@ export function Admin() {
               <h4 className="text-sm font-semibold text-neutral-300 mb-2">Cascade Rule Usage</h4>
               <div className="space-y-1">
                 {selectedUserAnalytics.ruleUsage.map((r: any, i: number) => (
-                  <div key={i} className="flex justify-between items-center bg-neutral-700 rounded px-3 py-1 text-sm">
+                  <div key={i} className="flex justify-between items-center glass-light rounded-lg px-3 py-1 text-sm">
                     <span className="text-neutral-300">{r.ruleId}</span>
                     <span className="text-neutral-400">
                       {r.successes}/{r.requests} success
@@ -366,22 +374,22 @@ export function Admin() {
       )}
 
       {/* System Overview */}
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">System Overview</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-neutral-700 rounded p-3">
+          <div className="glass-light rounded-lg p-3">
             <p className="text-neutral-400 text-xs">Total Users</p>
             <p className="text-xl font-bold">{users.length}</p>
           </div>
-          <div className="bg-neutral-700 rounded p-3">
+          <div className="glass-light rounded-lg p-3">
             <p className="text-neutral-400 text-xs">Active Users</p>
             <p className="text-xl font-bold text-green-400">{users.filter(u => u.enabled).length}</p>
           </div>
-          <div className="bg-neutral-700 rounded p-3">
+          <div className="glass-light rounded-lg p-3">
             <p className="text-neutral-400 text-xs">Admins</p>
             <p className="text-xl font-bold text-purple-400">{users.filter(u => u.role === 'admin').length}</p>
           </div>
-          <div className="bg-neutral-700 rounded p-3">
+          <div className="glass-light rounded-lg p-3">
             <p className="text-neutral-400 text-xs">Total Requests</p>
             <p className="text-xl font-bold">{users.reduce((s, u) => s + u.requestCount, 0)}</p>
           </div>

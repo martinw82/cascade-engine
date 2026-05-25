@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 
 const FALLBACK_KEY = 'cascade-master-default-key-2026';
 
@@ -19,6 +20,7 @@ interface AuthKey {
 }
 
 export function Auth() {
+  const { addToast } = useToast();
   const [authKeys, setAuthKeys] = useState<AuthKey[]>([]);
   const { apiKey: currentApiKey, setApiKey } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
@@ -250,11 +252,11 @@ setAuthKeys(prev => [...prev, {
        }
      } catch (error) {
        console.error('Error saving access key:', error);
-       alert('Failed to save access key: ' + (error as Error).message);
-     }
-   };
-
-   const handleEdit = (authKey: AuthKey) => {
+        addToast('error', 'Failed to save access key: ' + (error as Error).message);
+      }
+    };
+ 
+    const handleEdit = (authKey: AuthKey) => {
      setFormData({
        name: authKey.name,
        keyValue: authKey.keyValue,
@@ -290,10 +292,10 @@ setAuthKeys(prev => [...prev, {
        setAuthKeys(prev => prev.filter(k => k.id !== id));
      } catch (error) {
        console.error('Error deleting access key:', error);
-       alert('Failed to delete access key: ' + (error as Error).message);
-     }
-   };
-
+        addToast('error', 'Failed to delete access key: ' + (error as Error).message);
+      }
+    };
+ 
   const handleIpChange = (index: number, value: string) => {
     const newIps = [...formData.allowedIps];
     newIps[index] = value;
@@ -374,10 +376,10 @@ setAuthKeys(prev => [...prev, {
   const permissions = ['read', 'write', 'admin'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Authentication & Security</h2>
+          <h2 className="text-2xl font-bold gradient-text">Authentication & Security</h2>
           <p className="text-neutral-400 mt-1">
             Manage access keys and IP restrictions for secure API usage
           </p>
@@ -392,7 +394,7 @@ setAuthKeys(prev => [...prev, {
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4">
             {editingId ? 'Edit Access Key' : 'Add New Access Key'}
           </h3>
@@ -506,7 +508,7 @@ setAuthKeys(prev => [...prev, {
             </div>
 
             {/* Rate Limiting */}
-            <div className="border-t border-neutral-700 pt-4">
+            <div className="border-t border-surface-700/50 pt-4">
               <h4 className="text-sm font-semibold text-neutral-300 mb-3">Rate Limiting</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -580,10 +582,10 @@ setAuthKeys(prev => [...prev, {
       )}
 
       {/* User Profile & Password Change */}
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">Account</h3>
+            <h3 className="text-lg font-semibold gradient-text">Account</h3>
             {userInfo && (
               <p className="text-sm text-neutral-400">
                 Logged in as <span className="text-white font-medium">{userInfo.username}</span>
@@ -600,7 +602,7 @@ setAuthKeys(prev => [...prev, {
         </div>
 
         {showPasswordChange && (
-          <form onSubmit={handleChangePassword} className="space-y-4 mt-4 pt-4 border-t border-neutral-700">
+          <form onSubmit={handleChangePassword} className="space-y-4 mt-4 pt-4 border-t border-surface-700/50">
             <div>
               <label className="block text-sm font-medium text-neutral-300 mb-2">
                 Current Password
@@ -666,7 +668,7 @@ setAuthKeys(prev => [...prev, {
       {/* Auth Keys List */}
       <div className="grid gap-4">
         {authKeys.map((authKey) => (
-          <div key={authKey.id} className="bg-neutral-800 rounded-lg p-6">
+          <div key={authKey.id} className="glass rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <h3 className="text-lg font-semibold">{authKey.name}</h3>
@@ -697,7 +699,7 @@ setAuthKeys(prev => [...prev, {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="text-neutral-400">Access Key:</span>
-                <div className="text-neutral-200 font-mono bg-neutral-900 px-2 py-1 rounded mt-1 text-xs break-all">
+                <div className="text-neutral-200 font-mono glass rounded mt-1 text-xs break-all px-2 py-1">
                   {authKey.keyValue}
                 </div>
               </div>
@@ -706,7 +708,7 @@ setAuthKeys(prev => [...prev, {
                 <div className="mt-1 space-y-1">
                   {authKey.allowedIps.length > 0 ? (
                     authKey.allowedIps.map((ip, index) => (
-                      <div key={index} className="text-neutral-200 font-mono bg-neutral-900 px-2 py-1 rounded text-xs">
+                      <div key={index} className="text-neutral-200 font-mono glass rounded px-2 py-1 text-xs">
                         {ip}
               <div>
                 <span className="text-neutral-400">Rate Limit:</span>
@@ -731,7 +733,7 @@ setAuthKeys(prev => [...prev, {
                 <span className="text-neutral-400">Permissions:</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {authKey.permissions.map((permission) => (
-                    <span key={permission} className="bg-neutral-700 px-2 py-1 rounded text-xs capitalize">
+                    <span key={permission} className="glass-light rounded px-2 py-1 text-xs capitalize">
                       {permission}
                     </span>
                   ))}
@@ -758,7 +760,7 @@ setAuthKeys(prev => [...prev, {
         ))}
 
         {authKeys.length === 0 && (
-          <div className="bg-neutral-800 rounded-lg p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <div className="text-4xl mb-4">🔐</div>
             <h3 className="text-lg font-semibold mb-2">No Access Keys</h3>
             <p className="text-neutral-400 mb-4">
@@ -775,15 +777,15 @@ setAuthKeys(prev => [...prev, {
       </div>
 
       {/* API Usage Instructions */}
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">API Usage Instructions</h3>
         <div className="space-y-3 text-sm text-neutral-300">
           <div>
-            <strong>Authentication:</strong> Include the access key in the <code className="bg-neutral-900 px-2 py-1 rounded text-xs">X-API-Key</code> header
+            <strong>Authentication:</strong> Include the access key in the <code className="glass rounded px-2 py-1 text-xs">X-API-Key</code> header
           </div>
           <div>
             <strong>Example:</strong>
-            <pre className="bg-neutral-900 p-3 rounded mt-1 text-xs overflow-x-auto">
+            <pre className="glass rounded mt-1 p-3 text-xs overflow-x-auto">
           {`curl -X POST http://your-server:3001/api/cascade \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: your-access-key-here" \\

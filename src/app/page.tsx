@@ -19,8 +19,15 @@ import { Marketplace } from '../components/cascade/Marketplace';
 
 type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test' | 'benchmark' | 'cost' | 'abtest' | 'marketplace' | 'admin';
 
+const tabIcons: Record<string, string> = {
+  dashboard: '📊', providers: '🔧', models: '🤖', cascade: '🔀',
+  analytics: '📈', auth: '🔐', test: '🧪', benchmark: '🏆',
+  cost: '💰', abtest: '🔬', marketplace: '🏪', admin: '⚙️',
+};
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { logout } = useUIAuth();
   const router = useRouter();
 
@@ -30,78 +37,127 @@ export default function Home() {
   };
 
   const tabs = [
-    { id: 'dashboard' as TabType, label: 'Dashboard', icon: '📊' },
-    { id: 'providers' as TabType, label: 'Providers', icon: '🔧' },
-    { id: 'models' as TabType, label: 'Models', icon: '🤖' },
-    { id: 'cascade' as TabType, label: 'Cascade', icon: '🔀' },
-    { id: 'analytics' as TabType, label: 'Analytics', icon: '📈' },
-    { id: 'auth' as TabType, label: 'Security', icon: '🔐' },
-    { id: 'test' as TabType, label: 'Test', icon: '🧪' },
-    { id: 'benchmark' as TabType, label: 'Benchmark', icon: '🏆' },
-    { id: 'cost' as TabType, label: 'Cost Calc', icon: '💰' },
-    { id: 'abtest' as TabType, label: 'A/B Test', icon: '🔬' },
-    { id: 'marketplace' as TabType, label: 'Marketplace', icon: '🏪' },
-    { id: 'admin' as TabType, label: 'Admin', icon: '⚙️' },
+    { id: 'dashboard' as TabType, label: 'Dashboard', icon: '📊', group: 'Core' },
+    { id: 'providers' as TabType, label: 'Providers', icon: '🔧', group: 'Configuration' },
+    { id: 'models' as TabType, label: 'Models', icon: '🤖', group: 'Configuration' },
+    { id: 'cascade' as TabType, label: 'Cascade Rules', icon: '🔀', group: 'Configuration' },
+    { id: 'analytics' as TabType, label: 'Analytics', icon: '📈', group: 'Monitoring' },
+    { id: 'auth' as TabType, label: 'Security', icon: '🔐', group: 'Monitoring' },
+    { id: 'test' as TabType, label: 'Test', icon: '🧪', group: 'Tools' },
+    { id: 'benchmark' as TabType, label: 'Benchmark', icon: '🏆', group: 'Tools' },
+    { id: 'cost' as TabType, label: 'Cost Calc', icon: '💰', group: 'Tools' },
+    { id: 'abtest' as TabType, label: 'A/B Test', icon: '🔬', group: 'Tools' },
+    { id: 'marketplace' as TabType, label: 'Marketplace', icon: '🏪', group: 'Community' },
+    { id: 'admin' as TabType, label: 'Admin', icon: '⚙️', group: 'System' },
   ];
+
+  const groups = [...new Set(tabs.map(t => t.group))];
+
+  const tabContent = () => {
+    switch (activeTab) {
+      case 'dashboard': return <Dashboard />;
+      case 'providers': return <Providers />;
+      case 'models': return <Models />;
+      case 'cascade': return <Cascade />;
+      case 'analytics': return <Analytics />;
+      case 'auth': return <Auth />;
+      case 'test': return <Test />;
+      case 'benchmark': return <Benchmark />;
+      case 'cost': return <CostCalculator />;
+      case 'abtest': return <ABTest />;
+      case 'marketplace': return <Marketplace />;
+      case 'admin': return <Admin />;
+    }
+  };
 
   return (
     <AuthWrapper>
-      <main className="min-h-screen bg-neutral-900 text-neutral-100">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Cascade Master</h1>
-            <p className="text-neutral-400 mt-1">
-              Universal AI Traffic Controller - Maximize free-tier LLM usage
-            </p>
+      <div className="flex h-screen bg-surface-950 overflow-hidden">
+        {/* Sidebar */}
+        <aside className={`${sidebarCollapsed ? 'w-16' : 'w-56'} flex-shrink-0 bg-surface-900 border-r border-white/5 flex flex-col transition-all duration-300 ease-out`}>
+          {/* Brand */}
+          <div className={`flex items-center h-14 border-b border-white/5 px-4 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            {sidebarCollapsed ? (
+              <span className="text-xl font-bold gradient-text">C</span>
+            ) : (
+              <div>
+                <h1 className="text-sm font-bold gradient-text tracking-tight">Cascade Master</h1>
+                <p className="text-[10px] text-surface-500 tracking-wide uppercase">AI Traffic Controller</p>
+              </div>
+            )}
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-neutral-400">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>Server Online</span>
-            </div>
+
+          {/* Nav */}
+          <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4 scrollbar-none">
+            {groups.map(group => (
+              <div key={group}>
+                {!sidebarCollapsed && (
+                  <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-surface-500 mb-1">{group}</p>
+                )}
+                {tabs.filter(t => t.group === group).map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      activeTab === tab.id
+                        ? 'bg-accent-500/10 text-accent-400 shadow-[inset_2px_0_0_theme(colors.accent.500)]'
+                        : 'text-surface-400 hover:text-surface-200 hover:bg-white/5'
+                    }`}
+                    title={sidebarCollapsed ? tab.label : undefined}
+                  >
+                    <span className="text-base flex-shrink-0">{tab.icon}</span>
+                    {!sidebarCollapsed && <span className="truncate">{tab.label}</span>}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </nav>
+
+          {/* Bottom */}
+          <div className="border-t border-white/5 p-3 space-y-2">
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="w-full flex items-center justify-center px-3 py-2 rounded-lg text-sm text-surface-400 hover:text-surface-200 hover:bg-white/5 transition-colors"
+              title={sidebarCollapsed ? 'Expand' : 'Collapse'}
+            >
+              {sidebarCollapsed ? '→' : '← Collapse'}
+            </button>
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 text-sm rounded-md transition-colors border border-red-600/30"
+              className="w-full flex items-center justify-center px-3 py-2 rounded-lg text-sm text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors"
             >
-              Logout
+              {sidebarCollapsed ? '⏻' : '⏻ Logout'}
             </button>
           </div>
-        </div>
+        </aside>
 
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 mb-8 bg-neutral-800 p-1 rounded-lg">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-neutral-700 text-white'
-                  : 'text-neutral-400 hover:text-white hover:bg-neutral-700/50'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
+        {/* Main */}
+        <main className="flex-1 overflow-y-auto">
+          {/* Top bar */}
+          <div className="sticky top-0 z-10 bg-surface-950/80 backdrop-blur-xl border-b border-white/5">
+            <div className="flex items-center justify-between px-6 h-14">
+              <div className="flex items-center space-x-3">
+                <h2 className="text-lg font-semibold text-surface-200 capitalize">{activeTab}</h2>
+                <span className="text-lg">{tabIcons[activeTab]}</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 text-xs text-surface-500">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span>Live</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {/* Tab Content */}
-        <div className="tab-content">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'providers' && <Providers />}
-          {activeTab === 'models' && <Models />}
-          {activeTab === 'cascade' && <Cascade />}
-          {activeTab === 'analytics' && <Analytics />}
-          {activeTab === 'auth' && <Auth />}
-          {activeTab === 'test' && <Test />}
-          {activeTab === 'benchmark' && <Benchmark />}
-          {activeTab === 'cost' && <CostCalculator />}
-          {activeTab === 'abtest' && <ABTest />}
-          {activeTab === 'marketplace' && <Marketplace />}
-          {activeTab === 'admin' && <Admin />}
-        </div>
-      </main>
+          {/* Content */}
+          <div className="p-6 animate-fadeIn" key={activeTab}>
+            {tabContent()}
+          </div>
+        </main>
+      </div>
     </AuthWrapper>
   );
 }

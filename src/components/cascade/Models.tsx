@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { ListSkeleton } from './Skeleton';
 
 const FALLBACK_KEY = 'cascade-master-default-key-2026';
 
@@ -48,6 +50,7 @@ export function Models() {
     costPerToken: 0
   });
   const { apiKey, setApiKey } = useAuth();
+  const { addToast } = useToast();
 
   const fetchData = useCallback(async () => {
     console.log('Fetching models and providers...');
@@ -171,13 +174,14 @@ export function Models() {
           setModels(prev => [...prev, localModel]);
         }
         resetForm();
+        addToast('success', editingId ? 'Model updated' : 'Model added');
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to save model: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to save model: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
       console.error('Error saving model:', error);
-      alert('Error saving model: ' + (error as Error).message);
+      addToast('error', 'Error saving model: ' + (error as Error).message);
     }
   };
 
@@ -213,10 +217,10 @@ export function Models() {
         setModels([]);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to delete all models: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to delete all models: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
-      alert('Failed to delete all models: ' + (error as Error).message);
+      addToast('error', 'Failed to delete all models: ' + (error as Error).message);
     }
   };
 
@@ -234,10 +238,10 @@ export function Models() {
         setModels(prev => prev.filter(m => m.providerId !== providerId));
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to delete models: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to delete models: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
-      alert('Failed to delete models: ' + (error as Error).message);
+      addToast('error', 'Failed to delete models: ' + (error as Error).message);
     }
   };
 
@@ -284,10 +288,10 @@ export function Models() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Model Configuration</h2>
+          <h2 className="text-2xl font-bold gradient-text">Model Configuration</h2>
           <p className="text-neutral-400 mt-1">
             Configure models for each provider with their limits and capabilities
           </p>
@@ -349,7 +353,7 @@ export function Models() {
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4">
             {editingId ? 'Edit Model' : 'Add New Model'}
           </h3>
@@ -531,15 +535,15 @@ export function Models() {
 
               if (response.ok) {
                 const result = await response.json();
-                alert(`Bulk import completed! ${result.success} models added, ${result.errors} errors.`);
+                addToast('info', `Bulk import: ${result.success} added, ${result.errors} errors`);
                 fetchData(); // Refresh the list
                 setIsBulkImport(false);
               } else {
                 const errorData = await response.json().catch(() => ({}));
-                alert('Bulk import failed: ' + (errorData.error || response.statusText));
+                addToast('error', 'Bulk import failed: ' + (errorData.error || response.statusText));
               }
             } catch (error) {
-              alert('Bulk import error: ' + (error as Error).message);
+              addToast('error', 'Bulk import error: ' + (error as Error).message);
             }
           }}
         />
@@ -583,15 +587,15 @@ export function Models() {
 
               if (response.ok) {
                 const result = await response.json();
-                alert(`Models imported! ${result.success} added, ${result.errors} errors.`);
+                addToast('info', `Models imported: ${result.success} added, ${result.errors} errors`);
                 fetchData(); // Refresh the list
                 setIsDiscovering(false);
               } else {
                 const errorData = await response.json().catch(() => ({}));
-                alert('Import failed: ' + (errorData.error || response.statusText));
+                addToast('error', 'Import failed: ' + (errorData.error || response.statusText));
               }
             } catch (error) {
-              alert('Import error: ' + (error as Error).message);
+              addToast('error', 'Import error: ' + (error as Error).message);
             }
           }}
         />
@@ -600,11 +604,11 @@ export function Models() {
       {/* Models List */}
       <div className="grid gap-4">
         {models.map((model) => (
-          <div key={model.id} className="bg-neutral-800 rounded-lg p-6">
+          <div key={model.id} className="glass rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <h3 className="text-lg font-semibold">{model.modelId}</h3>
-                <span className="text-sm text-neutral-400 bg-neutral-700 px-2 py-1 rounded">
+                <span className="text-sm text-neutral-400 glass-light rounded-lg px-2 py-1">
                   {getProviderName(model.providerId)}
                 </span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(model.status)}`}>
@@ -658,7 +662,7 @@ export function Models() {
         ))}
 
         {models.length === 0 && (
-          <div className="bg-neutral-800 rounded-lg p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <div className="text-4xl mb-4">🤖</div>
             <h3 className="text-lg font-semibold mb-2">No Models Configured</h3>
             <p className="text-neutral-400 mb-4">
@@ -689,6 +693,7 @@ function BulkImportModal({
 }) {
   const [jsonText, setJsonText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const template = `[
   {
@@ -719,19 +724,20 @@ function BulkImportModal({
     if (!jsonText.trim()) return;
 
     setIsImporting(true);
+    setImportError(null);
     try {
       const models = JSON.parse(jsonText);
       await onImport(models);
     } catch (error) {
-      alert('Invalid JSON format: ' + (error as Error).message);
+      setImportError('Invalid JSON format: ' + (error as Error).message);
     } finally {
       setIsImporting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-neutral-800 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="glass rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Bulk Model Import</h3>
           <button
@@ -755,9 +761,9 @@ function BulkImportModal({
             />
           </div>
 
-          <div className="bg-neutral-700 p-4 rounded">
+          <div className="glass-light rounded-lg p-4">
             <h4 className="text-sm font-medium mb-2">Template Example:</h4>
-            <pre className="text-xs text-neutral-300 font-mono bg-neutral-800 p-2 rounded overflow-x-auto">
+            <pre className="text-xs text-neutral-300 font-mono glass rounded overflow-x-auto p-2">
               {template}
             </pre>
             <button
@@ -772,6 +778,9 @@ function BulkImportModal({
             <strong>Required fields:</strong> providerId, modelId<br />
             <strong>Optional fields:</strong> contextWindow, rpmLimit, tpmLimit, dailyQuota, isFree, costPerToken, status
           </div>
+          {importError && (
+            <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{importError}</div>
+          )}
         </div>
 
         <div className="flex space-x-3 mt-6">
@@ -815,17 +824,19 @@ function ModelDiscoveryModal({
   const [isImporting, setIsImporting] = useState(false);
   const [testingModelId, setTestingModelId] = useState<string | null>(null);
   const [modelTestResults, setModelTestResults] = useState<Record<string, { success: boolean; error?: string }>>({});
+  const [discoveryError, setDiscoveryError] = useState<string | null>(null);
 
   const handleDiscover = async () => {
     if (!selectedProvider) return;
 
     setIsDiscovering(true);
+    setDiscoveryError(null);
     try {
       const models = await onDiscover(selectedProvider);
       setDiscoveredModels(models);
-      setSelectedModels(new Set()); // Reset selections
+      setSelectedModels(new Set());
     } catch (error) {
-      alert('Discovery failed: ' + (error as Error).message);
+      setDiscoveryError('Discovery failed: ' + (error as Error).message);
     } finally {
       setIsDiscovering(false);
     }
@@ -839,7 +850,7 @@ function ModelDiscoveryModal({
     try {
       await onImport(modelsToImport);
     } catch (error) {
-      alert('Import failed: ' + (error as Error).message);
+      setDiscoveryError('Import failed: ' + (error as Error).message);
     } finally {
       setIsImporting(false);
     }
@@ -888,8 +899,8 @@ function ModelDiscoveryModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-neutral-800 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="glass rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Discover Models</h3>
           <button
@@ -927,6 +938,10 @@ function ModelDiscoveryModal({
             {isDiscovering ? '🔍 Discovering...' : '🔍 Discover Models'}
           </button>
 
+          {discoveryError && (
+            <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{discoveryError}</div>
+          )}
+
           {discoveredModels.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -952,7 +967,7 @@ function ModelDiscoveryModal({
                   </button>
                 </div>
               </div>
-              <div className="max-h-64 overflow-y-auto bg-neutral-700 rounded p-2">
+              <div className="max-h-64 overflow-y-auto glass-light rounded-lg p-2">
                 {discoveredModels.map((model, index) => {
                   const testResult = modelTestResults[model.id];
                   return (

@@ -123,15 +123,15 @@ export function ABTest() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div>
-        <h2 className="text-2xl font-bold">A/B Testing</h2>
+        <h2 className="text-2xl font-bold gradient-text">A/B Testing</h2>
         <p className="text-neutral-400 mt-1">Compare cascade rule performance with statistical testing</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Variant A */}
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4 text-blue-400">Variant A</h3>
           <select
             value={testA.ruleId}
@@ -149,7 +149,7 @@ export function ABTest() {
         </div>
 
         {/* Variant B */}
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4 text-green-400">Variant B</h3>
           <select
             value={testB.ruleId}
@@ -168,7 +168,7 @@ export function ABTest() {
       </div>
 
       {/* Prompt + Config */}
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Test Configuration</h3>
         <textarea
           value={testA.prompt}
@@ -197,12 +197,12 @@ export function ABTest() {
       </div>
 
       {error && (
-        <div className="bg-red-900/20 text-red-400 p-4 rounded-lg">{error}</div>
+        <div className="glass rounded-lg p-4 text-red-400 border border-red-500/30">{error}</div>
       )}
 
       {/* Results */}
       {results && (
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4">Results</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

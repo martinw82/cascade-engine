@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { CardSkeleton } from './Skeleton';
 
 const FALLBACK_KEY = 'cascade-master-default-key-2026';
 
@@ -144,9 +145,9 @@ export function Test() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-neutral-800 rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Test Cascade</h2>
+    <div className="space-y-6 animate-fadeIn">
+      <div className="glass rounded-xl p-6">
+        <h2 className="text-xl font-semibold mb-4 gradient-text">Test Cascade</h2>
         <p className="text-neutral-400 mb-4">
           Test your cascade configuration by sending a message through the system.
         </p>
@@ -226,11 +227,11 @@ export function Test() {
       </div>
 
       {error && (
-        <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
+        <div className="glass rounded-xl p-4 border border-red-500/50">
           <h3 className="text-red-400 font-medium mb-2">Error</h3>
           <p className="text-red-300 font-medium">{error.title}</p>
           {error.details && (
-            <div className="mt-2 p-2 bg-red-950/30 rounded border border-red-800/50">
+            <div className="mt-2 p-2 glass rounded border border-red-800/50">
               <p className="text-red-400 text-xs font-mono whitespace-pre-wrap break-words">
                 {error.details}
               </p>
@@ -240,9 +241,9 @@ export function Test() {
       )}
 
       {response && (
-        <div className="bg-green-900/20 border border-green-500 rounded-lg p-4">
+        <div className="glass rounded-xl p-4 border border-green-500/50">
           <h3 className="text-green-400 font-medium mb-2">Response</h3>
-          <div className="bg-neutral-800 rounded p-3 font-mono text-sm text-neutral-300">
+          <div className="glass rounded p-3 font-mono text-sm text-neutral-300">
             {response.choices[0]?.message?.content || 'No response content'}
           </div>
           <div className="mt-2 text-xs text-neutral-400">

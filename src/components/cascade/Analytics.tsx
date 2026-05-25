@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { CardSkeleton, TableSkeleton } from './Skeleton';
 
 interface ProviderStats {
   provider: string;
@@ -79,6 +81,7 @@ interface AnalyticsData {
 
 export function Analytics() {
   const { apiKey } = useAuth();
+  const { addToast } = useToast();
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -124,11 +127,11 @@ export function Analytics() {
         setData(prev => prev ? { ...prev, recentLogs: [], totalRequests: 0, totalSuccesses: 0, totalErrors: 0 } : null);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert('Failed to clear logs: ' + (errorData.error || response.statusText));
+        addToast('error', 'Failed to clear logs: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
       console.error('Failed to clear logs:', error);
-      alert('Failed to clear logs');
+      addToast('error', 'Failed to clear logs');
     } finally {
       setClearingLogs(false);
     }
@@ -136,22 +139,25 @@ export function Analytics() {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-neutral-400">Loading analytics...</div>
+      <div className="space-y-6 animate-fadeIn">
+        <div className="skeleton h-8 w-48" />
+        <div className="skeleton h-4 w-64 mt-1" />
+        <CardSkeleton count={4} />
+        <TableSkeleton rows={4} cols={6} />
       </div>
     );
   }
 
   if (data.totalRequests === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fadeIn">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
             <p className="text-neutral-400 mt-1">Monitor provider performance and cost savings</p>
           </div>
         </div>
-        <div className="bg-neutral-800 rounded-lg p-12 text-center">
+        <div className="glass rounded-xl p-12 text-center">
           <div className="text-6xl mb-4">📊</div>
           <h3 className="text-xl font-semibold mb-2">No Request Data Yet</h3>
           <p className="text-neutral-400 mb-4">
@@ -189,10 +195,10 @@ export function Analytics() {
   const maxHourlyValue = Math.max(...data.hourlyData.map(d => d.requests), 1);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
+          <h2 className="text-2xl font-bold gradient-text">Analytics Dashboard</h2>
           <p className="text-neutral-400 mt-1">
             Monitor provider performance and cost savings
           </p>
@@ -242,7 +248,7 @@ export function Analytics() {
         <>
           {/* Overview Cards */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">Total Requests</p>
@@ -253,7 +259,7 @@ export function Analytics() {
               <p className="text-neutral-500 text-xs mt-2">{data.totalSuccesses} succeeded, {data.totalErrors} failed</p>
             </div>
 
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">Avg Success Rate</p>
@@ -264,7 +270,7 @@ export function Analytics() {
               <p className="text-neutral-500 text-xs mt-2">Across all providers</p>
             </div>
 
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">Total Savings</p>
@@ -275,7 +281,7 @@ export function Analytics() {
               <p className="text-neutral-500 text-xs mt-2">vs paid API pricing</p>
             </div>
 
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">Active Providers</p>
@@ -288,7 +294,7 @@ export function Analytics() {
           </div>
 
           {/* Provider Performance Table */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Provider Performance</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -328,7 +334,7 @@ export function Analytics() {
           </div>
 
           {/* Hourly Activity */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Hourly Activity (Last 24h)</h3>
             <div className="overflow-x-auto">
               <div className="min-w-full">
@@ -340,7 +346,7 @@ export function Analytics() {
                 </div>
                 {data.hourlyData.filter(d => d.requests > 0).map((data, index) => (
                   <div key={index} className="grid grid-cols-4 gap-1 mb-1">
-                    <div className="text-center text-xs text-neutral-300 py-1 bg-neutral-700 rounded px-2">
+                    <div className="text-center text-xs text-neutral-300 py-1 glass-light rounded-lg px-2">
                       {data.hour}
                     </div>
                     <div className={`text-center text-xs text-white py-1 rounded px-2 ${getHeatmapColor(data.requests, maxHourlyValue)}`}>
@@ -363,7 +369,7 @@ export function Analytics() {
 
           {/* Cost Savings Breakdown */}
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4">Cost Savings Breakdown</h3>
               <div className="space-y-3">
                 {data.providerStats.map((provider, index) => (
@@ -391,12 +397,12 @@ export function Analytics() {
               </div>
             </div>
 
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4">Performance Insights</h3>
               <div className="space-y-4">
                 {data.providerStats.length > 0 && (
                   <>
-                    <div className="p-3 bg-neutral-700 rounded">
+                    <div className="glass-light rounded-lg p-3">
                       <div className="text-sm font-medium text-green-400 mb-1">Best Performer</div>
                       <div className="text-sm text-neutral-300">
                         {data.providerStats.reduce((best, current) =>
@@ -404,7 +410,7 @@ export function Analytics() {
                         ).provider} with {Math.max(...data.providerStats.map(p => parseFloat(p.successRate)))}% success rate
                       </div>
                     </div>
-                    <div className="p-3 bg-neutral-700 rounded">
+                    <div className="glass-light rounded-lg p-3">
                       <div className="text-sm font-medium text-blue-400 mb-1">Highest Volume</div>
                       <div className="text-sm text-neutral-300">
                         {data.providerStats.reduce((best, current) =>
@@ -412,7 +418,7 @@ export function Analytics() {
                         ).provider} handled {Math.max(...data.providerStats.map(p => p.requests)).toLocaleString()} requests
                       </div>
                     </div>
-                    <div className="p-3 bg-neutral-700 rounded">
+                    <div className="glass-light rounded-lg p-3">
                       <div className="text-sm font-medium text-yellow-400 mb-1">Fastest Response</div>
                       <div className="text-sm text-neutral-300">
                         {data.providerStats.reduce((best, current) =>
@@ -421,38 +427,38 @@ export function Analytics() {
                       </div>
                     </div>
           {/* Fallback Analytics */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Fallback Analytics</h3>
             {!data.fallbackAnalytics || data.fallbackAnalytics.totalCascadeRequests === 0 ? (
               <p className="text-neutral-400">No cascade data available yet.</p>
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-neutral-700 rounded p-4">
+                  <div className="glass-light rounded-lg p-4">
                     <p className="text-neutral-400 text-sm">Cascade Requests</p>
                     <p className="text-2xl font-bold text-white">{data.fallbackAnalytics.totalCascadeRequests}</p>
                   </div>
-                  <div className="bg-neutral-700 rounded p-4">
+                  <div className="glass-light rounded-lg p-4">
                     <p className="text-neutral-400 text-sm">Fallback Rate</p>
                     <p className={`text-2xl font-bold ${data.fallbackAnalytics.overallFallbackRate > 30 ? 'text-yellow-400' : 'text-green-400'}`}>
                       {data.fallbackAnalytics.overallFallbackRate.toFixed(1)}%
                     </p>
                   </div>
-                  <div className="bg-neutral-700 rounded p-4">
+                  <div className="glass-light rounded-lg p-4">
                     <p className="text-neutral-400 text-sm">Avg Attempts</p>
                     <p className="text-2xl font-bold text-blue-400">{data.fallbackAnalytics.avgAttemptsPerRequest.toFixed(2)}</p>
                   </div>
-                  <div className="bg-neutral-700 rounded p-4">
+                  <div className="glass-light rounded-lg p-4">
                     <p className="text-neutral-400 text-sm">Rules Used</p>
                     <p className="text-2xl font-bold text-purple-400">{data.fallbackAnalytics.ruleUsage.length}</p>
                   </div>
                 </div>
 
-                <div className="bg-neutral-700 rounded-lg p-4">
+                <div className="glass-light rounded-lg p-4">
                   <h4 className="font-semibold mb-2">Recent Fallback Chains</h4>
                   <div className="space-y-2">
                     {data.fallbackAnalytics.recentChains.slice(0, 5).map((chain, idx) => (
-                      <div key={idx} className="bg-neutral-600 rounded p-2 text-sm">
+                      <div key={idx} className="glass-light rounded-lg p-2 text-sm">
                         <div className="flex items-center justify-between">
                           <span>{chain.ruleName}</span>
                           <span className={chain.successful ? "text-green-400" : "text-red-400"}>
@@ -483,7 +489,7 @@ export function Analytics() {
         /* System Health Monitoring */
         <div className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">Uptime</p>
@@ -495,7 +501,7 @@ export function Analytics() {
               </div>
               <p className="text-neutral-500 text-xs mt-2">Server running time</p>
             </div>
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">Memory Usage</p>
@@ -507,7 +513,7 @@ export function Analytics() {
               </div>
               <p className="text-neutral-500 text-xs mt-2">Heap used / Heap total</p>
             </div>
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">RSS Memory</p>
@@ -519,7 +525,7 @@ export function Analytics() {
               </div>
               <p className="text-neutral-500 text-xs mt-2">Resident Set Size</p>
             </div>
-            <div className="bg-neutral-800 rounded-lg p-6">
+            <div className="glass rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-400 text-sm">Platform</p>
@@ -532,22 +538,22 @@ export function Analytics() {
           </div>
 
           {/* Request Rate */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Request Rate</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-neutral-700 rounded p-4">
+              <div className="glass-light rounded-lg p-4">
                 <p className="text-neutral-400 text-sm">Total</p>
                 <p className="text-2xl font-bold text-white">{data.totalRequests}</p>
               </div>
-              <div className="bg-neutral-700 rounded p-4">
+              <div className="glass-light rounded-lg p-4">
                 <p className="text-neutral-400 text-sm">Success Rate</p>
                 <p className="text-2xl font-bold text-green-400">{averageSuccessRate}%</p>
               </div>
-              <div className="bg-neutral-700 rounded p-4">
+              <div className="glass-light rounded-lg p-4">
                 <p className="text-neutral-400 text-sm">Errors</p>
                 <p className="text-2xl font-bold text-red-400">{data.totalErrors}</p>
               </div>
-              <div className="bg-neutral-700 rounded p-4">
+              <div className="glass-light rounded-lg p-4">
                 <p className="text-neutral-400 text-sm">Cost Saved</p>
                 <p className="text-2xl font-bold text-green-400">${totalSavings.toFixed(2)}</p>
               </div>
@@ -555,7 +561,7 @@ export function Analytics() {
           </div>
 
           {/* Hourly Activity Heatmap */}
-          <div className="bg-neutral-800 rounded-lg p-6">
+          <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Hourly Activity (Last 24h)</h3>
             <div className="grid grid-cols-24 gap-1">
               {data.hourlyData.map((hour, index) => (
@@ -573,7 +579,7 @@ export function Analytics() {
         </div>
       ) : (
         /* Request Logs View */
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Request Logs</h3>
           {data.recentLogs.length === 0 ? (
             <div className="text-center text-neutral-500 py-8">No requests logged yet</div>
@@ -601,7 +607,7 @@ export function Analytics() {
                       <td className="py-2">{log.provider}</td>
                       <td className="py-2 font-mono text-xs">{log.model}</td>
                       <td className="py-2">
-                        <span className="px-2 py-0.5 bg-neutral-700 rounded text-xs">
+                        <span className="px-2 py-0.5 glass-light rounded-lg text-xs">
                           {log.taskType}
                         </span>
                       </td>

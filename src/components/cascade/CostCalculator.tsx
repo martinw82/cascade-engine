@@ -66,17 +66,17 @@ export function CostCalculator() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       <div>
-        <h2 className="text-2xl font-bold">Cost Calculator</h2>
+        <h2 className="text-2xl font-bold gradient-text">Cost Calculator</h2>
         <p className="text-neutral-400 mt-1">Project your savings compared to GPT-4o pricing</p>
       </div>
 
-      <div className="bg-neutral-800 rounded-lg p-6">
+      <div className="glass rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Model Configuration</h3>
         <div className="space-y-4">
           {models.map((model, index) => (
-            <div key={index} className="bg-neutral-700 rounded-lg p-4">
+            <div key={index} className="glass-light rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <input
                   type="text"
@@ -148,7 +148,7 @@ export function CostCalculator() {
       </div>
 
       {results.length > 0 && (
-        <div className="bg-neutral-800 rounded-lg p-6">
+        <div className="glass rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4">Cost Projection</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
