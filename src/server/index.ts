@@ -8,13 +8,15 @@ import swaggerUi from '@fastify/swagger-ui';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { cascadeRoutes, providerCache, modelCache, cascadeEngine, cascadeSchema } from './routes/api/cascade';
-import { authenticateRequest, getUserId } from './middleware/auth';
+import { authenticateRequest, getUserId, hasPermission, isAdmin } from './middleware/auth';
 import { validateRequest, validateProviderInput, validateModelInput, validateCascadeRuleInput, validateAuthKeyInput } from './middleware/validation';
-import { auditLogPlugin } from './middleware/audit';
+import { auditLogPlugin, createAuditLog } from './middleware/audit';
+import { enhancedRateLimit, getRateLimitStatus } from './middleware/rate-limit';
+import { encrypt, isEncrypted } from './lib/encryption';
 import { validateEnv } from './lib/env';
 import { db, hashPassword, verifyPassword } from './lib/db';
 import { eq, and, sql } from 'drizzle-orm';
-import { requestLogs, providers, models as modelsTable, cascadeRules, authKeys, users } from './lib/schema';
+import { requestLogs, providers, models as modelsTable, cascadeRules, authKeys, users, auditLogs, webhooks } from './lib/schema';
 
 // Validate environment variables on startup
 const envValidation = validateEnv();
@@ -127,8 +129,8 @@ fastify.register(swaggerUi, {
   }
 });
 
-// Global rate limit
-const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX || '100');
+// Global rate limit - fallback if enhanced rate limit isn't used
+const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX || '1000');
 const rateLimitWindow = process.env.RATE_LIMIT_WINDOW || '1 minute';
 
 fastify.register(rateLimitPlugin, {
@@ -370,7 +372,9 @@ fastify.post('/api/providers', async (request, reply) => {
       const updateData: any = {};
       if (sanitized.name !== undefined) updateData.name = sanitized.name;
       if (sanitized.base_url !== undefined) updateData.baseUrl = sanitized.base_url;
-      if (sanitized.api_key !== undefined) updateData.apiKey = sanitized.api_key;
+      if (sanitized.api_key !== undefined) {
+        updateData.apiKey = isEncrypted(sanitized.api_key) ? sanitized.api_key : encrypt(sanitized.api_key);
+      }
       if (sanitized.status !== undefined) updateData.status = sanitized.status;
 
       const result = await db.update(providers).set(updateData).where(eq(providers.id, existing[0].id)).returning();
@@ -387,12 +391,14 @@ fastify.post('/api/providers', async (request, reply) => {
       return reply.send(mapped);
     } else {
       const newId = providerId || `provider-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const apiKey = sanitized.api_key || '';
+      const encryptedKey = apiKey ? (isEncrypted(apiKey) ? apiKey : encrypt(apiKey)) : '';
       const result = await db.insert(providers).values({
         id: newId,
         userId,
         name: sanitized.name || '',
         baseUrl: sanitized.base_url || '',
-        apiKey: sanitized.api_key || '',
+        apiKey: encryptedKey,
         status: sanitized.status || 'ready',
         createdAt: sanitized.created_at || new Date().toISOString()
       }).returning();
@@ -750,6 +756,260 @@ fastify.delete('/api/auth-keys/:id', {
     return reply.send({ success: true, message: 'Auth key deleted' });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to delete auth key' });
+  }
+});
+
+// Rate limiting management endpoints
+fastify.get('/api/auth-keys/:id/rate-limit', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+
+    // Verify key belongs to user
+    const existing = await db.select().from(authKeys).where(and(eq(authKeys.id, id), eq(authKeys.userId, userId))).limit(1);
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Auth key not found' });
+    }
+
+    const key = existing[0];
+    const status = await getRateLimitStatus(userId, id);
+
+    return reply.send({
+      id: key.id,
+      rateLimitEnabled: key.rateLimitEnabled,
+      rateLimitMax: key.rateLimitMax,
+      rateLimitWindow: key.rateLimitWindow,
+      currentStatus: status
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch rate limit status' });
+  }
+});
+
+fastify.put('/api/auth-keys/:id/rate-limit', {
+  preHandler: [createEndpointRateLimiter(10, '1 minute')],
+}, async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+    const data = request.body as any;
+
+    // Verify key belongs to user
+    const existing = await db.select().from(authKeys).where(and(eq(authKeys.id, id), eq(authKeys.userId, userId))).limit(1);
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Auth key not found' });
+    }
+
+    // Validate input
+    if (data.rateLimitMax !== undefined && (isNaN(data.rateLimitMax) || data.rateLimitMax < 1 || data.rateLimitMax > 10000)) {
+      return reply.code(400).send({ error: 'rateLimitMax must be between 1 and 10000' });
+    }
+
+    if (data.rateLimitWindow !== undefined) {
+      const validWindows = ['1 second', '5 seconds', '10 seconds', '30 seconds', '1 minute', '5 minutes', '15 minutes', '30 minutes', '1 hour', '6 hours', '1 day'];
+      if (!validWindows.includes(data.rateLimitWindow)) {
+        return reply.code(400).send({ error: 'Invalid rateLimitWindow. Must be one of: ' + validWindows.join(', ') });
+      }
+    }
+
+    const updateData: any = {
+      updatedAt: new Date().toISOString()
+    };
+
+    if (data.rateLimitEnabled !== undefined) updateData.rateLimitEnabled = data.rateLimitEnabled;
+    if (data.rateLimitMax !== undefined) updateData.rateLimitMax = data.rateLimitMax;
+    if (data.rateLimitWindow !== undefined) updateData.rateLimitWindow = data.rateLimitWindow;
+
+    const result = await db.update(authKeys).set(updateData).where(eq(authKeys.id, id)).returning();
+    return reply.send(result[0]);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to update rate limit settings' });
+  }
+});
+
+// Get all rate limit statistics (admin only)
+fastify.get('/api/admin/rate-limits', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!hasPermission(request, 'admin')) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const allKeys = await db.select().from(authKeys);
+    const stats = [];
+
+    for (const key of allKeys) {
+      if (!key.enabled || !key.rateLimitEnabled) continue;
+      
+      const status = await getRateLimitStatus(key.userId, key.id);
+      const user = await db.select().from(users).where(eq(users.id, key.userId)).limit(1);
+      
+      stats.push({
+        keyId: key.id,
+        keyName: key.name,
+        userName: user.length > 0 ? user[0].username : 'Unknown',
+        rateLimitMax: key.rateLimitMax,
+        rateLimitWindow: key.rateLimitWindow,
+        currentStatus: status
+      });
+    }
+
+    return reply.send(stats);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch rate limit statistics' });
+  }
+});
+
+// Audit log endpoints
+fastify.get('/api/admin/audit-logs', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!hasPermission(request, 'admin')) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const query = request.query as any;
+    const page = Math.max(1, parseInt(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 20));
+    const offset = (page - 1) * limit;
+
+    // Build filters
+    const filters: any[] = [];
+    if (query.action) {
+      filters.push(eq(auditLogs.action, query.action));
+    }
+    if (query.resource) {
+      filters.push(eq(auditLogs.resource, query.resource));
+    }
+    if (query.severity) {
+      filters.push(eq(auditLogs.severity, query.severity));
+    }
+    if (query.status) {
+      filters.push(eq(auditLogs.status, query.status));
+    }
+    if (query.username) {
+      filters.push(eq(auditLogs.username, query.username));
+    }
+    if (query.userId) {
+      filters.push(eq(auditLogs.userId, query.userId));
+    }
+
+    const whereClause = filters.length > 0 ? and(...filters) : undefined;
+
+    const [logs, totalResult] = await Promise.all([
+      db.select()
+        .from(auditLogs)
+        .where(whereClause)
+        .orderBy(sql`timestamp DESC`)
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: sql<number>`count(*)` })
+        .from(auditLogs)
+        .where(whereClause),
+    ]);
+
+    const total = totalResult[0]?.count || 0;
+
+    return reply.send({
+      logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch audit logs' });
+  }
+});
+
+fastify.get('/api/admin/audit-logs/stats', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!hasPermission(request, 'admin')) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const [totalLogs, actionStats, severityStats, recentActivity] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(auditLogs),
+      db.select({
+        action: auditLogs.action,
+        count: sql<number>`count(*)`,
+      }).from(auditLogs)
+        .groupBy(auditLogs.action),
+      db.select({
+        severity: auditLogs.severity,
+        count: sql<number>`count(*)`,
+      }).from(auditLogs)
+        .groupBy(auditLogs.severity),
+      db.select()
+        .from(auditLogs)
+        .orderBy(sql`timestamp DESC`)
+        .limit(10),
+    ]);
+
+    return reply.send({
+      totalLogs: totalLogs[0]?.count || 0,
+      actionStats,
+      severityStats,
+      recentActivity,
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch audit log stats' });
+  }
+});
+
+fastify.delete('/api/admin/audit-logs', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!hasPermission(request, 'admin')) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const body = request.body as any;
+    const olderThan = body.olderThan || '30 days';
+
+    // Parse the time string
+    const match = olderThan.match(/^(\d+)\s*(day|days|week|weeks|month|months)$/i);
+    if (!match) {
+      return reply.code(400).send({ error: 'Invalid olderThan format. Use format: "30 days", "2 weeks", "1 month"' });
+    }
+
+    const value = parseInt(match[1]);
+    const unit = match[2].toLowerCase();
+    let ms: number;
+
+    switch (unit) {
+      case 'day':
+      case 'days':
+        ms = value * 24 * 60 * 60 * 1000;
+        break;
+      case 'week':
+      case 'weeks':
+        ms = value * 7 * 24 * 60 * 60 * 1000;
+        break;
+      case 'month':
+      case 'months':
+        ms = value * 30 * 24 * 60 * 60 * 1000;
+        break;
+      default:
+        ms = 30 * 24 * 60 * 60 * 1000;
+    }
+
+    const cutoffDate = new Date(Date.now() - ms).toISOString();
+    const result = await db.delete(auditLogs)
+      .where(sql`timestamp < ${cutoffDate}`);
+
+    return reply.send({ success: true, message: `Audit logs older than ${olderThan} deleted` });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete audit logs' });
   }
 });
 
@@ -1322,7 +1582,21 @@ fastify.get('/api/analytics', async (request, reply) => {
          totalCascadeRequests: totalParentRequests,
          ruleUsage,
          recentChains
-       }
+       },
+       // System health
+       systemHealth: {
+         uptime: Math.floor(process.uptime()),
+         memoryUsage: process.memoryUsage(),
+         cpuUsage: process.cpuUsage(),
+         timestamp: new Date().toISOString(),
+         nodeVersion: process.version,
+         platform: process.platform
+       },
+       // Rate limit stats
+       rateLimitStats: totalParentRequests > 0 ? {
+         overallFallbackRate: parseFloat(overallFallbackRate),
+         avgAttemptsPerRequest: parseFloat(avgAttemptsPerRequest),
+       } : null
      });
   } catch (error) {
     console.error('Analytics error:', error);
@@ -1646,6 +1920,349 @@ fastify.post('/api/users/change-password', {
   }
 });
 
+// Admin user management endpoints
+fastify.get('/api/admin/users', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!isAdmin(request)) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const result = await db.select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      role: users.role,
+      enabled: users.enabled,
+      createdAt: users.createdAt,
+    }).from(users);
+
+    // Get auth key count and usage stats for each user
+    const usersWithStats = await Promise.all(result.map(async (user) => {
+      const authKeyCount = await db.select({ count: sql<number>`count(*)` })
+        .from(authKeys)
+        .where(eq(authKeys.userId, user.id));
+
+      const requestCount = await db.select({ count: sql<number>`count(*)` })
+        .from(requestLogs)
+        .where(eq(requestLogs.userId, user.id));
+
+      const providerCount = await db.select({ count: sql<number>`count(*)` })
+        .from(providers)
+        .where(eq(providers.userId, user.id));
+
+      return {
+        ...user,
+        authKeyCount: authKeyCount[0]?.count || 0,
+        requestCount: requestCount[0]?.count || 0,
+        providerCount: providerCount[0]?.count || 0,
+      };
+    }));
+
+    return reply.send(usersWithStats);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch users' });
+  }
+});
+
+fastify.put('/api/admin/users/:id', {
+  preHandler: [createEndpointRateLimiter(10, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!isAdmin(request)) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const { id } = request.params as { id: string };
+    const data = request.body as any;
+    const updateData: any = { updatedAt: new Date().toISOString() };
+
+    if (data.username !== undefined) updateData.username = data.username;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.role !== undefined) updateData.role = data.role;
+    if (data.enabled !== undefined) updateData.enabled = data.enabled;
+
+    if (data.password) {
+      if (data.password.length < 6) {
+        return reply.code(400).send({ error: 'Password must be at least 6 characters' });
+      }
+      updateData.passwordHash = hashPassword(data.password);
+    }
+
+    const result = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
+    return reply.send(result[0]);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to update user' });
+  }
+});
+
+fastify.delete('/api/admin/users/:id', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!isAdmin(request)) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const { id } = request.params as { id: string };
+
+    // Don't allow deleting the last admin
+    const adminCount = await db.select({ count: sql<number>`count(*)` })
+      .from(users).where(eq(users.role, 'admin'));
+    const targetUser = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+    if (targetUser.length > 0 && targetUser[0].role === 'admin' && adminCount[0]?.count <= 1) {
+      return reply.code(400).send({ error: 'Cannot delete the last admin user' });
+    }
+
+    // Cascade delete will handle related records
+    await db.delete(users).where(eq(users.id, id));
+    return reply.send({ success: true, message: 'User deleted' });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete user' });
+  }
+});
+
+// Admin per-user analytics
+fastify.get('/api/admin/users/:id/analytics', {
+  preHandler: [createEndpointRateLimiter(20, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!isAdmin(request)) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const { id } = request.params as { id: string };
+
+    const logs = await db.select().from(requestLogs).where(eq(requestLogs.userId, id));
+
+    const total = logs.length;
+    const successes = logs.filter(l => l.status === 'success').length;
+    const errors = logs.filter(l => l.status === 'error').length;
+    const totalCostSaved = logs.reduce((sum, l) => sum + (l.costSaved || 0), 0);
+
+    // Provider usage breakdown
+    const providerUsage = new Map<string, number>();
+    for (const log of logs) {
+      const pid = log.providerId || 'unknown';
+      providerUsage.set(pid, (providerUsage.get(pid) || 0) + 1);
+    }
+
+    // Cascade rule usage
+    const ruleUsage = new Map<string, { requests: number; successes: number; errors: number }>();
+    for (const log of logs) {
+      const rid = log.cascadeRuleId || 'unknown';
+      if (!ruleUsage.has(rid)) {
+        ruleUsage.set(rid, { requests: 0, successes: 0, errors: 0 });
+      }
+      const r = ruleUsage.get(rid)!;
+      r.requests++;
+      if (log.status === 'success') r.successes++;
+      else if (log.status === 'error') r.errors++;
+    }
+
+    return reply.send({
+      totalRequests: total,
+      totalSuccesses: successes,
+      totalErrors: errors,
+      successRate: total > 0 ? ((successes / total) * 100).toFixed(1) : 0,
+      totalCostSaved: totalCostSaved.toFixed(2),
+      providerUsage: Array.from(providerUsage.entries()).map(([provider, count]) => ({ provider, count })),
+      ruleUsage: Array.from(ruleUsage.entries()).map(([ruleId, stats]) => ({ ruleId, ...stats })),
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch user analytics' });
+  }
+});
+
+// Webhook CRUD endpoints
+fastify.get('/api/webhooks', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const result = await db.select().from(webhooks).where(eq(webhooks.userId, userId));
+    return reply.send(result.map(w => ({ ...w, secret: w.secret ? '[REDACTED]' : null })));
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch webhooks' });
+  }
+});
+
+fastify.post('/api/webhooks', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const data = request.body as any;
+
+    if (!data.name || !data.url || !data.events) {
+      return reply.code(400).send({ error: 'name, url, and events are required' });
+    }
+
+    const validEvents = ['cascade.success', 'cascade.error', 'cascade.fallback', 'provider.error', 'rate_limit.exceeded', 'auth.failure'];
+    const events = Array.isArray(data.events) ? data.events : JSON.parse(data.events);
+    for (const event of events) {
+      if (!validEvents.includes(event)) {
+        return reply.code(400).send({ error: `Invalid event type: ${event}` });
+      }
+    }
+
+    const id = data.id || `webhook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const existing = data.id
+      ? await db.select().from(webhooks).where(and(eq(webhooks.id, data.id), eq(webhooks.userId, userId))).limit(1)
+      : [];
+
+    if (existing.length > 0) {
+      await db.update(webhooks).set({
+        name: data.name,
+        url: data.url,
+        events: JSON.stringify(events),
+        enabled: data.enabled !== undefined ? data.enabled : existing[0].enabled,
+        secret: data.secret || existing[0].secret,
+        retryCount: data.retryCount || existing[0].retryCount,
+        timeout: data.timeout || existing[0].timeout,
+        updatedAt: new Date().toISOString(),
+      }).where(eq(webhooks.id, data.id));
+    } else {
+      await db.insert(webhooks).values({
+        id,
+        userId,
+        name: data.name,
+        url: data.url,
+        events: JSON.stringify(events),
+        enabled: data.enabled !== undefined ? data.enabled : true,
+        secret: data.secret || '',
+        retryCount: data.retryCount || 3,
+        timeout: data.timeout || 5000,
+      });
+    }
+
+    await cascadeEngine.refreshCaches();
+    return reply.send({ id, name: data.name, url: data.url, events, enabled: data.enabled !== undefined ? data.enabled : true });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to save webhook' });
+  }
+});
+
+fastify.delete('/api/webhooks/:id', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+    const existing = await db.select().from(webhooks).where(and(eq(webhooks.id, id), eq(webhooks.userId, userId))).limit(1);
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Webhook not found' });
+    }
+    await db.delete(webhooks).where(and(eq(webhooks.id, id), eq(webhooks.userId, userId)));
+    return reply.send({ success: true, message: 'Webhook deleted' });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete webhook' });
+  }
+});
+
+fastify.post('/api/webhooks/:id/test', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+    const existing = await db.select().from(webhooks).where(and(eq(webhooks.id, id), eq(webhooks.userId, userId))).limit(1);
+    if (existing.length === 0) {
+      return reply.code(404).send({ error: 'Webhook not found' });
+    }
+
+    const { triggerWebhooks } = await import('./lib/webhooks');
+    await triggerWebhooks({
+      type: 'cascade.success',
+      userId,
+      data: { message: 'This is a test webhook from Cascade Master', test: true },
+    });
+
+    return reply.send({ success: true, message: 'Test webhook sent' });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to send test webhook' });
+  }
+});
+
+// Backup & Restore endpoints
+fastify.get('/api/admin/backup', {
+  preHandler: [createEndpointRateLimiter(5, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!isAdmin(request)) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const [allUsers, allProviders, allModels, allRules, allAuthKeys, allWebhooks] = await Promise.all([
+      db.select().from(users),
+      db.select().from(providers),
+      db.select().from(modelsTable),
+      db.select().from(cascadeRules),
+      db.select().from(authKeys),
+      db.select().from(webhooks),
+    ]);
+
+    const backup = {
+      version: '1.0',
+      createdAt: new Date().toISOString(),
+      data: {
+        users: allUsers.map(u => ({ ...u, passwordHash: '[REDACTED]' })),
+        providers: allProviders.map(p => ({ ...p, apiKey: '[REDACTED]' })),
+        models: allModels,
+        cascadeRules: allRules,
+        authKeys: allAuthKeys.map(k => ({ ...k, keyValue: '[REDACTED]' })),
+        webhooks: allWebhooks.map(w => ({ ...w, secret: '[REDACTED]' })),
+      }
+    };
+
+    return reply.send(backup);
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to create backup' });
+  }
+});
+
+fastify.post('/api/admin/restore', {
+  preHandler: [createEndpointRateLimiter(3, '1 minute')],
+}, async (request, reply) => {
+  try {
+    if (!isAdmin(request)) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+
+    const backup = request.body as any;
+    if (!backup || !backup.data) {
+      return reply.code(400).send({ error: 'Invalid backup format' });
+    }
+
+    // Restore providers, models, cascade rules (not users/authKeys for safety)
+    if (backup.data.providers) {
+      for (const p of backup.data.providers) {
+        const existing = await db.select().from(providers).where(eq(providers.id, p.id)).limit(1);
+        if (existing.length === 0) {
+          await db.insert(providers).values({ ...p, apiKey: p.apiKey === '[REDACTED]' ? '' : p.apiKey });
+        }
+      }
+    }
+
+    if (backup.data.models) {
+      for (const m of backup.data.models) {
+        const existing = await db.select().from(modelsTable).where(eq(modelsTable.id, m.id)).limit(1);
+        if (existing.length === 0) {
+          await db.insert(modelsTable).values(m);
+        }
+      }
+    }
+
+    if (backup.data.cascadeRules) {
+      for (const r of backup.data.cascadeRules) {
+        const existing = await db.select().from(cascadeRules).where(eq(cascadeRules.id, r.id)).limit(1);
+        if (existing.length === 0) {
+          await db.insert(cascadeRules).values(r);
+        }
+      }
+    }
+
+    await cascadeEngine.refreshCaches();
+    return reply.send({ success: true, message: 'Configuration restored successfully' });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to restore backup' });
+  }
+});
+
 // Cache refresh endpoint - reloads providers/models/rules from DB without restart
 fastify.post('/api/cache/refresh', async (request, reply) => {
   try {
@@ -1701,7 +2318,7 @@ fastify.register(async (fastify) => {
   fastify.post('/api/cascade', {
     ...cascadeSchema,
     preHandler: [
-      createEndpointRateLimiter(30, '1 minute'),
+      enhancedRateLimit,
       validateRequest,
     ],
   }, cascadeRoutes.POST);
@@ -1718,7 +2335,7 @@ fastify.register(async (fastify) => {
 // OpenAI-compatible endpoint for external tools (opencode, etc.)
 fastify.post('/api/chat/completions', {
   preHandler: [
-    createEndpointRateLimiter(30, '1 minute'),
+    enhancedRateLimit,
     validateRequest,
   ],
 }, cascadeRoutes.POST);
@@ -1726,7 +2343,7 @@ fastify.post('/api/chat/completions', {
 // Standard OpenAI path alias (many tools use /v1/chat/completions)
 fastify.post('/v1/chat/completions', {
   preHandler: [
-    createEndpointRateLimiter(30, '1 minute'),
+    enhancedRateLimit,
     validateRequest,
   ],
 }, cascadeRoutes.POST);

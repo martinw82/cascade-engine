@@ -3,6 +3,7 @@ import { db } from '../../lib/db';
 import { eq, and } from 'drizzle-orm';
 import { providers, models, cascadeRules, requestLogs } from '../../lib/schema';
 import { createHash } from 'crypto';
+import { decrypt } from '../../lib/encryption';
 
 interface CascadeRequest {
   model?: string;
@@ -149,11 +150,15 @@ export class CascadeEngine {
       const providerData = await db.select().from(providers);
       this.providerCache.clear();
       for (const p of providerData) {
+        let apiKey = p.apiKey;
+        if (apiKey && apiKey.includes(':')) {
+          try { apiKey = decrypt(apiKey); } catch { /* use as-is if not encrypted */ }
+        }
         this.providerCache.set(p.id, {
           id: p.id,
           name: p.name,
           baseURL: p.baseUrl,
-          apiKey: p.apiKey,
+          apiKey,
           rpmLimit: 60,
           tpmLimit: 10000,
           dailyQuota: 1000,

@@ -11,8 +11,9 @@ import { Cascade } from '../components/cascade/Cascade';
 import { Analytics } from '../components/cascade/Analytics';
 import { Auth } from '../components/cascade/Auth';
 import { Test } from '../components/cascade/Test';
+import { Admin } from '../components/cascade/Admin';
 
-type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test';
+type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test' | 'admin';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -32,6 +33,7 @@ export default function Home() {
     { id: 'analytics' as TabType, label: 'Analytics', icon: '📈' },
     { id: 'auth' as TabType, label: 'Security', icon: '🔐' },
     { id: 'test' as TabType, label: 'Test', icon: '🧪' },
+    { id: 'admin' as TabType, label: 'Admin', icon: '⚙️' },
   ];
 
   return (
@@ -85,6 +87,7 @@ export default function Home() {
           {activeTab === 'analytics' && <Analytics />}
           {activeTab === 'auth' && <Auth />}
           {activeTab === 'test' && <Test />}
+          {activeTab === 'admin' && <Admin />}
         </div>
       </main>
     </AuthWrapper>

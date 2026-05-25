@@ -65,6 +65,9 @@ export const authKeys = sqliteTable('auth_keys', {
   allowedIps: text('allowed_ips'),
   permissions: text('permissions').default('["read","write"]'),
   enabled: integer('enabled', { mode: 'boolean' }).default(true),
+  rateLimitMax: integer('rate_limit_max').default(100), // Requests per window
+  rateLimitWindow: text('rate_limit_window').default('1 minute'), // Time window
+  rateLimitEnabled: integer('rate_limit_enabled', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default('CURRENT_TIMESTAMP'),
   updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
 });
@@ -93,4 +96,35 @@ export const requestLogs = sqliteTable('request_logs', {
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
+});
+
+// Audit logs table
+export const auditLogs = sqliteTable('audit_logs', {
+  id: text('id').primaryKey(),
+  timestamp: text('timestamp').default('CURRENT_TIMESTAMP'),
+  userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+  username: text('username'),
+  action: text('action').notNull(),
+  resource: text('resource').notNull(),
+  resourceId: text('resource_id'),
+  details: text('details'),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  status: text('status').notNull(),
+  severity: text('severity').default('info'),
+});
+
+// Webhooks table
+export const webhooks = sqliteTable('webhooks', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  url: text('url').notNull(),
+  events: text('events').notNull(), // JSON array of event types
+  enabled: integer('enabled', { mode: 'boolean' }).default(true),
+  secret: text('secret'),
+  retryCount: integer('retry_count').default(3),
+  timeout: integer('timeout').default(5000),
+  createdAt: text('created_at').default('CURRENT_TIMESTAMP'),
+  updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
 });

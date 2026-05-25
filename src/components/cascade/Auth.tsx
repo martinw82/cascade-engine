@@ -12,6 +12,9 @@ interface AuthKey {
   allowedIps: string[];
   permissions: string[];
   enabled: boolean;
+  rateLimitEnabled: boolean;
+  rateLimitMax: number;
+  rateLimitWindow: string;
   createdAt: string;
 }
 
@@ -27,7 +30,10 @@ export function Auth() {
     keyValue: '',
     allowedIps: [''],
     permissions: ['read', 'write'],
-    enabled: true
+    enabled: true,
+    rateLimitEnabled: true,
+    rateLimitMax: 100,
+    rateLimitWindow: '1 minute'
   });
 
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -66,6 +72,9 @@ export function Auth() {
             allowedIps: key.allowedIps ? JSON.parse(key.allowedIps) : [],
             permissions: key.permissions ? JSON.parse(key.permissions) : ['read'],
             enabled: key.enabled,
+            rateLimitEnabled: key.rateLimitEnabled,
+            rateLimitMax: key.rateLimitMax,
+            rateLimitWindow: key.rateLimitWindow,
             createdAt: key.createdAt
           }));
           setAuthKeys(formattedKeys);
@@ -78,6 +87,9 @@ export function Auth() {
             allowedIps: ['127.0.0.1', '::1', '192.168.1.100'],
             permissions: ['read', 'write', 'admin'],
             enabled: true,
+            rateLimitEnabled: true,
+            rateLimitMax: 100,
+            rateLimitWindow: '1 minute',
             createdAt: new Date().toISOString()
           }]);
         }
@@ -90,6 +102,9 @@ export function Auth() {
           allowedIps: ['127.0.0.1', '::1', '192.168.1.100'],
           permissions: ['read', 'write', 'admin'],
           enabled: true,
+          rateLimitEnabled: true,
+          rateLimitMax: 100,
+          rateLimitWindow: '1 minute',
           createdAt: new Date().toISOString()
         }]);
       } finally {
@@ -123,7 +138,10 @@ export function Auth() {
       keyValue: '',
       allowedIps: [''],
       permissions: ['read', 'write'],
-      enabled: true
+      enabled: true,
+      rateLimitEnabled: true,
+      rateLimitMax: 100,
+      rateLimitWindow: '1 minute'
     });
     setIsAdding(false);
     setEditingId(null);
@@ -144,14 +162,17 @@ export function Auth() {
              'Content-Type': 'application/json',
              'X-API-Key': currentApiKey || FALLBACK_KEY
            },
-           body: JSON.stringify({
-             id: editingId,
-             name: formData.name,
-             keyValue: formData.keyValue,
-             allowedIps: JSON.stringify(cleanIps),
-             permissions: JSON.stringify(formData.permissions),
-             enabled: formData.enabled
-           })
+body: JSON.stringify({
+              id: editingId,
+              name: formData.name,
+              keyValue: formData.keyValue,
+              allowedIps: JSON.stringify(cleanIps),
+              permissions: JSON.stringify(formData.permissions),
+              enabled: formData.enabled,
+              rateLimitEnabled: formData.rateLimitEnabled,
+              rateLimitMax: formData.rateLimitMax,
+              rateLimitWindow: formData.rateLimitWindow
+            })
          });
 
          if (response.ok) {
@@ -175,27 +196,33 @@ export function Auth() {
              'Content-Type': 'application/json',
              'X-API-Key': currentApiKey || FALLBACK_KEY
            },
-           body: JSON.stringify({
-             name: formData.name,
-             keyValue: formData.keyValue,
-             allowedIps: JSON.stringify(cleanIps),
-             permissions: JSON.stringify(formData.permissions),
-             enabled: formData.enabled
-           })
+body: JSON.stringify({
+              name: formData.name,
+              keyValue: formData.keyValue,
+              allowedIps: JSON.stringify(cleanIps),
+              permissions: JSON.stringify(formData.permissions),
+              enabled: formData.enabled,
+              rateLimitEnabled: formData.rateLimitEnabled,
+              rateLimitMax: formData.rateLimitMax,
+              rateLimitWindow: formData.rateLimitWindow
+            })
          });
 
          if (response.ok) {
            const newKey = await response.json();
            // Add to local state
-           setAuthKeys(prev => [...prev, {
-             id: newKey.id,
-             name: formData.name,
-             keyValue: formData.keyValue,
-             allowedIps: cleanIps,
-             permissions: formData.permissions,
-             enabled: formData.enabled,
-             createdAt: new Date().toISOString()
-           }]);
+setAuthKeys(prev => [...prev, {
+              id: newKey.id,
+              name: formData.name,
+              keyValue: formData.keyValue,
+              allowedIps: cleanIps,
+              permissions: formData.permissions,
+              enabled: formData.enabled,
+              rateLimitEnabled: formData.rateLimitEnabled,
+              rateLimitMax: formData.rateLimitMax,
+              rateLimitWindow: formData.rateLimitWindow,
+              createdAt: new Date().toISOString()
+            }]);
          } else {
            throw new Error('Failed to create access key');
          }
@@ -233,7 +260,10 @@ export function Auth() {
        keyValue: authKey.keyValue,
        allowedIps: authKey.allowedIps.length > 0 ? authKey.allowedIps : [''],
        permissions: authKey.permissions,
-       enabled: authKey.enabled
+       enabled: authKey.enabled,
+       rateLimitEnabled: authKey.rateLimitEnabled,
+       rateLimitMax: authKey.rateLimitMax,
+       rateLimitWindow: authKey.rateLimitWindow
      });
      setEditingId(authKey.id);
      setIsAdding(true);
@@ -475,6 +505,61 @@ export function Auth() {
               </label>
             </div>
 
+            {/* Rate Limiting */}
+            <div className="border-t border-neutral-700 pt-4">
+              <h4 className="text-sm font-semibold text-neutral-300 mb-3">Rate Limiting</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.rateLimitEnabled}
+                      onChange={(e) => setFormData(prev => ({ ...prev, rateLimitEnabled: e.target.checked }))}
+                      className="mr-2 w-4 h-4 text-blue-600 bg-neutral-700 border-neutral-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-neutral-300">Enable Rate Limit</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Max Requests
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.rateLimitMax}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rateLimitMax: Math.max(1, Math.min(10000, parseInt(e.target.value) || 1)) }))}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min={1}
+                    max={10000}
+                    disabled={!formData.rateLimitEnabled}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Time Window
+                  </label>
+                  <select
+                    value={formData.rateLimitWindow}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rateLimitWindow: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!formData.rateLimitEnabled}
+                  >
+                    <option value="1 second">1 second</option>
+                    <option value="5 seconds">5 seconds</option>
+                    <option value="10 seconds">10 seconds</option>
+                    <option value="30 seconds">30 seconds</option>
+                    <option value="1 minute">1 minute</option>
+                    <option value="5 minutes">5 minutes</option>
+                    <option value="15 minutes">15 minutes</option>
+                    <option value="30 minutes">30 minutes</option>
+                    <option value="1 hour">1 hour</option>
+                    <option value="6 hours">6 hours</option>
+                    <option value="1 day">1 day</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div className="flex space-x-3">
               <button
                 type="submit"
@@ -623,7 +708,19 @@ export function Auth() {
                     authKey.allowedIps.map((ip, index) => (
                       <div key={index} className="text-neutral-200 font-mono bg-neutral-900 px-2 py-1 rounded text-xs">
                         {ip}
-                      </div>
+              <div>
+                <span className="text-neutral-400">Rate Limit:</span>
+                <div className="mt-1">
+                  {authKey.rateLimitEnabled ? (
+                    <span className="text-neutral-200 text-xs">
+                      {authKey.rateLimitMax} requests / {authKey.rateLimitWindow}
+                    </span>
+                  ) : (
+                    <span className="text-neutral-500 text-xs">No limit</span>
+                  )}
+                </div>
+              </div>
+            </div>
                     ))
                   ) : (
                     <div className="text-neutral-500 text-xs">Any IP allowed</div>
@@ -638,6 +735,18 @@ export function Auth() {
                       {permission}
                     </span>
                   ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-neutral-400">Rate Limit:</span>
+                <div className="mt-1">
+                  {authKey.rateLimitEnabled ? (
+                    <span className="text-neutral-200 text-xs">
+                      {authKey.rateLimitMax} requests / {authKey.rateLimitWindow}
+                    </span>
+                  ) : (
+                    <span className="text-neutral-500 text-xs">No limit</span>
+                  )}
                 </div>
               </div>
             </div>

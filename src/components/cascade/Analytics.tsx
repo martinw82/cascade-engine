@@ -40,6 +40,14 @@ interface AnalyticsData {
   totalSuccesses: number;
   totalErrors: number;
   totalCostSaved: string;
+  systemHealth: {
+    uptime: number;
+    memoryUsage: { rss: number; heapTotal: number; heapUsed: number };
+    cpuUsage: { user: number; system: number };
+    timestamp: string;
+    nodeVersion: string;
+    platform: string;
+  };
   fallbackAnalytics?: {
     overallFallbackRate: number;
     avgAttemptsPerRequest: number;
@@ -74,7 +82,7 @@ export function Analytics() {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'overview' | 'logs'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'logs' | 'monitoring'>('overview');
   const [clearingLogs, setClearingLogs] = useState(false);
 
   useEffect(() => {
@@ -216,6 +224,16 @@ export function Analytics() {
             }`}
           >
             Request Logs ({data?.recentLogs.length || 0})
+          </button>
+          <button
+            onClick={() => setActiveView('monitoring')}
+            className={`px-3 py-1 text-sm rounded ${
+              activeView === 'monitoring'
+                ? 'bg-blue-600 text-white'
+                : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-300'
+            }`}
+          >
+            System Health
           </button>
         </div>
       </div>
@@ -461,6 +479,98 @@ export function Analytics() {
             </div>
           </div>
         </>
+      ) : activeView === 'monitoring' ? (
+        /* System Health Monitoring */
+        <div className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-neutral-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-neutral-400 text-sm">Uptime</p>
+                  <p className="text-2xl font-bold text-white">
+                    {Math.floor(data.systemHealth.uptime / 86400)}d {Math.floor((data.systemHealth.uptime % 86400) / 3600)}h {Math.floor((data.systemHealth.uptime % 3600) / 60)}m
+                  </p>
+                </div>
+                <div className="text-2xl">⏱️</div>
+              </div>
+              <p className="text-neutral-500 text-xs mt-2">Server running time</p>
+            </div>
+            <div className="bg-neutral-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-neutral-400 text-sm">Memory Usage</p>
+                  <p className="text-2xl font-bold text-blue-400">
+                    {Math.round(data.systemHealth.memoryUsage.heapUsed / 1024 / 1024)}MB / {Math.round(data.systemHealth.memoryUsage.heapTotal / 1024 / 1024)}MB
+                  </p>
+                </div>
+                <div className="text-2xl">💾</div>
+              </div>
+              <p className="text-neutral-500 text-xs mt-2">Heap used / Heap total</p>
+            </div>
+            <div className="bg-neutral-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-neutral-400 text-sm">RSS Memory</p>
+                  <p className="text-2xl font-bold text-purple-400">
+                    {Math.round(data.systemHealth.memoryUsage.rss / 1024 / 1024)}MB
+                  </p>
+                </div>
+                <div className="text-2xl">📊</div>
+              </div>
+              <p className="text-neutral-500 text-xs mt-2">Resident Set Size</p>
+            </div>
+            <div className="bg-neutral-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-neutral-400 text-sm">Platform</p>
+                  <p className="text-2xl font-bold text-green-400">{data.systemHealth.platform}</p>
+                </div>
+                <div className="text-2xl">⚡</div>
+              </div>
+              <p className="text-neutral-500 text-xs mt-2">Node {data.systemHealth.nodeVersion}</p>
+            </div>
+          </div>
+
+          {/* Request Rate */}
+          <div className="bg-neutral-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Request Rate</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-neutral-700 rounded p-4">
+                <p className="text-neutral-400 text-sm">Total</p>
+                <p className="text-2xl font-bold text-white">{data.totalRequests}</p>
+              </div>
+              <div className="bg-neutral-700 rounded p-4">
+                <p className="text-neutral-400 text-sm">Success Rate</p>
+                <p className="text-2xl font-bold text-green-400">{averageSuccessRate}%</p>
+              </div>
+              <div className="bg-neutral-700 rounded p-4">
+                <p className="text-neutral-400 text-sm">Errors</p>
+                <p className="text-2xl font-bold text-red-400">{data.totalErrors}</p>
+              </div>
+              <div className="bg-neutral-700 rounded p-4">
+                <p className="text-neutral-400 text-sm">Cost Saved</p>
+                <p className="text-2xl font-bold text-green-400">${totalSavings.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Hourly Activity Heatmap */}
+          <div className="bg-neutral-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Hourly Activity (Last 24h)</h3>
+            <div className="grid grid-cols-24 gap-1">
+              {data.hourlyData.map((hour, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <div
+                    className={`w-full ${getHeatmapColor(hour.requests, maxHourlyValue)} rounded`}
+                    style={{ height: `${Math.max(8, (hour.requests / maxHourlyValue) * 60)}px` }}
+                    title={`${hour.hour}: ${hour.requests} requests (${hour.successes} success, ${hour.errors} errors)`}
+                  />
+                  <span className="text-[8px] text-neutral-500 mt-1">{hour.hour.split(':')[0]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
         /* Request Logs View */
         <div className="bg-neutral-800 rounded-lg p-6">
