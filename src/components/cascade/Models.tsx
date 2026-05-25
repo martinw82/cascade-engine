@@ -350,23 +350,23 @@ export function Models() {
             Configure models for each provider with their limits and capabilities
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
           <button
             onClick={fetchData}
-            className="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-lg transition-colors"
+            className="px-3 py-2 border border-surface-600 text-surface-300 hover:bg-white/5 rounded-lg text-sm transition-all"
           >
-            🔄 Refresh
+            🔄
           </button>
           <button
             onClick={handleExport}
             disabled={models.length === 0}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+            className="px-3 py-2 border border-emerald-600/50 text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm transition-all"
           >
             📥 Export
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors"
+            className="px-3 py-2 border border-violet-600/50 text-violet-400 hover:bg-violet-500/10 rounded-lg text-sm transition-all"
           >
             📤 Import
           </button>
@@ -374,14 +374,14 @@ export function Models() {
           <button
             onClick={handleDeleteAll}
             disabled={models.length === 0}
-            className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-neutral-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+            className="px-3 py-2 border border-rose-600/50 text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm transition-all"
           >
             🗑️ Delete All
           </button>
           {providers.length > 0 && (
             <div className="relative group">
               <button
-                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition-colors"
+                className="px-3 py-2 border border-orange-600/50 text-orange-400 hover:bg-orange-500/10 rounded-lg text-sm transition-all whitespace-nowrap"
               >
                 🗑️ By Provider ▾
               </button>
@@ -400,19 +400,20 @@ export function Models() {
           )}
           <button
             onClick={() => setIsBulkImport(true)}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+            className="px-3 py-2 border border-purple-600/50 text-purple-400 hover:bg-purple-500/10 rounded-lg text-sm transition-all"
           >
-            📄 Bulk Import
+            📄 Bulk
           </button>
           <button
             onClick={() => setIsDiscovering(true)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors"
+            className="px-3 py-2 border border-emerald-600/50 text-emerald-400 hover:bg-emerald-500/10 rounded-lg text-sm transition-all"
           >
-            🔍 Discover Models
+            🔍 Discover
           </button>
+          <div className="w-px h-6 bg-surface-700" />
           <button
             onClick={() => setIsAdding(!isAdding)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-accent-600 hover:bg-accent-500 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-accent-500/20"
           >
             {isAdding ? 'Cancel' : '+ Add Model'}
           </button>
@@ -670,61 +671,76 @@ export function Models() {
       )}
 
       {/* Models List */}
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {models.map((model) => (
-          <div key={model.id} className="glass rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <h3 className="text-lg font-semibold">{model.modelId}</h3>
-                <span className="text-sm text-neutral-400 glass-light rounded-lg px-2 py-1">
-                  {getProviderName(model.providerId)}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(model.status)}`}>
-                  {model.status.toUpperCase()}
-                </span>
-                {model.isFree && (
-                  <span className="text-xs bg-green-900/20 text-green-400 px-2 py-1 rounded">
-                    FREE
+          <div key={model.id} className="glass rounded-xl p-5 hover:bg-white/[0.02] transition-colors">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-[15px] font-semibold text-white truncate">{model.modelId}</h3>
+                  <span className="text-[13px] text-surface-400 font-medium shrink-0">
+                    {getProviderName(model.providerId)}
                   </span>
-                )}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${
+                    model.status === 'ready'
+                      ? 'bg-emerald-900/50 text-emerald-300'
+                      : model.status === 'cooldown'
+                      ? 'bg-amber-900/50 text-amber-300'
+                      : 'bg-rose-900/50 text-rose-300'
+                  }`}>
+                    {model.status}
+                  </span>
+                  {model.isFree && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider bg-emerald-900/50 text-emerald-300">
+                      Free
+                    </span>
+                  )}
+                  {!model.isFree && model.costPerToken !== undefined && model.costPerToken > 0 && (
+                    <span className="text-[11px] text-surface-500">
+                      ${model.costPerToken.toFixed(6)}/token
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => handleEdit(model)}
-                  className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-sm rounded transition-colors"
+                  className="px-2.5 py-1.5 text-xs font-medium text-surface-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(model.id)}
-                  className="px-3 py-1 bg-red-600 hover:bg-red-500 text-sm rounded transition-colors"
+                  className="px-2.5 py-1.5 text-xs font-medium text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-all"
                 >
                   Delete
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-neutral-400">Context Window:</span>
-                <div className="text-neutral-200">{model.contextWindow.toLocaleString()}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+              <div className="bg-white/[0.03] rounded-lg px-3 py-2.5">
+                <div className="text-[11px] font-medium uppercase tracking-wider text-surface-500">Context</div>
+                <div className="text-sm font-semibold text-surface-200 mt-0.5">{model.contextWindow.toLocaleString()}</div>
               </div>
-              <div>
-                <span className="text-neutral-400">RPM Limit:</span>
-                <div className="text-neutral-200">{model.rpmLimit}</div>
+              <div className="bg-white/[0.03] rounded-lg px-3 py-2.5">
+                <div className="text-[11px] font-medium uppercase tracking-wider text-surface-500">RPM</div>
+                <div className="text-sm font-semibold text-surface-200 mt-0.5">{model.rpmLimit}</div>
               </div>
-              <div>
-                <span className="text-neutral-400">TPM Limit:</span>
-                <div className="text-neutral-200">{model.tpmLimit.toLocaleString()}</div>
+              <div className="bg-white/[0.03] rounded-lg px-3 py-2.5">
+                <div className="text-[11px] font-medium uppercase tracking-wider text-surface-500">TPM</div>
+                <div className="text-sm font-semibold text-surface-200 mt-0.5">{model.tpmLimit.toLocaleString()}</div>
               </div>
-              <div>
-                <span className="text-neutral-400">Daily Quota:</span>
-                <div className="text-neutral-200">{model.dailyQuota.toLocaleString()}</div>
+              <div className="bg-white/[0.03] rounded-lg px-3 py-2.5">
+                <div className="text-[11px] font-medium uppercase tracking-wider text-surface-500">Daily Quota</div>
+                <div className="text-sm font-semibold text-surface-200 mt-0.5">{model.dailyQuota.toLocaleString()}</div>
               </div>
             </div>
 
-            <div className="mt-4 text-xs text-neutral-500">
-              Created: {new Date(model.created).toLocaleDateString()}
+            <div className="mt-3 text-[11px] text-surface-600">
+              Created {new Date(model.created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
             </div>
           </div>
         ))}
