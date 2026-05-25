@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { ListSkeleton } from './Skeleton';
@@ -20,6 +20,7 @@ export function Providers() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const { apiKey, setApiKey } = useAuth();
   const { addToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -177,6 +178,62 @@ export function Providers() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/providers/export', {
+        headers: { 'X-API-Key': apiKey || FALLBACK_KEY }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `providers-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        addToast('success', `Exported ${data.data?.length || 0} providers`);
+      } else {
+        const err = await response.json();
+        addToast('error', err.error || 'Export failed');
+      }
+    } catch {
+      addToast('error', 'Export failed');
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const response = await fetch('/api/providers/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey || FALLBACK_KEY
+        },
+        body: JSON.stringify(data.data ? data : { data: [data] })
+      });
+      if (response.ok) {
+        const result = await response.json();
+        addToast('success', result.message || `Imported ${result.imported} providers`);
+        // Refresh the list
+        const refresh = await fetch('/api/providers', {
+          headers: { 'X-API-Key': apiKey || FALLBACK_KEY }
+        });
+        if (refresh.ok) setProviders(await refresh.json());
+      } else {
+        const err = await response.json();
+        addToast('error', err.error || 'Import failed');
+      }
+    } catch {
+      addToast('error', 'Invalid JSON file');
+    }
+    if (e.target) e.target.value = '';
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ready': return 'text-green-400 bg-green-900/20';
@@ -221,6 +278,26 @@ export function Providers() {
           >
             🔄 Refresh
           </button>
+          <button
+            onClick={handleExport}
+            disabled={providers.length === 0}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+          >
+            📥 Export
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors"
+          >
+            📤 Import
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
           <button
             onClick={handleDeleteAll}
             disabled={providers.length === 0}

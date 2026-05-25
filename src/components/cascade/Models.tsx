@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { ListSkeleton } from './Skeleton';
@@ -51,6 +51,7 @@ export function Models() {
   });
   const { apiKey, setApiKey } = useAuth();
   const { addToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
     console.log('Fetching models and providers...');
@@ -287,6 +288,59 @@ export function Models() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/models/export', {
+        headers: { 'X-API-Key': apiKey || FALLBACK_KEY }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `models-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        addToast('success', `Exported ${data.data?.length || 0} models`);
+      } else {
+        const err = await response.json();
+        addToast('error', err.error || 'Export failed');
+      }
+    } catch {
+      addToast('error', 'Export failed');
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const payload = data.data ? data : { data: [data] };
+      const response = await fetch('/api/models/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey || FALLBACK_KEY
+        },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        const result = await response.json();
+        addToast('success', result.message || `Imported ${result.imported} models`);
+        fetchData();
+      } else {
+        const err = await response.json();
+        addToast('error', err.error || 'Import failed');
+      }
+    } catch {
+      addToast('error', 'Invalid JSON file');
+    }
+    if (e.target) e.target.value = '';
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -303,6 +357,20 @@ export function Models() {
           >
             🔄 Refresh
           </button>
+          <button
+            onClick={handleExport}
+            disabled={models.length === 0}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+          >
+            📥 Export
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors"
+          >
+            📤 Import
+          </button>
+          <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
           <button
             onClick={handleDeleteAll}
             disabled={models.length === 0}
