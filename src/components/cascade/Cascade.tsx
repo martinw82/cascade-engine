@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface CascadeRule {
   id: string;
   name: string;
@@ -43,12 +45,12 @@ export function Cascade() {
         const [rulesRes, modelsRes] = await Promise.all([
           fetch('/api/cascade-rules', {
             headers: {
-              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+              'X-API-Key': apiKey || FALLBACK_KEY
             }
           }),
           fetch('/api/models', {
             headers: {
-              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+              'X-API-Key': apiKey || FALLBACK_KEY
             }
           })
         ]);
@@ -115,7 +117,7 @@ export function Cascade() {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': apiKey || FALLBACK_KEY
           },
           body: JSON.stringify({ id: editingId, ...ruleData })
         });
@@ -145,7 +147,7 @@ export function Cascade() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': apiKey || FALLBACK_KEY
           },
           body: JSON.stringify(ruleData)
         });
@@ -193,7 +195,7 @@ export function Cascade() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         },
         body: JSON.stringify({ id })
       });

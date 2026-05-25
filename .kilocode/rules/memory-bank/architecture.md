@@ -47,39 +47,28 @@ POST /api/cascade
        │
        ▼
 ┌─────────────────┐
-│  Input Valid.   │  ← messages array, max_tokens, etc.
+│  Input Valid.   │  ← messages, stream, max_tokens, tools, temperature
 └───────┬─────────┘
         │
         ▼
 ┌─────────────────┐
-│  Auth Check     │  ← API key → user → permissions
-└───────┬─────────┘
-        │
+│  Cache Check    │  ← SHA-256 hash (model+messages+temperature+tools)
+└───────┬─────────┘     → Hit: return cached (non-streaming only)
+        │ Miss
         ▼
-┌─────────────────┐
-│  Rate Limit     │  ← 30 req/min per key
-└───────┬─────────┘
-        │
-        ▼
-┌─────────────────┐     No      ┌─────────────────┐
-│  Task Detect    │────────────▶│  Default Model  │
-│  (keyword/type) │             │  or fallback    │
-└───────┬─────────┘             └─────────────────┘
-        │ Yes
-        ▼
-┌─────────────────┐
-│  Match Rule     │  ← Priority-ordered rules
-└───────┬─────────┘
-        │
-        ▼
-┌─────────────────┐     Fail     ┌─────────────────┐
-│  Try Model 1    │─────────────▶│  Try Model 2    │
-└─────────────────┘              └───────┬─────────┘
-        │ Success                        │
-        ▼                                ▼
-┌─────────────────┐              ┌─────────────────┐
-│  Return Response│              │  ...spillover... │
-└─────────────────┘              └─────────────────┘
+┌─────────────────┐     ┌──────────────────────┐
+│  stream=true    │────▶│  SSE Streaming Path  │
+└─────────────────┘     │  1. Try model connect │
+        │               │  2. On fail: spillover│
+        ▼               │  3. On success: pipe  │
+┌─────────────────┐     │  4. data: [DONE]      │
+│  Non-streaming  │     └──────────────────────┘
+│  1. detectTask  │
+│  2. match rule  │
+│  3. tryModels() │
+│  4. spillover   │
+│  5. cache result│
+└─────────────────┘
 ```
 
 ## Database Schema
@@ -103,6 +92,9 @@ All tables have `user_id` FK for multi-user isolation. Cascade delete on user de
 3. **SQLite file-based** — zero-config persistence, survives reboots
 4. **One-time seeding** — `settings` table tracks `defaults_seeded` to prevent duplicate data on restart
 5. **OpenAI-compatible** — `POST /api/chat/completions` accepts standard format, enabling integration with any OpenAI-compatible tool
+6. **Streaming spillover** — retries connection errors on next model, but commits once first SSE chunk is sent
+7. **In-memory response cache** — no DB overhead for cache lookups; TTL-based eviction avoids stale responses
+8. **AsyncGenerator-based streaming** — clean abstraction for different provider formats (OpenAI/Gemini/Anthropic) with unified SSE output
 
 ## Authentication Flow
 

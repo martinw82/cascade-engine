@@ -11,6 +11,9 @@
 - 💰 **Cost Optimization** - Maximize free-tier usage, track savings vs GPT-4o pricing
 - 🎯 **Task-Aware** - Detects coding, summarization, and general tasks automatically via keyword matching
 - 🔄 **Smart Cascading** - Falls back gracefully when models hit rate limits or fail
+- ⚡ **SSE Streaming** — Token-by-token streaming with spillover support across models
+- 🔧 **Tool Calling** — Full OpenAI-compatible function/tool calling with streaming deltas
+- 🗃️ **Response Caching** — In-memory cache with 5-min TTL for instant repeat responses
 - 📊 **Real-time Monitoring** - Live dashboard with request tracing and analytics
 - 🔐 **Secure Access** - API key authentication with IP restrictions
 - ⚡ **High Performance** - Optimized for low-resource environments (1vCPU/1GB RAM)
@@ -88,13 +91,49 @@ const client = new OpenAI({
 ### Direct API Usage
 
 ```bash
+# Non-streaming request
 curl http://your-server-ip:3001/api/cascade \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
   -d '{
     "messages": [
       {"role": "user", "content": "Hello, summarize this text: ..."}
-    ]
+    ],
+    "stream": false,
+    "temperature": 0.7,
+    "max_tokens": 8192
+  }'
+
+# Streaming request (SSE)
+curl -N http://your-server-ip:3001/api/cascade \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "messages": [{"role": "user", "content": "Count to 5"}],
+    "stream": true
+  }'
+
+# Request with tool calling
+curl http://your-server-ip:3001/api/cascade \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "messages": [{"role": "user", "content": "What is the weather in SF?"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get weather for a city",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {"type": "string"}
+          },
+          "required": ["location"]
+        }
+      }
+    }],
+    "tool_choice": "auto"
   }'
 ```
 
@@ -104,8 +143,9 @@ curl http://your-server-ip:3001/api/cascade \
 |--------|----------|-------------|
 | GET | `/health` | Health check (no auth required) |
 | GET | `/api/cascade` | API status info |
-| POST | `/api/cascade` | Send LLM request through cascade engine |
+| POST | `/api/cascade` | Send LLM request through cascade engine (streaming, tools, caching) |
 | POST | `/api/chat/completions` | OpenAI-compatible endpoint for external tools |
+| POST | `/v1/chat/completions` | Standard OpenAI path alias |
 | GET | `/api/providers` | List all providers |
 | POST | `/api/providers` | Create/update provider |
 | DELETE | `/api/providers` | Delete all providers and models |

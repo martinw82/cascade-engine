@@ -621,6 +621,26 @@ fastify.post('/api/auth-keys', {
     }
     const sanitized = validation.sanitized;
 
+    // Check if this is an update (id provided and exists)
+    const keyId = sanitized.id || data.id;
+    if (keyId) {
+      const existing = await db.select().from(authKeys).where(and(eq(authKeys.id, keyId), eq(authKeys.userId, userId))).limit(1);
+      if (existing.length > 0) {
+        // Update existing key
+        const updateData: any = {};
+        if (sanitized.name !== undefined) updateData.name = sanitized.name;
+        if (sanitized.allowedIps !== undefined) updateData.allowedIps = sanitized.allowedIps;
+        if (sanitized.permissions !== undefined) updateData.permissions = sanitized.permissions;
+        if (sanitized.enabled !== undefined) updateData.enabled = sanitized.enabled;
+        if (data.keyValue && data.keyValue !== '[REDACTED]') updateData.keyValue = data.keyValue;
+        updateData.updatedAt = new Date().toISOString();
+
+        const result = await db.update(authKeys).set(updateData).where(eq(authKeys.id, existing[0].id)).returning();
+        return reply.send(result[0]);
+      }
+    }
+
+    // Create new key
     let keyValue = data.keyValue;
     if (!keyValue) {
       const randomBytes = new Uint8Array(32);
@@ -631,7 +651,7 @@ fastify.post('/api/auth-keys', {
     }
 
     const result = await db.insert(authKeys).values({
-      id: sanitized.id,
+      id: keyId || `key-${Date.now()}`,
       userId,
       name: sanitized.name,
       keyValue: keyValue,
@@ -646,7 +666,8 @@ fastify.post('/api/auth-keys', {
       warning: 'Save this key - it will not be shown again'
     });
   } catch (error) {
-    return reply.code(500).send({ error: 'Failed to create auth key' });
+    console.error('Auth key save error:', error);
+    return reply.code(500).send({ error: 'Failed to save auth key', details: error.message });
   }
 });
 
@@ -736,48 +757,49 @@ fastify.delete('/api/auth-keys/:id', {
 fastify.post('/api/models/test', {
   preHandler: [createEndpointRateLimiter(10, '1 minute')],
 }, async (request, reply) => {
-  try {
-    const userId = getUserId(request);
-    const { providerId, modelId } = request.body as { providerId: string; modelId: string };
+   try {
+     const userId = getUserId(request);
+     const { providerId, modelId } = request.body as { providerId: string; modelId: string };
 
-    if (!providerId || !modelId) {
-      return reply.code(400).send({ error: 'providerId and modelId are required' });
-    }
+     if (!providerId || !modelId) {
+       return reply.code(400).send({ error: 'providerId and modelId are required' });
+     }
 
-    const provider = await db.select().from(providers).where(and(eq(providers.id, providerId), eq(providers.userId, userId))).limit(1);
-    if (!provider.length) {
-      return reply.code(404).send({ error: 'Provider not found' });
-    }
+      // Validate provider exists and belongs to user
+      const provider = await db.select().from(providers).where(and(eq(providers.id, providerId), eq(providers.userId, userId))).limit(1);
+      if (!provider.length) {
+        return reply.code(404).send({ error: 'Provider not found' });
+      }
 
-    const p = provider[0];
-    const baseUrl = p.baseUrl.endsWith('/') ? p.baseUrl.slice(0, -1) : p.baseUrl;
+     const p = provider[0];
+     const baseUrl = p.baseUrl.endsWith('/') ? p.baseUrl.slice(0, -1) : p.baseUrl;
 
-    // Determine API format based on provider
-    let url: string;
-    let headers: Record<string, string>;
-    let body: any;
+     // Determine API format based on provider
+     let url: string;
+     let headers: Record<string, string>;
+     let body: any;
 
-    if (p.id === 'gemini' || p.id === 'google') {
-      // Google Gemini format
-      url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${p.apiKey}`;
-      headers = { 'Content-Type': 'application/json' };
-      body = {
-        contents: [{ role: 'user', parts: [{ text: 'Say "OK" in one word.' }] }],
-        generationConfig: { maxOutputTokens: 10 }
-      };
-    } else {
-      // OpenAI-compatible format
-      url = `${baseUrl}/chat/completions`;
-      headers = {
-        'Authorization': `Bearer ${p.apiKey}`,
-        'Content-Type': 'application/json'
-      };
-      body = {
-        model: modelId,
-        messages: [{ role: 'user', content: 'Say "OK" in one word.' }],
-        max_tokens: 10
-      };
-    }
+     if (p.id === 'gemini' || p.id === 'google') {
+       // Google Gemini format
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId.replace(/^models\//, '')}:generateContent?key=${p.apiKey}`;
+       headers = { 'Content-Type': 'application/json' };
+       body = {
+         contents: [{ role: 'user', parts: [{ text: 'Say "OK" in one word.' }] }],
+         generationConfig: { maxOutputTokens: 10 }
+       };
+     } else {
+       // OpenAI-compatible format
+       url = `${baseUrl}/chat/completions`;
+       headers = {
+         'Authorization': `Bearer ${p.apiKey}`,
+         'Content-Type': 'application/json'
+       };
+       body = {
+         model: modelId,
+         messages: [{ role: 'user', content: 'Say "OK" in one word.' }],
+         max_tokens: 10
+       };
+     }
 
     const response = await fetch(url, {
       method: 'POST',
@@ -1078,7 +1100,7 @@ fastify.post('/api/test', async (request, reply) => {
 
     const { makeApiCall } = await import('./routes/api/cascade');
     const startTime = Date.now();
-    const response = await makeApiCall(provider, messages, modelId);
+    const response = await makeApiCall(provider, messages, model.modelId);
     const responseTime = Date.now() - startTime;
 
     try {
@@ -1184,27 +1206,124 @@ fastify.get('/api/analytics', async (request, reply) => {
       });
     }
 
-    const recentLogs = allLogs.slice(-50).reverse().map(log => ({
-      id: log.id,
-      timestamp: log.timestamp,
-      provider: providerNames.get(log.providerId || '') || log.providerId,
-      model: log.modelId,
-      taskType: log.taskType,
-      status: log.status,
-      responseTime: log.responseTimeMs,
-      tokensUsed: log.tokensUsed,
-      errorMessage: log.errorMessage
-    }));
+     const recentLogs = allLogs.slice(-50).reverse().map(log => ({
+       id: log.id,
+       timestamp: log.timestamp,
+       provider: providerNames.get(log.providerId || '') || log.providerId,
+       model: log.modelId,
+       taskType: log.taskType,
+       status: log.status,
+       responseTime: log.responseTimeMs,
+       tokensUsed: log.tokensUsed,
+       errorMessage: log.errorMessage
+     }));
 
-    return reply.send({
-      providerStats: providerStatsResult,
-      hourlyData,
-      recentLogs,
-      totalRequests: allLogs.length,
-      totalSuccesses: allLogs.filter(l => l.status === 'success').length,
-      totalErrors: allLogs.filter(l => l.status === 'error').length,
-      totalCostSaved: allLogs.reduce((sum, l) => sum + (l.costSaved || 0), 0).toFixed(2)
-    });
+     // --- Fallback Analytics ---
+     
+     // Fetch cascade rules for name mapping
+     const rulesList = await db.select().from(cascadeRules).where(eq(cascadeRules.userId, userId));
+     const ruleNames = new Map(rulesList.map(r => [r.id, r.name]));
+
+     // Group logs by parentRequestId (only those with parentRequestId set)
+     const parentGroups = new Map<string, any[]>();
+     for (const log of allLogs) {
+       if (log.parentRequestId) {
+         if (!parentGroups.has(log.parentRequestId)) {
+           parentGroups.set(log.parentRequestId, []);
+         }
+         parentGroups.get(log.parentRequestId)!.push(log);
+       }
+     }
+
+     // Compute overall fallback stats
+     let totalParentRequests = parentGroups.size;
+     let fallbackRequests = 0; // requests with >1 attempt
+     let totalAttempts = 0;
+     const ruleStatsMap = new Map<string, any>(); // ruleId -> { totalRequests, successfulRequests, totalAttempts }
+
+     for (const [parentId, logs] of parentGroups) {
+       const attempts = logs.length;
+       totalAttempts += attempts;
+       if (attempts > 1) {
+         fallbackRequests++;
+       }
+
+       // Get ruleId (should be same for all logs in this group)
+       const ruleId = logs[0]?.cascadeRuleId || 'unknown';
+       if (!ruleStatsMap.has(ruleId)) {
+         ruleStatsMap.set(ruleId, {
+           ruleId,
+           totalRequests: 0,
+           successfulRequests: 0,
+           totalAttempts: 0
+         });
+       }
+       const stats = ruleStatsMap.get(ruleId);
+       stats.totalRequests++;
+       stats.totalAttempts += attempts;
+       if (logs.some(l => l.status === 'success')) {
+         stats.successfulRequests++;
+       }
+     }
+
+     // Build rule usage array
+     const ruleUsage = Array.from(ruleStatsMap.values()).map(stats => ({
+       ruleId: stats.ruleId,
+       ruleName: ruleNames.get(stats.ruleId) || stats.ruleId,
+       totalRequests: stats.totalRequests,
+       successfulRequests: stats.successfulRequests,
+       successRate: stats.totalRequests > 0 ? ((stats.successfulRequests / stats.totalRequests) * 100).toFixed(1) : 0,
+       avgAttempts: stats.totalRequests > 0 ? (stats.totalAttempts / stats.totalRequests).toFixed(2) : 0
+     }));
+
+     const overallFallbackRate = totalParentRequests > 0 ? ((fallbackRequests / totalParentRequests) * 100).toFixed(1) : 0;
+     const avgAttemptsPerRequest = totalParentRequests > 0 ? (totalAttempts / totalParentRequests).toFixed(2) : 0;
+
+     // Build recent fallback chains (last 20 parent requests by latest timestamp)
+     const sortedParentIds = Array.from(parentGroups.keys()).sort((a, b) => {
+       const logsA = parentGroups.get(a)!;
+       const logsB = parentGroups.get(b)!;
+       const timeA = Math.max(...logsA.map(l => new Date(l.timestamp).getTime()));
+       const timeB = Math.max(...logsB.map(l => new Date(l.timestamp).getTime()));
+       return timeB - timeA; // descending
+     });
+
+     const recentChains = sortedParentIds.slice(0, 20).map(parentId => {
+       const logs = parentGroups.get(parentId)!;
+       const ruleId = logs[0]?.cascadeRuleId || 'unknown';
+       return {
+         parentRequestId: parentId,
+         ruleId,
+         ruleName: ruleNames.get(ruleId) || ruleId,
+         totalAttempts: logs.length,
+         successful: logs.some(l => l.status === 'success'),
+         attempts: logs.sort((a,b) => (a.attemptOrder || 0) - (b.attemptOrder || 0)).map(l => ({
+           order: l.attemptOrder,
+           providerId: l.providerId,
+           modelId: l.modelId,
+           status: l.status,
+           errorMessage: l.errorMessage
+         }))
+       };
+     });
+
+     return reply.send({
+       providerStats: providerStatsResult,
+       hourlyData,
+       recentLogs,
+       totalRequests: allLogs.length,
+       totalSuccesses: allLogs.filter(l => l.status === 'success').length,
+       totalErrors: allLogs.filter(l => l.status === 'error').length,
+       totalCostSaved: allLogs.reduce((sum, l) => sum + (l.costSaved || 0), 0).toFixed(2),
+       // New fallback analytics
+       fallbackAnalytics: {
+         overallFallbackRate: parseFloat(overallFallbackRate),
+         avgAttemptsPerRequest: parseFloat(avgAttemptsPerRequest),
+         totalCascadeRequests: totalParentRequests,
+         ruleUsage,
+         recentChains
+       }
+     });
   } catch (error) {
     console.error('Analytics error:', error);
     return reply.code(500).send({ error: 'Failed to fetch analytics' });
@@ -1285,6 +1404,109 @@ fastify.post('/api/users/register', {
       permissions: JSON.stringify(['read', 'write', 'admin']),
       enabled: true
     });
+
+    // Copy default providers, models, and cascade rules from default-user to new user
+    try {
+      // First, ensure default-user has providers (re-seed if they were deleted)
+      const defaultProviders = await db.select().from(providers).where(eq(providers.userId, 'default-user'));
+
+      if (defaultProviders.length === 0) {
+        console.log('Default-user has no providers, re-seeding defaults...');
+        const defaultProviderDefs = [
+          { id: 'nvidia-nim', name: 'NVIDIA NIM', baseUrl: 'https://integrate.api.nvidia.com/v1', apiKey: process.env.NVIDIA_API_KEY || '', status: 'ready' },
+          { id: 'groq', name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1', apiKey: process.env.GROQ_API_KEY || '', status: 'ready' },
+          { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1', apiKey: process.env.OPENROUTER_API_KEY || '', status: 'ready' },
+        ];
+
+        for (const dp of defaultProviderDefs) {
+          await db.insert(providers).values({ id: dp.id, userId: 'default-user', name: dp.name, baseUrl: dp.baseUrl, apiKey: dp.apiKey, status: dp.status }).onConflictDoNothing();
+        }
+
+        const defaultModelDefs = [
+          { id: 'llama-3.1-70b', providerId: 'nvidia-nim', modelId: 'meta/llama-3.1-70b-instruct', contextWindow: 128000, rpmLimit: 40, tpmLimit: 10000, dailyQuota: 1000, isFree: true, costPerToken: 0, status: 'ready' },
+          { id: 'llama-3.1-8b-instant', providerId: 'groq', modelId: 'llama-3.1-8b-instant', contextWindow: 128000, rpmLimit: 30, tpmLimit: 10000, dailyQuota: 1000, isFree: true, costPerToken: 0, status: 'ready' },
+          { id: 'gemini-1.5-flash', providerId: 'openrouter', modelId: 'google/gemini-2.5-flash', contextWindow: 1000000, rpmLimit: 50, tpmLimit: 10000, dailyQuota: 1000, isFree: true, costPerToken: 0, status: 'ready' },
+        ];
+
+        for (const dm of defaultModelDefs) {
+          await db.insert(modelsTable).values({ id: dm.id, userId: 'default-user', providerId: dm.providerId, modelId: dm.modelId, contextWindow: dm.contextWindow, rpmLimit: dm.rpmLimit, tpmLimit: dm.tpmLimit, dailyQuota: dm.dailyQuota, isFree: dm.isFree, costPerToken: dm.costPerToken, status: dm.status }).onConflictDoNothing();
+        }
+
+        // Re-seed cascade rules if default-user has none
+        const defaultRulesCheck = await db.select().from(cascadeRules).where(eq(cascadeRules.userId, 'default-user'));
+        if (defaultRulesCheck.length === 0) {
+          const defaultRuleDefs = [
+            { id: 'coding-rule', name: 'Coding Tasks', priority: 1, triggerType: 'keyword', triggerValue: 'code|program|function|debug|programming', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
+            { id: 'summarization-rule', name: 'Summarization Tasks', priority: 2, triggerType: 'keyword', triggerValue: 'summarize|extract|analyze|document|summary', modelOrder: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']), wordLimit: 5, enabled: true },
+            { id: 'default-rule', name: 'Default Fallback', priority: 99, triggerType: 'task_type', triggerValue: 'general', modelOrder: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
+          ];
+          for (const dr of defaultRuleDefs) {
+            await db.insert(cascadeRules).values({ id: dr.id, userId: 'default-user', name: dr.name, priority: dr.priority, triggerType: dr.triggerType, triggerValue: dr.triggerValue, modelOrder: dr.modelOrder, wordLimit: dr.wordLimit, enabled: dr.enabled }).onConflictDoNothing();
+          }
+        }
+      }
+
+      // Re-fetch after potential re-seed
+      const providersToCopy = await db.select().from(providers).where(eq(providers.userId, 'default-user'));
+      const providerIdMap = new Map<string, string>();
+
+      for (const dp of providersToCopy) {
+        const newProviderId = `${dp.id}-${userId}`;
+        providerIdMap.set(dp.id, newProviderId);
+        await db.insert(providers).values({
+          id: newProviderId,
+          userId,
+          name: dp.name,
+          baseUrl: dp.baseUrl,
+          apiKey: dp.apiKey,
+          status: dp.status,
+          createdAt: dp.createdAt
+        });
+      }
+
+      const modelsToCopy = await db.select().from(modelsTable).where(eq(modelsTable.userId, 'default-user'));
+      for (const dm of modelsToCopy) {
+        const newProviderId = providerIdMap.get(dm.providerId);
+        if (newProviderId) {
+          await db.insert(modelsTable).values({
+            id: `${dm.id}-${userId}`,
+            userId,
+            providerId: newProviderId,
+            modelId: dm.modelId,
+            contextWindow: dm.contextWindow,
+            rpmLimit: dm.rpmLimit,
+            tpmLimit: dm.tpmLimit,
+            dailyQuota: dm.dailyQuota,
+            isFree: dm.isFree,
+            costPerToken: dm.costPerToken,
+            status: dm.status,
+            createdAt: dm.createdAt
+          });
+        }
+      }
+
+      const rulesToCopy = await db.select().from(cascadeRules).where(eq(cascadeRules.userId, 'default-user'));
+      for (const dr of rulesToCopy) {
+        const oldModelOrder = JSON.parse(dr.modelOrder) as string[];
+        const newModelOrder = oldModelOrder.map((oldId: string) => `${oldId}-${userId}`);
+        await db.insert(cascadeRules).values({
+          id: `${dr.id}-${userId}`,
+          userId,
+          name: dr.name,
+          priority: dr.priority,
+          triggerType: dr.triggerType,
+          triggerValue: dr.triggerValue,
+          modelOrder: JSON.stringify(newModelOrder),
+          wordLimit: dr.wordLimit,
+          enabled: dr.enabled,
+          createdAt: dr.createdAt
+        });
+      }
+
+      await cascadeEngine.refreshCaches();
+    } catch (seedError) {
+      console.error('Failed to seed default data for new user:', seedError);
+    }
 
     return reply.code(201).send({
       success: true,
@@ -1495,6 +1717,14 @@ fastify.register(async (fastify) => {
 
 // OpenAI-compatible endpoint for external tools (opencode, etc.)
 fastify.post('/api/chat/completions', {
+  preHandler: [
+    createEndpointRateLimiter(30, '1 minute'),
+    validateRequest,
+  ],
+}, cascadeRoutes.POST);
+
+// Standard OpenAI path alias (many tools use /v1/chat/completions)
+fastify.post('/v1/chat/completions', {
   preHandler: [
     createEndpointRateLimiter(30, '1 minute'),
     validateRequest,

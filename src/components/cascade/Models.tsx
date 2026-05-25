@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface Model {
   id: string;
   providerId: string;
@@ -45,7 +47,7 @@ export function Models() {
     isFree: true,
     costPerToken: 0
   });
-  const { apiKey } = useAuth();
+  const { apiKey, setApiKey } = useAuth();
 
   const fetchData = useCallback(async () => {
     console.log('Fetching models and providers...');
@@ -53,18 +55,24 @@ export function Models() {
       const [modelsRes, providersRes] = await Promise.all([
         fetch('/api/models', {
           headers: {
-            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': apiKey || FALLBACK_KEY
           }
         }),
         fetch('/api/providers', {
           headers: {
-            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': apiKey || FALLBACK_KEY
           }
         })
       ]);
 
       console.log('Models response status:', modelsRes.status);
       console.log('Providers response status:', providersRes.status);
+
+      if (modelsRes.status === 401 || providersRes.status === 401) {
+        console.warn('API key invalid, falling back to default key');
+        setApiKey(FALLBACK_KEY);
+        return;
+      }
 
       if (modelsRes.ok) {
         const modelsData = await modelsRes.json();
@@ -135,7 +143,7 @@ export function Models() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         },
         body: JSON.stringify(modelData),
       });
@@ -198,7 +206,7 @@ export function Models() {
       const response = await fetch('/api/models', {
         method: 'DELETE',
         headers: {
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         }
       });
       if (response.ok) {
@@ -219,7 +227,7 @@ export function Models() {
       const response = await fetch(`/api/models/provider/${providerId}`, {
         method: 'DELETE',
         headers: {
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         }
       });
       if (response.ok) {
@@ -241,7 +249,7 @@ export function Models() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         },
         body: JSON.stringify({ providerId, modelId })
       });
@@ -516,7 +524,7 @@ export function Models() {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                  'X-API-Key': apiKey || FALLBACK_KEY
                 },
                 body: JSON.stringify({ models: importedModels })
               });
@@ -547,7 +555,7 @@ export function Models() {
             try {
               const response = await fetch(`/api/models/discover/${providerId}`, {
                 headers: {
-                  'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                  'X-API-Key': apiKey || FALLBACK_KEY
                 }
               });
 
@@ -568,7 +576,7 @@ export function Models() {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                  'X-API-Key': apiKey || FALLBACK_KEY
                 },
                 body: JSON.stringify({ models: modelsToImport })
               });
@@ -854,7 +862,7 @@ function ModelDiscoveryModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         },
         body: JSON.stringify({ providerId: model.providerId, modelId: model.modelId })
       });

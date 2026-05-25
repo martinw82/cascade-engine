@@ -287,24 +287,22 @@ export async function validateRequest(request: FastifyRequest, reply: FastifyRep
     return reply.code(400).send({ error: 'Messages array required' });
   }
 
-  // Limit number of messages
-  if (body.messages.length > 50) {
-    return reply.code(400).send({ error: 'Too many messages (max 50)' });
+  // Limit number of messages - generous limit for tool conversations
+  if (body.messages.length > 500) {
+    return reply.code(400).send({ error: 'Too many messages (max 500)' });
   }
 
   // Validate message structure
   for (const message of body.messages) {
-    if (!message.role || !message.content) {
+    if (!message.role) {
       return reply.code(400).send({ error: 'Invalid message structure' });
     }
-    if (!['user', 'assistant', 'system', 'tool', 'function'].includes(message.role)) {
-      return reply.code(400).send({ error: 'Invalid message role' });
+    // Allow messages without content when role is 'assistant' with tool_calls
+    if (!message.content && message.role !== 'assistant') {
+      return reply.code(400).send({ error: 'Invalid message structure' });
     }
-    if (typeof message.content !== 'string') {
-      return reply.code(400).send({ error: 'Message content must be string' });
-    }
-    if (message.content.length > 100000) {
-      return reply.code(400).send({ error: 'Message content too long (max 100k chars)' });
+    if (typeof message.content === 'string' && message.content.length > 500000) {
+      return reply.code(400).send({ error: 'Message content too long (max 500k chars)' });
     }
   }
 
@@ -318,7 +316,7 @@ export async function validateRequest(request: FastifyRequest, reply: FastifyRep
     return reply.code(400).send({ error: 'Temperature must be between 0 and 2' });
   }
 
-  if (body.max_tokens !== undefined && body.max_tokens > 10000) {
-    return reply.code(400).send({ error: 'max_tokens cannot exceed 10000' });
+  if (body.max_tokens !== undefined && body.max_tokens > 200000) {
+    body.max_tokens = 200000;
   }
 }

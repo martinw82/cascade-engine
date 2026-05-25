@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface Provider {
   id: string;
   name: string;
@@ -14,7 +16,7 @@ interface Provider {
 
 export function Providers() {
   const [providers, setProviders] = useState<Provider[]>([]);
-  const { apiKey } = useAuth();
+  const { apiKey, setApiKey } = useAuth();
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -22,10 +24,16 @@ export function Providers() {
       try {
         const response = await fetch('/api/providers', {
           headers: {
-            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': apiKey || FALLBACK_KEY
           }
         });
         console.log('Providers response status:', response.status);
+        if (response.status === 401) {
+          // Key is invalid, fall back to default
+          console.warn('API key invalid, falling back to default key');
+          setApiKey(FALLBACK_KEY);
+          return;
+        }
         if (response.ok) {
           const data = await response.json();
           console.log('Fetched providers:', data.length);
@@ -60,7 +68,7 @@ export function Providers() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         },
         body: JSON.stringify({
           id,
@@ -82,15 +90,15 @@ export function Providers() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         },
         body: JSON.stringify({
           ...(editingId && { id: editingId }),
           name: formData.name,
           base_url: formData.baseURL,
-          api_key: formData.apiKey,
+          ...(formData.apiKey && { api_key: formData.apiKey }),
           status: 'ready',
-          created_at: new Date().toISOString()
+          ...(editingId ? {} : { created_at: new Date().toISOString() })
         }),
       });
 
@@ -116,7 +124,7 @@ export function Providers() {
     setFormData({
       name: provider.name,
       baseURL: provider.baseURL,
-      apiKey: provider.apiKey
+      apiKey: ''
     });
     setEditingId(provider.id);
     setIsAdding(true);
@@ -127,7 +135,7 @@ export function Providers() {
       const response = await fetch(`/api/providers/${id}`, {
         method: 'DELETE',
         headers: {
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         }
       });
       if (response.ok) {
@@ -148,7 +156,7 @@ export function Providers() {
       const response = await fetch('/api/providers', {
         method: 'DELETE',
         headers: {
-          'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': apiKey || FALLBACK_KEY
         }
       });
       if (response.ok) {
@@ -188,7 +196,7 @@ export function Providers() {
                 try {
                   const response = await fetch('/api/providers', {
                     headers: {
-                      'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+                      'X-API-Key': apiKey || FALLBACK_KEY
                     }
                   });
                   console.log('Refresh response status:', response.status);
@@ -260,14 +268,15 @@ export function Providers() {
             <div>
               <label className="block text-sm font-medium text-neutral-300 mb-2">
                 API Key
+                {editingId && <span className="text-neutral-500 text-xs ml-2">(leave blank to keep existing)</span>}
               </label>
               <input
                 type="password"
                 value={formData.apiKey}
                 onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                 className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="sk-..."
-                required
+                placeholder={editingId ? 'Enter new key to update, or leave blank' : 'sk-...'}
+                required={!editingId}
               />
             </div>
             <div className="flex space-x-3">

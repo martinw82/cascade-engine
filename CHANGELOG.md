@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **SSE Streaming** — `POST /api/cascade` now accepts `"stream": true` for real-time token-by-token response streaming. Supports three provider formats: OpenAI-compatible (Groq, OpenRouter, NVIDIA, Mistral), Gemini (`streamGenerateContent`), and Anthropic (message events). Streaming spillover retries on connection failure.
+- **Tool Calling** — `tools` and `tool_choice` parameters forwarded to upstream providers in both streaming and non-streaming modes. Full OpenAI-compatible tool call delta handling in SSE chunks.
+- **Response Caching** — In-memory cache with SHA-256 key generation (model + messages + temperature + tools). 5-minute TTL with automatic eviction. Cache hits return in ~11ms vs ~200ms cache miss. Streaming requests bypass cache.
 - OpenAI-compatible endpoint `POST /api/chat/completions` for external agent integration (opencode, Claude Code, Cursor, etc.)
 - Model testing endpoint (`POST /api/models/test`) - validate models before adding them
 - Test button in model add/edit form with inline result display
@@ -29,6 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated README with accurate repository URLs and documentation links
 - Added LICENSE file (MIT)
 - Added `.gitignore` entries for database files and logs
+- Corrected Next.js rewrite rule destination port from 3002 to 3001
+- Added fallback analytics: view which cascade rules were used and which providers failed before successful ones in the Analytics overview
 
 ### Fixed
 - **Critical Drizzle ORM query bug**: chained `.where().where()` silently overwrites conditions; replaced with `and(eq(), eq())` across all server routes (providers, models, cascade rules, auth keys, user login)

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface Model {
   id: string;
   name: string;
@@ -47,12 +49,12 @@ export function Test() {
         const [modelsRes, providersRes] = await Promise.all([
           fetch('/api/models', {
             headers: {
-              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+              'X-API-Key': apiKey || FALLBACK_KEY
             }
           }),
           fetch('/api/providers', {
             headers: {
-              'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+              'X-API-Key': apiKey || FALLBACK_KEY
             }
           })
         ]);
@@ -94,26 +96,25 @@ export function Test() {
     try {
       const endpoint = bypassCascade ? '/api/test' : '/api/cascade';
 
-      let body: any;
-      if (bypassCascade) {
-        const model = models.find(m => m.id === selectedModel);
-        body = {
-          providerId: selectedProvider,
-          modelId: model?.modelId || selectedModel,
-          messages: [{ role: 'user', content: message }]
-        };
-      } else {
-        body = {
-          model: selectedModel,
-          messages: [{ role: 'user', content: message }]
-        };
-      }
+       let body: any;
+       if (bypassCascade) {
+         body = {
+           providerId: selectedProvider,
+           modelId: selectedModel,
+           messages: [{ role: 'user', content: message }]
+         };
+       } else {
+         body = {
+           model: selectedModel,
+           messages: [{ role: 'user', content: message }]
+         };
+       }
 
        const res = await fetch(`${endpoint}`, {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
-           'X-API-Key': apiKey || 'cascade-master-default-key-2026',
+           'X-API-Key': apiKey || FALLBACK_KEY,
            'X-Internal': 'true',
          },
          body: JSON.stringify(body),

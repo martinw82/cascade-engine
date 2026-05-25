@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface LogEntry {
   timestamp: string;
   level: 'info' | 'success' | 'error' | 'warning';
@@ -59,7 +61,7 @@ export function Dashboard() {
       try {
         const response = await fetch('/api/metrics', {
           headers: {
-            'X-API-Key': apiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': apiKey || FALLBACK_KEY
           }
         });
         if (response.ok) {

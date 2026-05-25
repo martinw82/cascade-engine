@@ -9,7 +9,9 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
   }
 
   const isLocalhost = request.ip === '127.0.0.1' || request.ip === '::1' || request.ip === '::ffff:127.0.0.1';
-  if (request.headers['x-internal'] && isLocalhost) {
+  // Only allow x-internal bypass in development environment
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  if (request.headers['x-internal'] && isLocalhost && isDevelopment) {
     (request as any).auth = {
       keyId: 'internal',
       userId: 'default-user',

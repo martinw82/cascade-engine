@@ -100,7 +100,7 @@ run_test "Validate Key (Invalid)" "curl -s -X POST -H 'x-api-key: invalid-key' h
 
 # Cleanup test data
 curl -s -X DELETE -H 'x-internal: true' http://localhost:3001/api/models/provider/test-provider > /dev/null 2>&1 || true
-curl -s -X DELETE -H 'x-internal: true' http://localhost:3001/api/providers > /dev/null 2>&1 || true
+curl -s -X DELETE -H 'x-internal: true' http://localhost:3001/api/providers/test-provider > /dev/null 2>&1 || true
 curl -s -X DELETE -H 'x-internal: true' -H 'Content-Type: application/json' -d '{"id":"test-rule"}' http://localhost:3001/api/cascade-rules > /dev/null 2>&1 || true
 curl -s -X DELETE -H 'x-internal: true' http://localhost:3001/api/auth-keys/test-key > /dev/null 2>&1 || true
 

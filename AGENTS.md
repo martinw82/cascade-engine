@@ -15,8 +15,7 @@
 
 ## Important Setup Notes
 
-- The Next.js config (`next.config.ts`) contains a rewrite rule that proxies `/api` to `http://localhost:3002/api/:path*`. This is incorrect and must be fixed for the UI to communicate with the API server.
-- To fix, change the rewrite destination port from `3002` to `3001` in `next.config.ts`.
+- The Next.js config (`next.config.ts`) contains a rewrite rule that proxies `/api` to `http://localhost:3001/api/:path*` (API server port). This allows the UI to communicate with the API server.
 - After fixing, run:
   - API server: `bun run server`
   - UI server (network accessible): `HOST=0.0.0.0 PORT=3000 bun dev`
@@ -30,7 +29,7 @@
 - UI entry: `src/app/page.tsx` — tabbed management interface (Dashboard, Providers, Models, Cascade Rules, Analytics, Auth)
 - API entry: `src/server/index.ts` — Fastify on port 3001, all routes defined inline
 - CLI entry: `bin/cascade-master.js` — spawns `bun src/server/index.ts`
-- Cascade engine: `src/server/routes/api/cascade.ts` — task-aware routing with spillover across model lists
+- Cascade engine: `src/server/routes/api/cascade.ts` — task-aware routing with spillover, SSE streaming, tool calling, and response caching
 - Components: `src/components/cascade/` — one React component per UI tab
 - Path alias: `@/*` → `src/*`
 
@@ -82,8 +81,10 @@ No unit test framework is configured.
 ## API Endpoints
 
 ### Core
-- `POST /api/cascade` — Send LLM request through cascade engine (OpenAI-compatible)
+- `POST /api/cascade` — Send LLM request through cascade engine (OpenAI-compatible, supports streaming, tool calling, and response caching)
 - `GET /api/cascade` — API status info
+- `POST /api/chat/completions` — OpenAI-compatible endpoint alias (for external tools)
+- `POST /v1/chat/completions` — Standard OpenAI path alias
 - `GET /health` — Health check (no auth)
 
 ### Providers

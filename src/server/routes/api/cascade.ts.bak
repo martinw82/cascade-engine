@@ -831,15 +831,7 @@ export class CascadeEngine {
     const startTime = Date.now();
 
      if (request.model) {
-       let directModel = this.modelCache.get(request.model);
-       if (!directModel || directModel.status !== 'ready') {
-         for (const m of this.modelCache.values()) {
-           if (m.modelId === request.model && m.status === 'ready') {
-             directModel = m;
-             break;
-           }
-         }
-       }
+       const directModel = this.modelCache.get(request.model);
        if (directModel && directModel.status === 'ready') {
          const directProvider = this.providerCache.get(directModel.providerId);
          if (directProvider && directProvider.status === 'ready') {

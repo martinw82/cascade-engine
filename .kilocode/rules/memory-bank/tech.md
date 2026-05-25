@@ -90,10 +90,17 @@ db.select().from(table).where(and(eq(table.a, x), eq(table.b, y)))
 ## API Endpoints
 
 ### Core
-- `POST /api/cascade` — Cascade LLM request (OpenAI-compatible)
+- `POST /api/cascade` — Cascade LLM request (OpenAI-compatible, supports streaming, tools, caching)
 - `POST /api/chat/completions` — OpenAI-compatible endpoint (for external tools)
+- `POST /v1/chat/completions` — Standard OpenAI path alias
 - `GET /api/cascade` — Engine status
 - `GET /health` — Health check (no auth)
+
+### Streaming Details
+- Request body: `{ "stream": true, "messages": [...], "temperature": 0.7, "tools": [...] }`
+- Response: `text/event-stream` with OpenAI-compatible chunks, terminated by `data: [DONE]`
+- Three provider streaming implementations: OpenAI-compatible (SSE parser), Gemini (`streamGenerateContent`), Anthropic (content_block_delta events)
+- Spillover: retries on HTTP/connection errors before first chunk; once streaming, commits to that model
 
 ### Users
 - `POST /api/users/register` — Create user + API key

@@ -40,6 +40,33 @@ interface AnalyticsData {
   totalSuccesses: number;
   totalErrors: number;
   totalCostSaved: string;
+  fallbackAnalytics?: {
+    overallFallbackRate: number;
+    avgAttemptsPerRequest: number;
+    totalCascadeRequests: number;
+    ruleUsage: Array<{
+      ruleId: string;
+      ruleName: string;
+      totalRequests: number;
+      successfulRequests: number;
+      successRate: string;
+      avgAttempts: string;
+    }>;
+    recentChains: Array<{
+      parentRequestId: string;
+      ruleId: string;
+      ruleName: string;
+      totalAttempts: number;
+      successful: boolean;
+      attempts: Array<{
+        order: number;
+        providerId: string;
+        modelId: string;
+        status: string;
+        errorMessage?: string;
+      }>;
+    }>;
+  };
 }
 
 export function Analytics() {
@@ -375,7 +402,60 @@ export function Analytics() {
                         ).provider} at {Math.min(...data.providerStats.map(p => p.averageLatency))}ms average
                       </div>
                     </div>
-                  </>
+          {/* Fallback Analytics */}
+          <div className="bg-neutral-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Fallback Analytics</h3>
+            {!data.fallbackAnalytics || data.fallbackAnalytics.totalCascadeRequests === 0 ? (
+              <p className="text-neutral-400">No cascade data available yet.</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-neutral-700 rounded p-4">
+                    <p className="text-neutral-400 text-sm">Cascade Requests</p>
+                    <p className="text-2xl font-bold text-white">{data.fallbackAnalytics.totalCascadeRequests}</p>
+                  </div>
+                  <div className="bg-neutral-700 rounded p-4">
+                    <p className="text-neutral-400 text-sm">Fallback Rate</p>
+                    <p className={`text-2xl font-bold ${data.fallbackAnalytics.overallFallbackRate > 30 ? 'text-yellow-400' : 'text-green-400'}`}>
+                      {data.fallbackAnalytics.overallFallbackRate.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="bg-neutral-700 rounded p-4">
+                    <p className="text-neutral-400 text-sm">Avg Attempts</p>
+                    <p className="text-2xl font-bold text-blue-400">{data.fallbackAnalytics.avgAttemptsPerRequest.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-neutral-700 rounded p-4">
+                    <p className="text-neutral-400 text-sm">Rules Used</p>
+                    <p className="text-2xl font-bold text-purple-400">{data.fallbackAnalytics.ruleUsage.length}</p>
+                  </div>
+                </div>
+
+                <div className="bg-neutral-700 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Recent Fallback Chains</h4>
+                  <div className="space-y-2">
+                    {data.fallbackAnalytics.recentChains.slice(0, 5).map((chain, idx) => (
+                      <div key={idx} className="bg-neutral-600 rounded p-2 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span>{chain.ruleName}</span>
+                          <span className={chain.successful ? "text-green-400" : "text-red-400"}>
+                            {chain.successful ? 'Success' : 'Failed'} ({chain.totalAttempts} attempt{chain.totalAttempts !== 1 ? 's' : ''})
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {chain.attempts.map((att, i) => (
+                            <span key={i} className={`px-2 py-0.5 rounded text-xs ${att.status === 'success' ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'}`}>
+                              {att.order}. {att.modelId}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
                 )}
               </div>
             </div>

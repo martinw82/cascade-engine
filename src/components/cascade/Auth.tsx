@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface AuthKey {
   id: string;
   name: string;
@@ -44,9 +46,16 @@ export function Auth() {
       try {
         const response = await fetch('/api/auth-keys', {
           headers: {
-            'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': currentApiKey || FALLBACK_KEY
           }
         });
+
+        if (response.status === 401) {
+          console.warn('API key invalid, falling back to default key');
+          setApiKey(FALLBACK_KEY);
+          setIsLoading(false);
+          return;
+        }
 
         if (response.ok) {
           const data = await response.json();
@@ -65,7 +74,7 @@ export function Auth() {
           setAuthKeys([{
             id: 'default-key',
             name: 'Default Access Key',
-            keyValue: 'cascade-master-default-key-2026',
+            keyValue: FALLBACK_KEY,
             allowedIps: ['127.0.0.1', '::1', '192.168.1.100'],
             permissions: ['read', 'write', 'admin'],
             enabled: true,
@@ -77,7 +86,7 @@ export function Auth() {
         setAuthKeys([{
           id: 'default-key',
           name: 'Default Access Key',
-          keyValue: 'cascade-master-default-key-2026',
+          keyValue: FALLBACK_KEY,
           allowedIps: ['127.0.0.1', '::1', '192.168.1.100'],
           permissions: ['read', 'write', 'admin'],
           enabled: true,
@@ -92,7 +101,7 @@ export function Auth() {
       try {
         const response = await fetch('/api/users/me', {
           headers: {
-            'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+            'X-API-Key': currentApiKey || FALLBACK_KEY
           }
         });
         if (response.ok) {
@@ -133,7 +142,7 @@ export function Auth() {
            method: 'POST',
            headers: {
              'Content-Type': 'application/json',
-             'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+             'X-API-Key': currentApiKey || FALLBACK_KEY
            },
            body: JSON.stringify({
              id: editingId,
@@ -164,7 +173,7 @@ export function Auth() {
            method: 'POST',
            headers: {
              'Content-Type': 'application/json',
-             'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+             'X-API-Key': currentApiKey || FALLBACK_KEY
            },
            body: JSON.stringify({
              name: formData.name,
@@ -196,7 +205,7 @@ export function Auth() {
        // Refresh keys list to ensure we have latest data
        const refreshResponse = await fetch('/api/auth-keys', {
          headers: {
-           'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+           'X-API-Key': currentApiKey || FALLBACK_KEY
          }
        });
        if (refreshResponse.ok) {
@@ -238,7 +247,7 @@ export function Auth() {
          method: 'DELETE',
          headers: {
            'Content-Type': 'application/json',
-           'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+           'X-API-Key': currentApiKey || FALLBACK_KEY
          },
          body: JSON.stringify({ id })
        });
@@ -307,7 +316,7 @@ export function Auth() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': currentApiKey || 'cascade-master-default-key-2026'
+          'X-API-Key': currentApiKey || FALLBACK_KEY
         },
         body: JSON.stringify({
           currentPassword: passwordForm.currentPassword,
@@ -666,7 +675,7 @@ export function Auth() {
           <div>
             <strong>Example:</strong>
             <pre className="bg-neutral-900 p-3 rounded mt-1 text-xs overflow-x-auto">
-{`curl -X POST http://your-server:3002/api/cascade \\
+          {`curl -X POST http://your-server:3001/api/cascade \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: your-access-key-here" \\
   -d '{"messages": [{"role": "user", "content": "Hello"}]}'`}

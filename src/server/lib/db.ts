@@ -98,6 +98,9 @@ function initializeDatabase() {
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      parent_request_id TEXT,
+      cascade_rule_id TEXT,
+      attempt_order INTEGER,
       provider_id TEXT,
       model_id TEXT,
       task_type TEXT,
@@ -111,15 +114,20 @@ function initializeDatabase() {
     );
   `);
 
-  // Migrate existing tables: add user_id column if not present
-  migrateAddUserIdColumn('providers', 'user_id');
-  migrateAddUserIdColumn('models', 'user_id');
-  migrateAddUserIdColumn('cascade_rules', 'user_id');
-  migrateAddUserIdColumn('auth_keys', 'user_id');
-  migrateAddUserIdColumn('request_logs', 'user_id');
+   // Migrate existing tables: add user_id column if not present
+   migrateAddUserIdColumn('providers', 'user_id');
+   migrateAddUserIdColumn('models', 'user_id');
+   migrateAddUserIdColumn('cascade_rules', 'user_id');
+   migrateAddUserIdColumn('auth_keys', 'user_id');
+   migrateAddUserIdColumn('request_logs', 'user_id');
 
-  // Assign existing data to default user if user_id is NULL
-  assignDataToDefaultUser();
+   // Migrate request_logs: add new columns for fallback analytics
+   migrateAddColumn('request_logs', 'parent_request_id');
+   migrateAddColumn('request_logs', 'cascade_rule_id');
+   migrateAddColumn('request_logs', 'attempt_order');
+
+   // Assign existing data to default user if user_id is NULL
+   assignDataToDefaultUser();
 
   // Insert default data
   initializeDefaultData();
@@ -128,6 +136,14 @@ function initializeDatabase() {
 function migrateAddUserIdColumn(tableName: string, columnName: string) {
   try {
     sqlite.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} TEXT;`);
+  } catch (e) {
+    // Column might already exist, ignore
+  }
+}
+
+function migrateAddColumn(tableName: string, columnName: string, columnType: string = 'TEXT') {
+  try {
+    sqlite.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType};`);
   } catch (e) {
     // Column might already exist, ignore
   }
@@ -175,7 +191,7 @@ function initializeDefaultData() {
     {
       id: 'nvidia-nim',
       name: 'NVIDIA NIM',
-      base_url: 'https://api.nvidia.com/v1',
+      base_url: 'https://integrate.api.nvidia.com/v1',
       api_key: process.env.NVIDIA_API_KEY || '',
       status: 'ready'
     },
@@ -209,7 +225,7 @@ function initializeDefaultData() {
     {
       id: 'llama-3.1-70b',
       provider_id: 'nvidia-nim',
-      model_id: 'llama-3.1-70b',
+      model_id: 'meta/llama-3.1-70b-instruct',
       context_window: 128000,
       rpm_limit: 40,
       tpm_limit: 10000,
@@ -233,7 +249,7 @@ function initializeDefaultData() {
     {
       id: 'gemini-1.5-flash',
       provider_id: 'openrouter',
-      model_id: 'gemini-1.5-flash',
+      model_id: 'google/gemini-2.5-flash',
       context_window: 1000000,
       rpm_limit: 50,
       tpm_limit: 10000,
@@ -348,6 +364,35 @@ function initializeDefaultData() {
       JSON.stringify(['read', 'write', 'admin']),
       1
     );
+
+    // Insert fallback key for UI (hardcoded in components)
+    insertAuthKey.run(
+      'fallback-key',
+      'default-user',
+      'UI Fallback Key',
+      'cascade-master-default-key-2026',
+      null,
+      JSON.stringify(['read', 'write', 'admin']),
+      1
+    );
+  } else {
+    // Ensure fallback key exists even if other keys were added before
+    const fallbackExists = sqlite.prepare("SELECT COUNT(*) as count FROM auth_keys WHERE key_value = 'cascade-master-default-key-2026'").get() as { count: number };
+    if (fallbackExists.count === 0) {
+      sqlite.prepare(`
+        INSERT OR IGNORE INTO auth_keys (id, user_id, name, key_value, allowed_ips, permissions, enabled)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'fallback-key',
+        'default-user',
+        'UI Fallback Key',
+        'cascade-master-default-key-2026',
+        null,
+        JSON.stringify(['read', 'write', 'admin']),
+        1
+      );
+      console.log('Added missing UI fallback key');
+    }
   }
 
   // Mark defaults as seeded

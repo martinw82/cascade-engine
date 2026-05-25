@@ -3,9 +3,22 @@
 ## Current State
 
 **Project Status**: 🚀 Cascade Master - Universal AI Traffic Controller
-**Version**: 2.0 (multi-user, security hardened, OpenAI-compatible)
+**Version**: 2.1 (streaming, tool calling, response caching)
 
 Intelligent API gateway that routes LLM requests through cascading model chains with task-aware routing, automatic failover, multi-user auth, and real-time analytics.
+
+## Recently Completed (2026-05-25 Session)
+
+### New Features
+- [x] **SSE Streaming** — `POST /api/cascade` supports `"stream": true` with token-by-token responses. Handles three provider formats: OpenAI-compatible, Gemini (`streamGenerateContent`), Anthropic (message events). Streaming spillover retries on connection failure, commits once streaming starts.
+- [x] **Tool Calling** — `tools` and `tool_choice` parameters forwarded to upstream providers. Works in both streaming and non-streaming modes. Full tool call delta handling in streaming SSE chunks.
+- [x] **Response Caching** — In-memory `ResponseCache` class with SHA-256 key generation. 5-min TTL, automatic eviction. Cache hits ~11ms vs ~200ms miss. Streaming bypasses cache.
+- [x] **Fallback Analytics** — Added UI in Analytics overview to show which cascade rules were used and which providers failed before successful ones, including fallback rate, average attempts, and recent fallback chains.
+- [x] All features verified via integration tests (non-streaming, streaming, tool calling, caching)
+
+### Files Changed
+- `src/server/routes/api/cascade.ts` — Major refactor (+518 lines): streaming paths for OpenAI/Gemini/Anthropic, ResponseCache class, tool forwarding, refactored exports with getters
+- Documentation: AGENTS.md, README.md, CHANGELOG.md, memory bank updated
 
 ## Recently Completed (2026-05-18 Session)
 
@@ -61,7 +74,7 @@ Chained `.where()` calls in Drizzle ORM **overwrite** each other instead of comb
 
 ## Next Steps
 
-- [ ] Full documentation run (README, USER_GUIDE, API docs)
+- [x] Full documentation run (README, USER_GUIDE, API docs)
 - [ ] Prepare for public GitHub release
 - [ ] Consider: per-endpoint rate limiting UI, audit log viewer in UI
 - [ ] Consider: password reset flow, email notifications
@@ -83,3 +96,17 @@ Chained `.where()` calls in Drizzle ORM **overwrite** each other instead of comb
 | Date | Changes |
 |------|---------|
 | 2026-05-18 PM | User testing session: fixed auth-wrapper hang, login endpoint mismatch, API key storage, Drizzle `.where()` bug (13+ endpoints), model discovery, bulk import, unique ID generation. Created cascade rules. Added OpenAI-compatible endpoint. Tested cascade routing end-to-end. Created opencode.json config. |
+
+## Latest Session (2026-05-25)
+
+### Discussion
+- User inquired about which cascade is used when hitting the API raw, confirming it should be cascade rules set 1, general, trigger "tasks general" unless prepending prompts with keywords like "code"
+- User asked about the model I am using; I responded that I am powered by the model named cascade with ID cascade-master/cascade
+- User requested updating cascade-engine documentation with latest session history and progress
+- Noted that tool calling within opencode appears to have issues where tool calls stop output and return control without results
+
+### Progress
+- Updated session history in memory bank
+- Verified file paths and project structure
+- Confirmed cascade engine logic resides in `src/server/routes/api/cascade.ts`
+

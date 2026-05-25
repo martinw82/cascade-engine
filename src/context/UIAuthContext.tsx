@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface UIAuthContextType {
   isAuthenticated: boolean;
   user: { username: string; role: string } | null;
@@ -56,7 +58,9 @@ export function UIAuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setIsAuthenticated(true);
         setUser(data.user);
-        localStorage.setItem('cascadeApiKey', data.apiKey);
+        // Use the returned API key, or fall back to the default key
+        const key = data.apiKey || FALLBACK_KEY;
+        localStorage.setItem('cascadeApiKey', key);
         return true;
       } else {
         return false;

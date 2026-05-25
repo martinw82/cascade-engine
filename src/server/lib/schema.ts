@@ -74,6 +74,9 @@ export const requestLogs = sqliteTable('request_logs', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   timestamp: text('timestamp').default('CURRENT_TIMESTAMP'),
+  parentRequestId: text('parent_request_id'), // Groups attempts from same cascade
+  cascadeRuleId: text('cascade_rule_id'), // Which cascade rule was matched
+  attemptOrder: integer('attempt_order'), // Sequence number within cascade (1,2,3...)
   providerId: text('provider_id'),
   modelId: text('model_id'),
   taskType: text('task_type'),
@@ -84,4 +87,10 @@ export const requestLogs = sqliteTable('request_logs', {
   costSaved: real('cost_saved').default(0),
   clientIp: text('client_ip'),
   userAgent: text('user_agent'),
+});
+
+// Settings table
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
 });

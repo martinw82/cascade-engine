@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+const FALLBACK_KEY = 'cascade-master-default-key-2026';
+
 interface AuthContextType {
   apiKey: string | null;
   setApiKey: (key: string | null) => void;
@@ -11,26 +13,40 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [apiKey, setApiKey] = useState<string | null>(() => {
-    // Try to get from localStorage on initial load
+  const [apiKey, setApiKeyState] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('cascadeApiKey') || 'cascade-master-default-key-2026';
+      return localStorage.getItem('cascadeApiKey') || FALLBACK_KEY;
     }
-    return 'cascade-master-default-key-2026';
+    return FALLBACK_KEY;
   });
 
+  // Validate the stored key on mount — if it's invalid, fall back
   useEffect(() => {
-    // Save to localStorage whenever it changes
-    if (apiKey) {
-      localStorage.setItem('cascadeApiKey', apiKey);
+    if (!apiKey) return;
+    fetch('/api/auth-keys', {
+      headers: { 'X-API-Key': apiKey }
+    }).then(res => {
+      if (!res.ok) {
+        console.warn('Stored API key is invalid, falling back to default');
+        setApiKeyState(FALLBACK_KEY);
+      }
+    }).catch(() => {
+      // Server not ready yet, skip validation
+    });
+  }, []);
+
+  const setApiKey = (key: string | null) => {
+    setApiKeyState(key);
+    if (key) {
+      localStorage.setItem('cascadeApiKey', key);
     } else {
       localStorage.removeItem('cascadeApiKey');
     }
-  }, [apiKey]);
+  };
 
   const value = {
     apiKey,
-    setApiKey: (key: string | null) => setApiKey(key),
+    setApiKey,
     isAuthenticated: !!apiKey
   };
 
