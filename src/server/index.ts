@@ -16,7 +16,7 @@ import { encrypt, isEncrypted } from './lib/encryption';
 import { validateEnv } from './lib/env';
 import { db, hashPassword, verifyPassword } from './lib/db';
 import { eq, and, sql } from 'drizzle-orm';
-import { requestLogs, providers, models as modelsTable, cascadeRules, authKeys, users, auditLogs, webhooks } from './lib/schema';
+import { requestLogs, providers, models as modelsTable, cascadeRules, authKeys, users, auditLogs, webhooks, marketplaceRules } from './lib/schema';
 
 // Validate environment variables on startup
 const envValidation = validateEnv();
@@ -447,6 +447,53 @@ fastify.delete('/api/providers/:id', async (request, reply) => {
   }
 });
 
+// Provider export/import
+fastify.get('/api/providers/export', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const result = await db.select().from(providers).where(eq(providers.userId, userId));
+    const exportData = result.map(p => ({
+      name: p.name,
+      baseUrl: p.baseUrl,
+      apiKey: '[REDACTED]',
+      status: p.status,
+    }));
+    return reply.send({ version: '1.0', type: 'providers', exportedAt: new Date().toISOString(), data: exportData });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to export providers' });
+  }
+});
+
+fastify.post('/api/providers/import', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const body = request.body as any;
+    if (!body.data || !Array.isArray(body.data)) {
+      return reply.code(400).send({ error: 'Invalid import format. Expected { data: [...] }' });
+    }
+
+    let imported = 0;
+    for (const item of body.data) {
+      if (!item.name || !item.baseUrl) continue;
+      const id = `provider-import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${imported}`;
+      await db.insert(providers).values({
+        id,
+        userId,
+        name: item.name,
+        baseUrl: item.baseUrl,
+        apiKey: item.apiKey || '',
+        status: item.status || 'ready',
+      });
+      imported++;
+    }
+
+    await cascadeEngine.refreshCaches();
+    return reply.send({ success: true, imported, message: `Imported ${imported} providers` });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to import providers' });
+  }
+});
+
 // Models CRUD routes
 fastify.get('/api/models', async (request, reply) => {
   try {
@@ -595,6 +642,200 @@ fastify.put('/api/cascade-rules', async (request, reply) => {
     return reply.send(result[0]);
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to update cascade rule' });
+  }
+});
+
+// Cascade rules export/import
+fastify.get('/api/cascade-rules/export', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const result = await db.select().from(cascadeRules).where(eq(cascadeRules.userId, userId));
+    const exportData = result.map(r => ({
+      name: r.name,
+      priority: r.priority,
+      triggerType: r.triggerType,
+      triggerValue: r.triggerValue,
+      modelOrder: r.modelOrder,
+      wordLimit: r.wordLimit,
+      enabled: Boolean(r.enabled),
+    }));
+    return reply.send({ version: '1.0', type: 'cascade-rules', exportedAt: new Date().toISOString(), data: exportData });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to export cascade rules' });
+  }
+});
+
+fastify.post('/api/cascade-rules/import', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const body = request.body as any;
+    if (!body.data || !Array.isArray(body.data)) {
+      return reply.code(400).send({ error: 'Invalid import format. Expected { data: [...] }' });
+    }
+
+    let imported = 0;
+    for (const item of body.data) {
+      if (!item.name || !item.triggerType || !item.triggerValue || !item.modelOrder) continue;
+      const id = `rule-import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${imported}`;
+      await db.insert(cascadeRules).values({
+        id,
+        userId,
+        name: item.name,
+        priority: item.priority || 0,
+        triggerType: item.triggerType,
+        triggerValue: item.triggerValue,
+        modelOrder: item.modelOrder,
+        wordLimit: item.wordLimit || 5,
+        enabled: item.enabled !== undefined ? item.enabled : true,
+      });
+      imported++;
+    }
+
+    await cascadeEngine.refreshCaches();
+    return reply.send({ success: true, imported, message: `Imported ${imported} cascade rules` });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to import cascade rules' });
+  }
+});
+
+// Marketplace endpoints
+fastify.get('/api/marketplace', async (request, reply) => {
+  try {
+    const query = request.query as any;
+    const category = query.category || null;
+    const search = query.search || null;
+
+    let result;
+    if (category) {
+      result = await db.select().from(marketplaceRules)
+        .where(and(eq(marketplaceRules.published, true as any), eq(marketplaceRules.category, category)))
+        .orderBy(sql`downloads DESC`)
+        .limit(50);
+    } else if (search) {
+      result = await db.select().from(marketplaceRules)
+        .where(and(eq(marketplaceRules.published, true as any), sql`name LIKE ${'%' + search + '%'}`))
+        .orderBy(sql`downloads DESC`)
+        .limit(50);
+    } else {
+      result = await db.select().from(marketplaceRules)
+        .where(eq(marketplaceRules.published, true as any))
+        .orderBy(sql`downloads DESC`)
+        .limit(50);
+    }
+
+    return reply.send(result.map(r => ({
+      ...r,
+      tags: r.tags ? JSON.parse(r.tags) : [],
+      modelOrder: JSON.parse(r.modelOrder),
+    })));
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch marketplace items' });
+  }
+});
+
+fastify.get('/api/marketplace/mine', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const result = await db.select().from(marketplaceRules)
+      .where(eq(marketplaceRules.userId, userId))
+      .orderBy(sql`createdAt DESC`);
+    return reply.send(result.map(r => ({ ...r, tags: r.tags ? JSON.parse(r.tags) : [], modelOrder: JSON.parse(r.modelOrder) })));
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to fetch my listings' });
+  }
+});
+
+fastify.post('/api/marketplace', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const data = request.body as any;
+
+    if (!data.name || !data.triggerType || !data.triggerValue || !data.modelOrder) {
+      return reply.code(400).send({ error: 'name, triggerType, triggerValue, modelOrder are required' });
+    }
+
+    const id = data.id || `marketplace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const existing = data.id
+      ? await db.select().from(marketplaceRules).where(and(eq(marketplaceRules.id, data.id), eq(marketplaceRules.userId, userId))).limit(1)
+      : [];
+
+    if (existing.length > 0) {
+      await db.update(marketplaceRules).set({
+        name: data.name,
+        description: data.description || existing[0].description,
+        triggerType: data.triggerType,
+        triggerValue: data.triggerValue,
+        modelOrder: JSON.stringify(data.modelOrder),
+        wordLimit: data.wordLimit || existing[0].wordLimit,
+        category: data.category || existing[0].category,
+        tags: data.tags ? JSON.stringify(data.tags) : existing[0].tags,
+        published: data.published !== undefined ? data.published : existing[0].published,
+        updatedAt: new Date().toISOString(),
+      }).where(eq(marketplaceRules.id, data.id));
+    } else {
+      await db.insert(marketplaceRules).values({
+        id,
+        userId,
+        name: data.name,
+        description: data.description || '',
+        triggerType: data.triggerType,
+        triggerValue: data.triggerValue,
+        modelOrder: JSON.stringify(data.modelOrder),
+        wordLimit: data.wordLimit || 5,
+        category: data.category || 'general',
+        tags: data.tags ? JSON.stringify(data.tags) : '[]',
+        published: data.published || false,
+      });
+    }
+
+    return reply.send({ id, name: data.name, published: data.published || false });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to save marketplace item' });
+  }
+});
+
+fastify.post('/api/marketplace/:id/download', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+
+    const item = await db.select().from(marketplaceRules).where(eq(marketplaceRules.id, id)).limit(1);
+    if (item.length === 0) {
+      return reply.code(404).send({ error: 'Marketplace item not found' });
+    }
+
+    // Increment download count
+    await db.update(marketplaceRules).set({ downloads: (item[0].downloads || 0) + 1 }).where(eq(marketplaceRules.id, id));
+
+    // Create cascade rule from marketplace template
+    const ruleId = `marketplace-dl-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    await db.insert(cascadeRules).values({
+      id: ruleId,
+      userId,
+      name: item[0].name,
+      priority: 0,
+      triggerType: item[0].triggerType,
+      triggerValue: item[0].triggerValue,
+      modelOrder: item[0].modelOrder,
+      wordLimit: item[0].wordLimit || 5,
+      enabled: true,
+    });
+
+    await cascadeEngine.refreshCaches();
+    return reply.send({ success: true, ruleId, name: item[0].name, message: `Downloaded and installed rule: ${item[0].name}` });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to download marketplace item' });
+  }
+});
+
+fastify.delete('/api/marketplace/:id', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const { id } = request.params as { id: string };
+    await db.delete(marketplaceRules).where(and(eq(marketplaceRules.id, id), eq(marketplaceRules.userId, userId)));
+    return reply.send({ success: true });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete marketplace item' });
   }
 });
 
@@ -1198,6 +1439,63 @@ fastify.post('/api/models/benchmark', {
     });
   } catch (error) {
     return reply.code(500).send({ error: 'Benchmark failed' });
+  }
+});
+
+// Model export/import
+fastify.get('/api/models/export', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const result = await db.select().from(modelsTable).where(eq(modelsTable.userId, userId));
+    const exportData = result.map(m => ({
+      providerId: m.providerId,
+      modelId: m.modelId,
+      contextWindow: m.contextWindow,
+      rpmLimit: m.rpmLimit,
+      tpmLimit: m.tpmLimit,
+      dailyQuota: m.dailyQuota,
+      isFree: Boolean(m.isFree),
+      costPerToken: m.costPerToken,
+      status: m.status,
+    }));
+    return reply.send({ version: '1.0', type: 'models', exportedAt: new Date().toISOString(), data: exportData });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to export models' });
+  }
+});
+
+fastify.post('/api/models/import', async (request, reply) => {
+  try {
+    const userId = getUserId(request);
+    const body = request.body as any;
+    if (!body.data || !Array.isArray(body.data)) {
+      return reply.code(400).send({ error: 'Invalid import format. Expected { data: [...] }' });
+    }
+
+    let imported = 0;
+    for (const item of body.data) {
+      if (!item.modelId || !item.providerId) continue;
+      const id = `model-import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${imported}`;
+      await db.insert(modelsTable).values({
+        id,
+        userId,
+        providerId: item.providerId,
+        modelId: item.modelId,
+        contextWindow: item.contextWindow || 4096,
+        rpmLimit: item.rpmLimit || 60,
+        tpmLimit: item.tpmLimit || 10000,
+        dailyQuota: item.dailyQuota || 1000,
+        isFree: item.isFree !== undefined ? item.isFree : true,
+        costPerToken: item.costPerToken || 0,
+        status: item.status || 'ready',
+      });
+      imported++;
+    }
+
+    await cascadeEngine.refreshCaches();
+    return reply.send({ success: true, imported, message: `Imported ${imported} models` });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to import models' });
   }
 });
 

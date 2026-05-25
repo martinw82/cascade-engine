@@ -128,3 +128,23 @@ export const webhooks = sqliteTable('webhooks', {
   createdAt: text('created_at').default('CURRENT_TIMESTAMP'),
   updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
 });
+
+// Marketplace rules table (community-shared cascade rule templates)
+export const marketplaceRules = sqliteTable('marketplace_rules', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  triggerType: text('trigger_type').notNull(),
+  triggerValue: text('trigger_value').notNull(),
+  modelOrder: text('model_order').notNull(),
+  wordLimit: integer('word_limit').default(5),
+  category: text('category').default('general'),
+  tags: text('tags'), // JSON array
+  downloads: integer('downloads').default(0),
+  likes: integer('likes').default(0),
+  rating: real('rating').default(0),
+  published: integer('published', { mode: 'boolean' }).default(false),
+  createdAt: text('created_at').default('CURRENT_TIMESTAMP'),
+  updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
+});

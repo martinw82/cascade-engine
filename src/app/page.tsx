@@ -15,8 +15,9 @@ import { Admin } from '../components/cascade/Admin';
 import { Benchmark } from '../components/cascade/Benchmark';
 import { CostCalculator } from '../components/cascade/CostCalculator';
 import { ABTest } from '../components/cascade/ABTest';
+import { Marketplace } from '../components/cascade/Marketplace';
 
-type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test' | 'benchmark' | 'cost' | 'abtest' | 'admin';
+type TabType = 'dashboard' | 'providers' | 'models' | 'cascade' | 'analytics' | 'auth' | 'test' | 'benchmark' | 'cost' | 'abtest' | 'marketplace' | 'admin';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -39,6 +40,7 @@ export default function Home() {
     { id: 'benchmark' as TabType, label: 'Benchmark', icon: '🏆' },
     { id: 'cost' as TabType, label: 'Cost Calc', icon: '💰' },
     { id: 'abtest' as TabType, label: 'A/B Test', icon: '🔬' },
+    { id: 'marketplace' as TabType, label: 'Marketplace', icon: '🏪' },
     { id: 'admin' as TabType, label: 'Admin', icon: '⚙️' },
   ];
 
@@ -96,6 +98,7 @@ export default function Home() {
           {activeTab === 'benchmark' && <Benchmark />}
           {activeTab === 'cost' && <CostCalculator />}
           {activeTab === 'abtest' && <ABTest />}
+          {activeTab === 'marketplace' && <Marketplace />}
           {activeTab === 'admin' && <Admin />}
         </div>
       </main>
