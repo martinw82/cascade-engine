@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 31,
+      "symbolId": "src/components/cascade/Marketplace.tsx::Marketplace::function"
+    }
+  ],
+  "contentHash": "ae384b2c7fdd3933d7c2e27a6b7601e08a042cac010f0c9e9e85a73988544975",
+  "edges": [],
+  "file": "src/components/cascade/Marketplace.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T17:27:23+08:00",
+      "hash": "a9430555ddc679a1c46b7378730c113cb7ece56e",
+      "kind": "commit",
+      "message": "feat: v0.9 - export/import for all resources, community marketplace"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 254,
+      "endOffset": 12614,
+      "kind": "function",
+      "name": "Marketplace",
+      "startLine": 9,
+      "startOffset": 326,
+      "symbolId": "src/components/cascade/Marketplace.tsx::Marketplace::function"
+    }
+  ]
+}

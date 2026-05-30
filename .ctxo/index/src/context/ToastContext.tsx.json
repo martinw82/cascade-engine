@@ -1,0 +1,45 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "src/context/ToastContext.tsx::ToastProvider::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/context/ToastContext.tsx::useToast::function"
+    }
+  ],
+  "contentHash": "039cb772c32c4677722de607c0f72573dba77a37a63191a72208546c6c8b442f",
+  "edges": [],
+  "file": "src/context/ToastContext.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 66,
+      "endOffset": 2328,
+      "kind": "function",
+      "name": "ToastProvider",
+      "startLine": 18,
+      "startOffset": 413,
+      "symbolId": "src/context/ToastContext.tsx::ToastProvider::function"
+    },
+    {
+      "endLine": 72,
+      "endOffset": 2501,
+      "kind": "function",
+      "name": "useToast",
+      "startLine": 68,
+      "startOffset": 2330,
+      "symbolId": "src/context/ToastContext.tsx::useToast::function"
+    }
+  ]
+}

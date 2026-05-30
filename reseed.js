@@ -89,8 +89,15 @@ async function resetSeeding() {
     const existingRules = await db.select().from(rulesTable).where(eq(rulesTable.userId, 'default-user'));
     if (existingRules.length === 0) {
       const cascadeRules = [
+        // ── Keyword-based rules (trigger on first words of message) ──
         { id: 'coding-rule', name: 'Coding Tasks', priority: 1, triggerType: 'keyword', triggerValue: 'code|program|function|debug|programming', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
         { id: 'summarization-rule', name: 'Summarization Tasks', priority: 2, triggerType: 'keyword', triggerValue: 'summarize|extract|analyze|document|summary', modelOrder: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']), wordLimit: 5, enabled: true },
+        // ── Auto-detected task_type rules (set by User-Agent header) ──
+        { id: 'opencode-rule', name: 'OpenCode CLI', priority: 3, triggerType: 'task_type', triggerValue: 'opencode', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
+        { id: 'coding-tools-rule', name: 'AI Coding Assistant', priority: 4, triggerType: 'task_type', triggerValue: 'coding', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
+        { id: 'chat-tools-rule', name: 'Chat Assistant', priority: 5, triggerType: 'task_type', triggerValue: 'chat', modelOrder: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']), wordLimit: 5, enabled: true },
+        { id: 'cli-tools-rule', name: 'API / CLI Tools', priority: 6, triggerType: 'task_type', triggerValue: 'cli', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'gemini-1.5-flash', 'llama-3.1-70b']), wordLimit: 5, enabled: true },
+        // ── Catch-all fallback ──
         { id: 'default-rule', name: 'Default Fallback', priority: 99, triggerType: 'task_type', triggerValue: 'general', modelOrder: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']), wordLimit: 5, enabled: true }
       ];
       

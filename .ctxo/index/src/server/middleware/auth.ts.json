@@ -1,0 +1,222 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 27,
+      "symbolId": "src/server/middleware/auth.ts::authenticateRequest::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "src/server/middleware/auth.ts::loginWithJWT::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/middleware/auth.ts::getUserId::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/middleware/auth.ts::getUsername::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/middleware/auth.ts::getUserRole::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "src/server/middleware/auth.ts::hasPermission::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/middleware/auth.ts::isAdmin::function"
+    }
+  ],
+  "contentHash": "bd01c9fd79d784a59588bcbca9af1137c240db2974f612cd82ad808b410cc7d8",
+  "edges": [
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::authKeys::variable"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::users::variable"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "imports",
+      "to": "src/server/lib/encryption.ts::verifyToken::function"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "calls",
+      "to": "src/server/lib/encryption.ts::verifyToken::function"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "calls",
+      "to": "src/server/middleware/auth.ts::getClientIp::function"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "calls",
+      "to": "src/server/middleware/auth.ts::getClientIp::function"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "calls",
+      "to": "src/server/middleware/auth.ts::isIpAllowed::function"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "calls",
+      "to": "src/server/middleware/auth.ts::getClientIp::function"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "uses",
+      "to": "src/server/lib/encryption.ts::verifyToken::function"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "uses",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::authKeys::variable"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::users::variable"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::loginWithJWT::function",
+      "kind": "uses",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/middleware/auth.ts::loginWithJWT::function",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::users::variable"
+    }
+  ],
+  "file": "src/server/middleware/auth.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-17T00:42:21+08:00",
+      "hash": "050247d4449d65d07ed77344c0672dc521f0092e",
+      "kind": "commit",
+      "message": "feat: security hardening - rate limiting, CORS, auth improvements, graceful shutdown, secure key generation"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-02T07:41:41+00:00",
+      "hash": "2182f2968214fc8e5d33e93400b1ddfdeb436317",
+      "kind": "commit",
+      "message": "Add internal auth bypass for test requests"
+    },
+    {
+      "date": "2026-04-29T10:53:16+00:00",
+      "hash": "fe515ee0c12c64e143083b3c42a6bbc483c198a8",
+      "kind": "commit",
+      "message": "feat(cascade): implement persistence, authentication, and enhanced engine"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 124,
+      "endOffset": 3494,
+      "kind": "function",
+      "name": "authenticateRequest",
+      "startLine": 7,
+      "startOffset": 249,
+      "symbolId": "src/server/middleware/auth.ts::authenticateRequest::function"
+    },
+    {
+      "endLine": 154,
+      "endOffset": 4400,
+      "kind": "function",
+      "name": "loginWithJWT",
+      "startLine": 127,
+      "startOffset": 3554,
+      "symbolId": "src/server/middleware/auth.ts::loginWithJWT::function"
+    },
+    {
+      "endLine": 159,
+      "endOffset": 4568,
+      "kind": "function",
+      "name": "getUserId",
+      "startLine": 157,
+      "startOffset": 4448,
+      "symbolId": "src/server/middleware/auth.ts::getUserId::function"
+    },
+    {
+      "endLine": 164,
+      "endOffset": 4738,
+      "kind": "function",
+      "name": "getUsername",
+      "startLine": 162,
+      "startOffset": 4617,
+      "symbolId": "src/server/middleware/auth.ts::getUsername::function"
+    },
+    {
+      "endLine": 169,
+      "endOffset": 4900,
+      "kind": "function",
+      "name": "getUserRole",
+      "startLine": 167,
+      "startOffset": 4788,
+      "symbolId": "src/server/middleware/auth.ts::getUserRole::function"
+    },
+    {
+      "endLine": 175,
+      "endOffset": 5180,
+      "kind": "function",
+      "name": "hasPermission",
+      "startLine": 172,
+      "startOffset": 4953,
+      "symbolId": "src/server/middleware/auth.ts::hasPermission::function"
+    },
+    {
+      "endLine": 180,
+      "endOffset": 5392,
+      "kind": "function",
+      "name": "isAdmin",
+      "startLine": 178,
+      "startOffset": 5224,
+      "symbolId": "src/server/middleware/auth.ts::isAdmin::function"
+    }
+  ]
+}

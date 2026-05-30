@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 10,
+      "symbolId": "src/components/cascade/CostCalculator.tsx::CostCalculator::function"
+    }
+  ],
+  "contentHash": "414d5b47b1cd9d6367b8e38b12e1d06cefa55e7e960b7cb47e1dcc39ef3454cb",
+  "edges": [],
+  "file": "src/components/cascade/CostCalculator.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T17:20:35+08:00",
+      "hash": "0de90e93880c9e11844a8d89940bce1d1a4f19d4",
+      "kind": "commit",
+      "message": "feat: v0.9 features - benchmark, cost calc, A/B test, Postman collection"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 184,
+      "endOffset": 6983,
+      "kind": "function",
+      "name": "CostCalculator",
+      "startLine": 26,
+      "startOffset": 594,
+      "symbolId": "src/components/cascade/CostCalculator.tsx::CostCalculator::function"
+    }
+  ]
+}

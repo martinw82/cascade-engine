@@ -1,0 +1,219 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 24,
+      "symbolId": "src/app/page.tsx::Home::function"
+    }
+  ],
+  "contentHash": "c52eea4b71503d23bbbeee5a5870742d060e55ebc34b2082718ab462a4c6afd3",
+  "edges": [
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Dashboard.ts::Dashboard::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Providers.ts::Providers::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Models.ts::Models::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Cascade.ts::Cascade::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Analytics.ts::Analytics::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Auth.ts::Auth::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Test.ts::Test::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Admin.ts::Admin::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Benchmark.ts::Benchmark::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/CostCalculator.ts::CostCalculator::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/ABTest.ts::ABTest::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Marketplace.ts::Marketplace::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Dashboard.ts::Dashboard::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Providers.ts::Providers::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Models.ts::Models::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Cascade.ts::Cascade::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Analytics.ts::Analytics::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Auth.ts::Auth::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Test.ts::Test::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Benchmark.ts::Benchmark::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/CostCalculator.ts::CostCalculator::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/ABTest.ts::ABTest::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Marketplace.ts::Marketplace::class"
+    },
+    {
+      "from": "src/app/page.tsx::Home::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Admin.ts::Admin::class"
+    }
+  ],
+  "file": "src/app/page.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T17:27:23+08:00",
+      "hash": "a9430555ddc679a1c46b7378730c113cb7ece56e",
+      "kind": "commit",
+      "message": "feat: v0.9 - export/import for all resources, community marketplace"
+    },
+    {
+      "date": "2026-05-25T17:20:35+08:00",
+      "hash": "0de90e93880c9e11844a8d89940bce1d1a4f19d4",
+      "kind": "commit",
+      "message": "feat: v0.9 features - benchmark, cost calc, A/B test, Postman collection"
+    },
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-02T07:17:56+00:00",
+      "hash": "330ae72f2afb4b659f2b5b90f8d3e130149a08a5",
+      "kind": "commit",
+      "message": "feat(ui): add test tab and map model API response"
+    },
+    {
+      "date": "2026-05-01T23:57:37+00:00",
+      "hash": "78788a048cad71cea09e4e06247e33455d72629a",
+      "kind": "commit",
+      "message": "refactor(ui): remove authentication logic and login page"
+    },
+    {
+      "date": "2026-04-29T21:58:06+00:00",
+      "hash": "89d6966d63c6f7d283c903f060b75e27b6f97cff",
+      "kind": "commit",
+      "message": "Add UI authentication with login/logout for secure dashboard access"
+    },
+    {
+      "date": "2026-04-29T10:53:16+00:00",
+      "hash": "fe515ee0c12c64e143083b3c42a6bbc483c198a8",
+      "kind": "commit",
+      "message": "feat(cascade): implement persistence, authentication, and enhanced engine"
+    },
+    {
+      "date": "2026-04-29T10:21:42+00:00",
+      "hash": "3e93c1fa4303b84702696ea813327abfcfc4a313",
+      "kind": "commit",
+      "message": "feat(ui): implement tabbed management interface and analytics dashboard"
+    },
+    {
+      "date": "2026-04-29T08:03:51+00:00",
+      "hash": "2daf97207d371043c0cfd9aa3f5499d749029d88",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T00:34:52+00:00",
+      "hash": "3cfcdff551a4944b8c264ef0fcb7b8a8f03a5604",
+      "kind": "commit",
+      "message": "Initial commit"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": [
+    {
+      "endLine": 162,
+      "endOffset": 7617,
+      "kind": "function",
+      "name": "Home",
+      "startLine": 27,
+      "startOffset": 1290,
+      "symbolId": "src/app/page.tsx::Home::function"
+    }
+  ]
+}

@@ -1,0 +1,856 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 37,
+      "symbolId": "src/server/routes/api/cascade.ts::POST::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/routes/api/cascade.ts::GET::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "src/server/routes/api/cascade.ts::makeApiCall::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getProviderCache::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getModelCache::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getResponseCache::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.initializeCaches::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.initializeFallbackConfig::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.startQueueProcessor::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.processQueuedRequest::method"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.detectTaskType::method"
+    },
+    {
+      "cyclomatic": 22,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.selectModel::method"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.parseProviderError::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestBody::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestHeaders::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildApiUrl::method"
+    },
+    {
+      "cyclomatic": 31,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method"
+    },
+    {
+      "cyclomatic": 15,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method"
+    },
+    {
+      "cyclomatic": 21,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeGeminiStreamingCall::method"
+    },
+    {
+      "cyclomatic": 19,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeAnthropicStreamingCall::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.findModelForProvider::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.updateProviderUsage::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.resetCounters::method"
+    },
+    {
+      "cyclomatic": 26,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method"
+    },
+    {
+      "cyclomatic": 24,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.handleRequest::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.handleStreamingRequest::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.refreshCaches::method"
+    }
+  ],
+  "contentHash": "608fb2b41e33e9ef20a3a29e1a4d08609b75c8ea104d73f62f70abf8510728ed",
+  "edges": [
+    {
+      "from": "src/server/routes/api/cascade.ts::POST::function",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::POST::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::providers::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::POST::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::models::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::POST::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::POST::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::requestLogs::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::POST::function",
+      "kind": "imports",
+      "to": "src/server/lib/encryption.ts::decrypt::function"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::POST::function",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::getClientIp::function"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.initializeCaches::method",
+      "kind": "calls",
+      "to": "src/server/lib/encryption.ts::decrypt::function"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.initializeCaches::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.initializeFallbackConfig::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.startQueueProcessor::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.processQueuedRequest::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.processQueuedRequest::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.buildApiUrl::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestBody::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestHeaders::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.parseProviderError::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.buildApiUrl::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestBody::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestHeaders::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.parseProviderError::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeGeminiStreamingCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.parseProviderError::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeAnthropicStreamingCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.parseProviderError::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.makeGeminiStreamingCall::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.makeAnthropicStreamingCall::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.updateProviderUsage::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.detectTaskType::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.selectModel::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.selectModel::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.updateProviderUsage::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.updateProviderUsage::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.detectTaskType::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.selectModel::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.selectModel::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.handleRequest::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.resetCounters::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.handleRequest::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.handleStreamingRequest::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.resetCounters::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.handleStreamingRequest::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine.refreshCaches::method",
+      "kind": "calls",
+      "to": "src/server/routes/api/cascade.ts::CascadeEngine.initializeCaches::method"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+      "kind": "uses",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::providers::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+      "kind": "uses",
+      "to": "src/server/lib/encryption.ts::decrypt::function"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::models::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+    },
+    {
+      "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::requestLogs::variable"
+    }
+  ],
+  "file": "src/server/routes/api/cascade.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-02T22:11:30+00:00",
+      "hash": "bb277802271812c504d366b66b1b270bb89f1f0e",
+      "kind": "commit",
+      "message": "feat(cascade): upgrade routing from provider-level to model-specific"
+    },
+    {
+      "date": "2026-05-02T15:48:30+00:00",
+      "hash": "7906f427841d4f155881436bba42b00a0f3b96b0",
+      "kind": "commit",
+      "message": "Add bypass cascade option to Test tab for direct provider/model testing"
+    },
+    {
+      "date": "2026-05-02T15:37:34+00:00",
+      "hash": "aa9280ae56e879eec5df3fb58e3e9e92242478b8",
+      "kind": "commit",
+      "message": "Don't disable providers for 4xx client errors"
+    },
+    {
+      "date": "2026-05-02T15:36:54+00:00",
+      "hash": "86b70bc1dbbd0af5201f1f6e05384ded5040c3ff",
+      "kind": "commit",
+      "message": "Improve cascade to use appropriate models per provider and better error handling"
+    },
+    {
+      "date": "2026-05-02T09:39:49+00:00",
+      "hash": "42ad24f89246e6dcd7140d3429ff477951de5f19",
+      "kind": "commit",
+      "message": "fix(api): implement request timeout for provider calls"
+    },
+    {
+      "date": "2026-05-02T09:14:02+00:00",
+      "hash": "fea82449721f2ec7614b8df4087f702e3373ac7b",
+      "kind": "commit",
+      "message": "Add detailed logging for API calls to debug provider issues"
+    },
+    {
+      "date": "2026-05-02T07:54:47+00:00",
+      "hash": "be4d78d2f212ebc17cef56e85a45b98bb375473e",
+      "kind": "commit",
+      "message": "Implement real API calls to LLM providers instead of simulation"
+    },
+    {
+      "date": "2026-04-29T19:44:48+00:00",
+      "hash": "d86836a6025fe4282045e96a120cac9c6ecbab82",
+      "kind": "commit",
+      "message": "refactor(server): export CascadeEngine for external use"
+    },
+    {
+      "date": "2026-04-29T11:07:59+00:00",
+      "hash": "a9c5c7bda33fdd18739fc04e6e64e15e87cd68fc",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T11:02:21+00:00",
+      "hash": "ae464f925426a082f57d219fb6829233202ea058",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T10:53:16+00:00",
+      "hash": "fe515ee0c12c64e143083b3c42a6bbc483c198a8",
+      "kind": "commit",
+      "message": "feat(cascade): implement persistence, authentication, and enhanced engine"
+    },
+    {
+      "date": "2026-04-29T08:03:51+00:00",
+      "hash": "2daf97207d371043c0cfd9aa3f5499d749029d88",
+      "kind": "commit",
+      "message": "wip"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 1254,
+      "endOffset": 41872,
+      "kind": "function",
+      "name": "POST",
+      "startLine": 1174,
+      "startOffset": 38734,
+      "symbolId": "src/server/routes/api/cascade.ts::POST::function"
+    },
+    {
+      "endLine": 1364,
+      "endOffset": 46077,
+      "kind": "function",
+      "name": "GET",
+      "startLine": 1354,
+      "startOffset": 45680,
+      "symbolId": "src/server/routes/api/cascade.ts::GET::function"
+    },
+    {
+      "endLine": 1401,
+      "endOffset": 46850,
+      "kind": "function",
+      "name": "makeApiCall",
+      "startLine": 1371,
+      "startOffset": 46128,
+      "symbolId": "src/server/routes/api/cascade.ts::makeApiCall::function"
+    },
+    {
+      "endLine": 1166,
+      "endOffset": 38497,
+      "kind": "class",
+      "name": "CascadeEngine",
+      "startLine": 116,
+      "startOffset": 2608,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine::class"
+    },
+    {
+      "endLine": 137,
+      "endOffset": 3257,
+      "kind": "method",
+      "name": "CascadeEngine.getProviderCache",
+      "startLine": 135,
+      "startOffset": 3173,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getProviderCache::method"
+    },
+    {
+      "endLine": 141,
+      "endOffset": 3336,
+      "kind": "method",
+      "name": "CascadeEngine.getModelCache",
+      "startLine": 139,
+      "startOffset": 3261,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getModelCache::method"
+    },
+    {
+      "endLine": 145,
+      "endOffset": 3410,
+      "kind": "method",
+      "name": "CascadeEngine.getResponseCache",
+      "startLine": 143,
+      "startOffset": 3340,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getResponseCache::method"
+    },
+    {
+      "endLine": 204,
+      "endOffset": 5319,
+      "kind": "method",
+      "name": "CascadeEngine.initializeCaches",
+      "startLine": 147,
+      "startOffset": 3414,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.initializeCaches::method"
+    },
+    {
+      "endLine": 246,
+      "endOffset": 6298,
+      "kind": "method",
+      "name": "CascadeEngine.initializeFallbackConfig",
+      "startLine": 206,
+      "startOffset": 5323,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.initializeFallbackConfig::method"
+    },
+    {
+      "endLine": 262,
+      "endOffset": 6817,
+      "kind": "method",
+      "name": "CascadeEngine.startQueueProcessor",
+      "startLine": 248,
+      "startOffset": 6302,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.startQueueProcessor::method"
+    },
+    {
+      "endLine": 274,
+      "endOffset": 7192,
+      "kind": "method",
+      "name": "CascadeEngine.processQueuedRequest",
+      "startLine": 264,
+      "startOffset": 6822,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.processQueuedRequest::method"
+    },
+    {
+      "endLine": 297,
+      "endOffset": 8031,
+      "kind": "method",
+      "name": "CascadeEngine.detectTaskType",
+      "startLine": 276,
+      "startOffset": 7196,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.detectTaskType::method"
+    },
+    {
+      "endLine": 334,
+      "endOffset": 9256,
+      "kind": "method",
+      "name": "CascadeEngine.selectModel",
+      "startLine": 299,
+      "startOffset": 8035,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.selectModel::method"
+    },
+    {
+      "endLine": 375,
+      "endOffset": 10941,
+      "kind": "method",
+      "name": "CascadeEngine.parseProviderError",
+      "startLine": 336,
+      "startOffset": 9260,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.parseProviderError::method"
+    },
+    {
+      "endLine": 387,
+      "endOffset": 11364,
+      "kind": "method",
+      "name": "CascadeEngine.buildRequestBody",
+      "startLine": 377,
+      "startOffset": 10945,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestBody::method"
+    },
+    {
+      "endLine": 394,
+      "endOffset": 11564,
+      "kind": "method",
+      "name": "CascadeEngine.buildRequestHeaders",
+      "startLine": 389,
+      "startOffset": 11368,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestHeaders::method"
+    },
+    {
+      "endLine": 399,
+      "endOffset": 11758,
+      "kind": "method",
+      "name": "CascadeEngine.buildApiUrl",
+      "startLine": 396,
+      "startOffset": 11568,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildApiUrl::method"
+    },
+    {
+      "endLine": 526,
+      "endOffset": 16747,
+      "kind": "method",
+      "name": "CascadeEngine.makeApiCall",
+      "startLine": 401,
+      "startOffset": 11762,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method"
+    },
+    {
+      "endLine": 599,
+      "endOffset": 18992,
+      "kind": "method",
+      "name": "CascadeEngine.makeOpenAIStreamingCall",
+      "startLine": 528,
+      "startOffset": 16751,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method"
+    },
+    {
+      "endLine": 683,
+      "endOffset": 21878,
+      "kind": "method",
+      "name": "CascadeEngine.makeGeminiStreamingCall",
+      "startLine": 601,
+      "startOffset": 18996,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeGeminiStreamingCall::method"
+    },
+    {
+      "endLine": 787,
+      "endOffset": 25486,
+      "kind": "method",
+      "name": "CascadeEngine.makeAnthropicStreamingCall",
+      "startLine": 685,
+      "startOffset": 21882,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeAnthropicStreamingCall::method"
+    },
+    {
+      "endLine": 800,
+      "endOffset": 26229,
+      "kind": "method",
+      "name": "CascadeEngine.makeStreamingApiCall",
+      "startLine": 789,
+      "startOffset": 25490,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method"
+    },
+    {
+      "endLine": 809,
+      "endOffset": 26454,
+      "kind": "method",
+      "name": "CascadeEngine.findModelForProvider",
+      "startLine": 802,
+      "startOffset": 26233,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.findModelForProvider::method"
+    },
+    {
+      "endLine": 816,
+      "endOffset": 26670,
+      "kind": "method",
+      "name": "CascadeEngine.updateProviderUsage",
+      "startLine": 811,
+      "startOffset": 26458,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.updateProviderUsage::method"
+    },
+    {
+      "endLine": 828,
+      "endOffset": 26954,
+      "kind": "method",
+      "name": "CascadeEngine.resetCounters",
+      "startLine": 818,
+      "startOffset": 26674,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.resetCounters::method"
+    },
+    {
+      "endLine": 920,
+      "endOffset": 30694,
+      "kind": "method",
+      "name": "CascadeEngine.tryProviderWithSpillover",
+      "startLine": 830,
+      "startOffset": 26958,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method"
+    },
+    {
+      "endLine": 963,
+      "endOffset": 32231,
+      "kind": "method",
+      "name": "CascadeEngine.wrapStreamingWithLogging",
+      "startLine": 922,
+      "startOffset": 30699,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method"
+    },
+    {
+      "endLine": 1042,
+      "endOffset": 34939,
+      "kind": "method",
+      "name": "CascadeEngine.tryProviderStreaming",
+      "startLine": 965,
+      "startOffset": 32236,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method"
+    },
+    {
+      "endLine": 1085,
+      "endOffset": 36068,
+      "kind": "method",
+      "name": "CascadeEngine.logRequest",
+      "startLine": 1044,
+      "startOffset": 34943,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method"
+    },
+    {
+      "endLine": 1125,
+      "endOffset": 37354,
+      "kind": "method",
+      "name": "CascadeEngine.handleRequest",
+      "startLine": 1087,
+      "startOffset": 36073,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.handleRequest::method"
+    },
+    {
+      "endLine": 1155,
+      "endOffset": 38248,
+      "kind": "method",
+      "name": "CascadeEngine.handleStreamingRequest",
+      "startLine": 1127,
+      "startOffset": 37359,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.handleStreamingRequest::method"
+    },
+    {
+      "endLine": 1165,
+      "endOffset": 38495,
+      "kind": "method",
+      "name": "CascadeEngine.refreshCaches",
+      "startLine": 1157,
+      "startOffset": 38252,
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.refreshCaches::method"
+    },
+    {
+      "endLine": 1168,
+      "endOffset": 38547,
+      "kind": "variable",
+      "name": "cascadeEngine",
+      "startLine": 1168,
+      "startOffset": 38512,
+      "symbolId": "src/server/routes/api/cascade.ts::cascadeEngine::variable"
+    },
+    {
+      "endLine": 1170,
+      "endOffset": 38611,
+      "kind": "variable",
+      "name": "providerCache",
+      "startLine": 1170,
+      "startOffset": 38563,
+      "symbolId": "src/server/routes/api/cascade.ts::providerCache::variable"
+    },
+    {
+      "endLine": 1171,
+      "endOffset": 38668,
+      "kind": "variable",
+      "name": "modelCache",
+      "startLine": 1171,
+      "startOffset": 38626,
+      "symbolId": "src/server/routes/api/cascade.ts::modelCache::variable"
+    },
+    {
+      "endLine": 1172,
+      "endOffset": 38731,
+      "kind": "variable",
+      "name": "responseCache",
+      "startLine": 1172,
+      "startOffset": 38683,
+      "symbolId": "src/server/routes/api/cascade.ts::responseCache::variable"
+    },
+    {
+      "endLine": 1344,
+      "endOffset": 45358,
+      "kind": "variable",
+      "name": "cascadeSchema",
+      "startLine": 1256,
+      "startOffset": 41887,
+      "symbolId": "src/server/routes/api/cascade.ts::cascadeSchema::variable"
+    },
+    {
+      "endLine": 1369,
+      "endOffset": 46125,
+      "kind": "variable",
+      "name": "cascadeRoutes",
+      "startLine": 1366,
+      "startOffset": 46092,
+      "symbolId": "src/server/routes/api/cascade.ts::cascadeRoutes::variable"
+    }
+  ]
+}

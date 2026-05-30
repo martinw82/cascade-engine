@@ -1,0 +1,54 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 30,
+      "symbolId": "src/components/cascade/Admin.tsx::Admin::function"
+    }
+  ],
+  "contentHash": "90b0f5e63b50b5e91168695f366269050fafd15d952fb081fb0eb5f50585cea6",
+  "edges": [
+    {
+      "from": "src/components/cascade/Admin.tsx::Admin::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Skeleton.ts::CardSkeleton::class"
+    },
+    {
+      "from": "src/components/cascade/Admin.tsx::Admin::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Skeleton.ts::TableSkeleton::class"
+    },
+    {
+      "from": "src/components/cascade/Admin.tsx::Admin::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Skeleton.ts::TableSkeleton::class"
+    }
+  ],
+  "file": "src/components/cascade/Admin.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": [
+    {
+      "endLine": 399,
+      "endOffset": 16501,
+      "kind": "function",
+      "name": "Admin",
+      "startLine": 21,
+      "startOffset": 484,
+      "symbolId": "src/components/cascade/Admin.tsx::Admin::function"
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 23,
+      "symbolId": "src/server/middleware/validation.ts::validateProviderInput::function"
+    },
+    {
+      "cyclomatic": 27,
+      "symbolId": "src/server/middleware/validation.ts::validateModelInput::function"
+    },
+    {
+      "cyclomatic": 34,
+      "symbolId": "src/server/middleware/validation.ts::validateCascadeRuleInput::function"
+    },
+    {
+      "cyclomatic": 24,
+      "symbolId": "src/server/middleware/validation.ts::validateAuthKeyInput::function"
+    },
+    {
+      "cyclomatic": 21,
+      "symbolId": "src/server/middleware/validation.ts::validateRequest::function"
+    }
+  ],
+  "contentHash": "e4268a101d23f157a8b74cd1d1614066499acd3d22ceef89c24176fefb8f3cbd",
+  "edges": [
+    {
+      "from": "src/server/middleware/validation.ts::validateProviderInput::function",
+      "kind": "calls",
+      "to": "src/server/middleware/validation.ts::sanitizeString::function"
+    },
+    {
+      "from": "src/server/middleware/validation.ts::validateModelInput::function",
+      "kind": "calls",
+      "to": "src/server/middleware/validation.ts::sanitizeString::function"
+    },
+    {
+      "from": "src/server/middleware/validation.ts::validateCascadeRuleInput::function",
+      "kind": "calls",
+      "to": "src/server/middleware/validation.ts::sanitizeString::function"
+    },
+    {
+      "from": "src/server/middleware/validation.ts::validateCascadeRuleInput::function",
+      "kind": "calls",
+      "to": "src/server/middleware/validation.ts::sanitizeString::function"
+    },
+    {
+      "from": "src/server/middleware/validation.ts::validateAuthKeyInput::function",
+      "kind": "calls",
+      "to": "src/server/middleware/validation.ts::sanitizeString::function"
+    }
+  ],
+  "file": "src/server/middleware/validation.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-04-29T17:59:32+00:00",
+      "hash": "54ac341f1b43429999c6c5ec24a6000fcb7ba258",
+      "kind": "commit",
+      "message": "feat(server): add metrics, backup endpoints and request validation"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 65,
+      "endOffset": 2333,
+      "kind": "function",
+      "name": "validateProviderInput",
+      "startLine": 18,
+      "startOffset": 470,
+      "symbolId": "src/server/middleware/validation.ts::validateProviderInput::function"
+    },
+    {
+      "endLine": 123,
+      "endOffset": 4477,
+      "kind": "function",
+      "name": "validateModelInput",
+      "startLine": 68,
+      "startOffset": 2372,
+      "symbolId": "src/server/middleware/validation.ts::validateModelInput::function"
+    },
+    {
+      "endLine": 199,
+      "endOffset": 7341,
+      "kind": "function",
+      "name": "validateCascadeRuleInput",
+      "startLine": 126,
+      "startOffset": 4523,
+      "symbolId": "src/server/middleware/validation.ts::validateCascadeRuleInput::function"
+    },
+    {
+      "endLine": 267,
+      "endOffset": 9980,
+      "kind": "function",
+      "name": "validateAuthKeyInput",
+      "startLine": 202,
+      "startOffset": 7383,
+      "symbolId": "src/server/middleware/validation.ts::validateAuthKeyInput::function"
+    },
+    {
+      "endLine": 321,
+      "endOffset": 11972,
+      "kind": "function",
+      "name": "validateRequest",
+      "startLine": 270,
+      "startOffset": 10032,
+      "symbolId": "src/server/middleware/validation.ts::validateRequest::function"
+    }
+  ]
+}

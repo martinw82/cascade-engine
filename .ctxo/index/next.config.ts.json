@@ -1,0 +1,41 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "7b3ccd7b97da580e67fa2e4ad3035b685cee23a78d002697256d75e9d5246b2c",
+  "edges": [],
+  "file": "next.config.ts",
+  "intent": [
+    {
+      "date": "2026-05-19T11:26:01+08:00",
+      "hash": "d90c16e427deae10f4c5b120d815e60ce2d72989",
+      "kind": "commit",
+      "message": "fix: critical bug fixes from testing - Drizzle ORM queries, auth flow, ID collisions, and OpenAI-compatible endpoint"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-01T20:25:42+00:00",
+      "hash": "e62ecf6a0aa10fe298db21a5bd38dbc43c555b36",
+      "kind": "commit",
+      "message": "Configure Next.js for standalone build"
+    },
+    {
+      "date": "2026-04-29T00:34:52+00:00",
+      "hash": "3cfcdff551a4944b8c264ef0fcb7b8a8f03a5604",
+      "kind": "commit",
+      "message": "Initial commit"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": []
+}

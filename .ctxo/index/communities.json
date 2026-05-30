@@ -1,0 +1,1126 @@
+{
+  "version": 1,
+  "computedAt": "2026-05-28T19:19:14.010Z",
+  "commitSha": "a9bd953",
+  "modularity": 0.8348722683902738,
+  "communities": [
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/alias/react-dom-server-experimental.js::error::function",
+      "communityId": 0,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/alias"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/alias/react-dom-server.js::error::function",
+      "communityId": 1,
+      "communityLabel": "error area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/loaders/devtool/devtool-style-inject.js::insertAtTop::function",
+      "communityId": 2,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/loaders/devtool"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/loaders/next-style-loader/runtime/isEqualLocals.js::isEqualLocals::function",
+      "communityId": 3,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/loaders/next-style-loader/runtime"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/join-function.js::createDebugLogger::function",
+      "communityId": 4,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/join-function.js::createJoinMsg::function",
+      "communityId": 5,
+      "communityLabel": "createJoinMsg area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js::parseCookie::function",
+      "communityId": 6,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js::parseSetCookie::function",
+      "communityId": 6,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js::stringifyCookie::function",
+      "communityId": 7,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/cookies"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/primitives/load.js::load::function",
+      "communityId": 8,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/@edge-runtime/primitives"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/react-is/cjs/react-is.production.js::typeOf::function",
+      "communityId": 9,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/compiled/react-is/cjs"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/next/dist/server/next.js::createServer::function",
+      "communityId": 10,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/next/dist/server"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/react/cjs/react-jsx-runtime.production.js::jsxProd::function",
+      "communityId": 11,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/react/cjs"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/react/cjs/react.production.js::Component::function",
+      "communityId": 12,
+      "communityLabel": "Component area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/react/cjs/react.production.js::PureComponent::function",
+      "communityId": 13,
+      "communityLabel": "PureComponent area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/react/cjs/react.production.js::isValidElement::function",
+      "communityId": 14,
+      "communityLabel": "isValidElement area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/comparator.js::Comparator.intersects::method",
+      "communityId": 15,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/classes"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/comparator.js::Comparator.parse::method",
+      "communityId": 16,
+      "communityLabel": "Comparator.parse area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/comparator.js::Comparator.test::method",
+      "communityId": 17,
+      "communityLabel": "Comparator.test area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/comparator.js::Comparator.toString::method",
+      "communityId": 18,
+      "communityLabel": "Comparator.toString area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/comparator.js::Comparator::class",
+      "communityId": 19,
+      "communityLabel": "Comparator area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/range.js::Range.format::method",
+      "communityId": 20,
+      "communityLabel": "Range.format area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/range.js::Range.intersects::method",
+      "communityId": 21,
+      "communityLabel": "Range.intersects area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/range.js::Range.parseRange::method",
+      "communityId": 22,
+      "communityLabel": "Range.parseRange area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/range.js::Range.test::method",
+      "communityId": 23,
+      "communityLabel": "Range.test area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/range.js::Range.toString::method",
+      "communityId": 24,
+      "communityLabel": "Range.toString area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/range.js::Range::class",
+      "communityId": 25,
+      "communityLabel": "Range area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer.compare::method",
+      "communityId": 26,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer.compareBuild::method",
+      "communityId": 27,
+      "communityLabel": "SemVer.compareBuild area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer.compareMain::method",
+      "communityId": 26,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer.comparePre::method",
+      "communityId": 26,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer.format::method",
+      "communityId": 28,
+      "communityLabel": "SemVer.format area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer.inc::method",
+      "communityId": 28,
+      "communityLabel": "SemVer.format area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer.toString::method",
+      "communityId": 29,
+      "communityLabel": "SemVer.toString area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/classes/semver.js::SemVer::class",
+      "communityId": 30,
+      "communityLabel": "SemVer area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/internal/lrucache.js::LRUCache.delete::method",
+      "communityId": 31,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/internal/lrucache.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/internal/lrucache.js::LRUCache.get::method",
+      "communityId": 31,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/internal/lrucache.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/internal/lrucache.js::LRUCache.set::method",
+      "communityId": 31,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/internal/lrucache.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/semver/internal/lrucache.js::LRUCache::class",
+      "communityId": 32,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/semver/internal"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/styled-jsx/dist/index/index.js::JSXStyle::function",
+      "communityId": 33,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/styled-jsx/dist/index/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/styled-jsx/dist/index/index.js::StyleRegistry::function",
+      "communityId": 34,
+      "communityLabel": "createStyleRegistry area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/styled-jsx/dist/index/index.js::createStyleRegistry::function",
+      "communityId": 34,
+      "communityLabel": "createStyleRegistry area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/standalone/node_modules/styled-jsx/dist/index/index.js::useStyleRegistry::function",
+      "communityId": 33,
+      "communityLabel": "cascade-deploy/.next/standalone/node_modules/styled-jsx/dist/index/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/types/routes.d.ts::AppRoutes::type",
+      "communityId": 35,
+      "communityLabel": "cascade-deploy/.next/types"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/types/routes.d.ts::LayoutRoutes::type",
+      "communityId": 36,
+      "communityLabel": "LayoutRoutes area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/types/routes.d.ts::PageRoutes::type",
+      "communityId": 37,
+      "communityLabel": "PageRoutes area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/types/routes.d.ts::ParamMap::interface",
+      "communityId": 38,
+      "communityLabel": "ParamMap area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/types/routes.d.ts::ParamsOf::type",
+      "communityId": 39,
+      "communityLabel": "ParamsOf area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/types/routes.d.ts::RedirectRoutes::type",
+      "communityId": 40,
+      "communityLabel": "RedirectRoutes area"
+    },
+    {
+      "symbolId": "cascade-deploy/.next/types/routes.d.ts::RewriteRoutes::type",
+      "communityId": 41,
+      "communityLabel": "RewriteRoutes area"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/build/webpack/alias/react-dom-server-experimental.js::error::function",
+      "communityId": 42,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/build/webpack/alias"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/build/webpack/alias/react-dom-server.js::error::function",
+      "communityId": 43,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/build/webpack/alias (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/devtool/devtool-style-inject.js::insertAtTop::function",
+      "communityId": 44,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/devtool"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/next-style-loader/runtime/isEqualLocals.js::isEqualLocals::function",
+      "communityId": 45,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/next-style-loader/runtime"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/join-function.js::createDebugLogger::function",
+      "communityId": 46,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/join-function.js::createJoinMsg::function",
+      "communityId": 47,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js::parseCookie::function",
+      "communityId": 48,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js::parseSetCookie::function",
+      "communityId": 48,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js::stringifyCookie::function",
+      "communityId": 49,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/cookies"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/primitives/load.js::load::function",
+      "communityId": 50,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/compiled/@edge-runtime/primitives"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/compiled/react-is/cjs/react-is.production.js::typeOf::function",
+      "communityId": 51,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/compiled/react-is/cjs"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/next/dist/server/next.js::createServer::function",
+      "communityId": 52,
+      "communityLabel": "cascade-deploy/node_modules/next/dist/server"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/react/cjs/react-jsx-runtime.production.js::jsxProd::function",
+      "communityId": 53,
+      "communityLabel": "cascade-deploy/node_modules/react/cjs"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/react/cjs/react.production.js::Component::function",
+      "communityId": 54,
+      "communityLabel": "cascade-deploy/node_modules/react/cjs (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/react/cjs/react.production.js::PureComponent::function",
+      "communityId": 55,
+      "communityLabel": "cascade-deploy/node_modules/react/cjs (3)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/react/cjs/react.production.js::isValidElement::function",
+      "communityId": 56,
+      "communityLabel": "cascade-deploy/node_modules/react/cjs (4)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/comparator.js::Comparator.intersects::method",
+      "communityId": 57,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/comparator.js::Comparator.parse::method",
+      "communityId": 58,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/comparator.js::Comparator.test::method",
+      "communityId": 59,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (3)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/comparator.js::Comparator.toString::method",
+      "communityId": 60,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (4)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/comparator.js::Comparator::class",
+      "communityId": 61,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (5)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/range.js::Range.format::method",
+      "communityId": 62,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (6)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/range.js::Range.intersects::method",
+      "communityId": 63,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (7)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/range.js::Range.parseRange::method",
+      "communityId": 64,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (8)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/range.js::Range.test::method",
+      "communityId": 65,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (9)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/range.js::Range.toString::method",
+      "communityId": 66,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (10)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/range.js::Range::class",
+      "communityId": 67,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (11)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer.compare::method",
+      "communityId": 68,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes/semver.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer.compareBuild::method",
+      "communityId": 69,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (12)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer.compareMain::method",
+      "communityId": 68,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes/semver.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer.comparePre::method",
+      "communityId": 68,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes/semver.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer.format::method",
+      "communityId": 70,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes/semver.js (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer.inc::method",
+      "communityId": 70,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes/semver.js (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer.toString::method",
+      "communityId": 71,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (13)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/classes/semver.js::SemVer::class",
+      "communityId": 72,
+      "communityLabel": "cascade-deploy/node_modules/semver/classes (14)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/internal/lrucache.js::LRUCache.delete::method",
+      "communityId": 73,
+      "communityLabel": "cascade-deploy/node_modules/semver/internal/lrucache.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/internal/lrucache.js::LRUCache.get::method",
+      "communityId": 73,
+      "communityLabel": "cascade-deploy/node_modules/semver/internal/lrucache.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/internal/lrucache.js::LRUCache.set::method",
+      "communityId": 73,
+      "communityLabel": "cascade-deploy/node_modules/semver/internal/lrucache.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/semver/internal/lrucache.js::LRUCache::class",
+      "communityId": 74,
+      "communityLabel": "cascade-deploy/node_modules/semver/internal"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js::JSXStyle::function",
+      "communityId": 75,
+      "communityLabel": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js::StyleRegistry::function",
+      "communityId": 76,
+      "communityLabel": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js::createStyleRegistry::function",
+      "communityId": 76,
+      "communityLabel": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js (2)"
+    },
+    {
+      "symbolId": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js::useStyleRegistry::function",
+      "communityId": 75,
+      "communityLabel": "cascade-deploy/node_modules/styled-jsx/dist/index/index.js"
+    },
+    {
+      "symbolId": "cascade-deploy/server/lib/db.ts::db::variable",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/lib/schema.ts::authKeys::variable",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/lib/schema.ts::cascadeRules::variable",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/lib/schema.ts::models::variable",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/lib/schema.ts::providers::variable",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/lib/schema.ts::requestLogs::variable",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/middleware/auth.ts::authenticateRequest::function",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/middleware/validation.ts::validateRequest::function",
+      "communityId": 78,
+      "communityLabel": "cascade-deploy/server/middleware"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.detectTaskType::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.findModelForProvider::method",
+      "communityId": 80,
+      "communityLabel": "cascade-deploy/server/routes/api"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.handleRequest::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.initializeCaches::method",
+      "communityId": 81,
+      "communityLabel": "CascadeEngine.initializeFallbackConfig area"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.initializeFallbackConfig::method",
+      "communityId": 81,
+      "communityLabel": "CascadeEngine.initializeFallbackConfig area"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.logRequest::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.processQueuedRequest::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.resetCounters::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.selectModel::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.startQueueProcessor::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine.updateProviderUsage::method",
+      "communityId": 79,
+      "communityLabel": "cascade-deploy/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::CascadeEngine::class",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::GET::function",
+      "communityId": 82,
+      "communityLabel": "GET area"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::POST::function",
+      "communityId": 77,
+      "communityLabel": "cascade-deploy/server"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::cascadeEngine::variable",
+      "communityId": 83,
+      "communityLabel": "cascadeEngine area"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::cascadeRoutes::variable",
+      "communityId": 84,
+      "communityLabel": "cascadeRoutes area"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::modelCache::variable",
+      "communityId": 85,
+      "communityLabel": "modelCache area"
+    },
+    {
+      "symbolId": "cascade-deploy/server/routes/api/cascade.ts::providerCache::variable",
+      "communityId": 86,
+      "communityLabel": "providerCache area"
+    },
+    {
+      "symbolId": "src/app/auth-wrapper.tsx::AuthWrapper::function",
+      "communityId": 87,
+      "communityLabel": "src/app"
+    },
+    {
+      "symbolId": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "communityId": 88,
+      "communityLabel": "src/app/dashboard"
+    },
+    {
+      "symbolId": "src/app/layout.tsx::RootLayout::function",
+      "communityId": 89,
+      "communityLabel": "RootLayout area"
+    },
+    {
+      "symbolId": "src/app/layout.tsx::metadata::variable",
+      "communityId": 90,
+      "communityLabel": "metadata area"
+    },
+    {
+      "symbolId": "src/app/login/page.tsx::LoginPage::function",
+      "communityId": 91,
+      "communityLabel": "src/app/login"
+    },
+    {
+      "symbolId": "src/app/page.tsx::Home::function",
+      "communityId": 92,
+      "communityLabel": "Home area"
+    },
+    {
+      "symbolId": "src/components/cascade/ABTest.tsx::ABTest::function",
+      "communityId": 93,
+      "communityLabel": "src/components/cascade"
+    },
+    {
+      "symbolId": "src/components/cascade/Admin.tsx::Admin::function",
+      "communityId": 94,
+      "communityLabel": "Admin area"
+    },
+    {
+      "symbolId": "src/components/cascade/Analytics.tsx::Analytics::function",
+      "communityId": 95,
+      "communityLabel": "Analytics area"
+    },
+    {
+      "symbolId": "src/components/cascade/Auth.tsx::Auth::function",
+      "communityId": 96,
+      "communityLabel": "Auth area"
+    },
+    {
+      "symbolId": "src/components/cascade/Benchmark.tsx::Benchmark::function",
+      "communityId": 97,
+      "communityLabel": "Benchmark area"
+    },
+    {
+      "symbolId": "src/components/cascade/Cascade.tsx::Cascade::function",
+      "communityId": 98,
+      "communityLabel": "Cascade area"
+    },
+    {
+      "symbolId": "src/components/cascade/CostCalculator.tsx::CostCalculator::function",
+      "communityId": 99,
+      "communityLabel": "CostCalculator area"
+    },
+    {
+      "symbolId": "src/components/cascade/Dashboard.tsx::Dashboard::function",
+      "communityId": 100,
+      "communityLabel": "Dashboard area"
+    },
+    {
+      "symbolId": "src/components/cascade/Marketplace.tsx::Marketplace::function",
+      "communityId": 101,
+      "communityLabel": "Marketplace area"
+    },
+    {
+      "symbolId": "src/components/cascade/Models.tsx::Models::function",
+      "communityId": 102,
+      "communityLabel": "Models area"
+    },
+    {
+      "symbolId": "src/components/cascade/Providers.tsx::Providers::function",
+      "communityId": 103,
+      "communityLabel": "Providers area"
+    },
+    {
+      "symbolId": "src/components/cascade/Skeleton.tsx::CardSkeleton::function",
+      "communityId": 104,
+      "communityLabel": "CardSkeleton area"
+    },
+    {
+      "symbolId": "src/components/cascade/Skeleton.tsx::ListSkeleton::function",
+      "communityId": 105,
+      "communityLabel": "ListSkeleton area"
+    },
+    {
+      "symbolId": "src/components/cascade/Skeleton.tsx::TableSkeleton::function",
+      "communityId": 106,
+      "communityLabel": "TableSkeleton area"
+    },
+    {
+      "symbolId": "src/components/cascade/Test.tsx::Test::function",
+      "communityId": 107,
+      "communityLabel": "Test area"
+    },
+    {
+      "symbolId": "src/context/AuthContext.tsx::AuthProvider::function",
+      "communityId": 108,
+      "communityLabel": "src/context"
+    },
+    {
+      "symbolId": "src/context/AuthContext.tsx::useAuth::function",
+      "communityId": 109,
+      "communityLabel": "useAuth area"
+    },
+    {
+      "symbolId": "src/context/ToastContext.tsx::ToastProvider::function",
+      "communityId": 110,
+      "communityLabel": "ToastProvider area"
+    },
+    {
+      "symbolId": "src/context/ToastContext.tsx::useToast::function",
+      "communityId": 111,
+      "communityLabel": "useToast area"
+    },
+    {
+      "symbolId": "src/context/UIAuthContext.tsx::UIAuthProvider::function",
+      "communityId": 112,
+      "communityLabel": "UIAuthProvider area"
+    },
+    {
+      "symbolId": "src/context/UIAuthContext.tsx::useUIAuth::function",
+      "communityId": 113,
+      "communityLabel": "useUIAuth area"
+    },
+    {
+      "symbolId": "src/server/lib/db.ts::db::variable",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/lib/db.ts::hashPassword::function",
+      "communityId": 115,
+      "communityLabel": "src/server/lib/db.ts"
+    },
+    {
+      "symbolId": "src/server/lib/db.ts::verifyPassword::function",
+      "communityId": 115,
+      "communityLabel": "src/server/lib/db.ts"
+    },
+    {
+      "symbolId": "src/server/lib/encryption.ts::decrypt::function",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/lib/encryption.ts::encrypt::function",
+      "communityId": 117,
+      "communityLabel": "src/server/lib"
+    },
+    {
+      "symbolId": "src/server/lib/encryption.ts::generateToken::function",
+      "communityId": 118,
+      "communityLabel": "generateToken area"
+    },
+    {
+      "symbolId": "src/server/lib/encryption.ts::isEncrypted::function",
+      "communityId": 119,
+      "communityLabel": "isEncrypted area"
+    },
+    {
+      "symbolId": "src/server/lib/encryption.ts::verifyToken::function",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/lib/env.ts::validateEnv::function",
+      "communityId": 120,
+      "communityLabel": "validateEnv area"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::auditLogs::variable",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::authKeys::variable",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::cascadeRules::variable",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::marketplaceRules::variable",
+      "communityId": 121,
+      "communityLabel": "marketplaceRules area"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::models::variable",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::providers::variable",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::requestLogs::variable",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::settings::variable",
+      "communityId": 122,
+      "communityLabel": "settings area"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::users::variable",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/lib/schema.ts::webhooks::variable",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/lib/webhooks.ts::triggerWebhooks::function",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/middleware/audit.ts::createAuditLog::function",
+      "communityId": 123,
+      "communityLabel": "src/server/middleware"
+    },
+    {
+      "symbolId": "src/server/middleware/auth.ts::authenticateRequest::function",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/middleware/auth.ts::getUserId::function",
+      "communityId": 124,
+      "communityLabel": "getUserId area"
+    },
+    {
+      "symbolId": "src/server/middleware/auth.ts::getUserRole::function",
+      "communityId": 125,
+      "communityLabel": "getUserRole area"
+    },
+    {
+      "symbolId": "src/server/middleware/auth.ts::getUsername::function",
+      "communityId": 126,
+      "communityLabel": "getUsername area"
+    },
+    {
+      "symbolId": "src/server/middleware/auth.ts::hasPermission::function",
+      "communityId": 127,
+      "communityLabel": "hasPermission area"
+    },
+    {
+      "symbolId": "src/server/middleware/auth.ts::isAdmin::function",
+      "communityId": 128,
+      "communityLabel": "isAdmin area"
+    },
+    {
+      "symbolId": "src/server/middleware/auth.ts::loginWithJWT::function",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/middleware/rate-limit.ts::getRateLimitStatus::function",
+      "communityId": 114,
+      "communityLabel": "src/server"
+    },
+    {
+      "symbolId": "src/server/middleware/security.ts::securityHeadersPlugin::function",
+      "communityId": 129,
+      "communityLabel": "securityHeadersPlugin area"
+    },
+    {
+      "symbolId": "src/server/middleware/validation.ts::validateAuthKeyInput::function",
+      "communityId": 130,
+      "communityLabel": "validateAuthKeyInput area"
+    },
+    {
+      "symbolId": "src/server/middleware/validation.ts::validateCascadeRuleInput::function",
+      "communityId": 131,
+      "communityLabel": "validateCascadeRuleInput area"
+    },
+    {
+      "symbolId": "src/server/middleware/validation.ts::validateModelInput::function",
+      "communityId": 132,
+      "communityLabel": "validateModelInput area"
+    },
+    {
+      "symbolId": "src/server/middleware/validation.ts::validateProviderInput::function",
+      "communityId": 133,
+      "communityLabel": "validateProviderInput area"
+    },
+    {
+      "symbolId": "src/server/middleware/validation.ts::validateRequest::function",
+      "communityId": 134,
+      "communityLabel": "validateRequest area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildApiUrl::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestBody::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.buildRequestHeaders::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.detectTaskType::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.findModelForProvider::method",
+      "communityId": 137,
+      "communityLabel": "src/server/routes/api"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getModelCache::method",
+      "communityId": 138,
+      "communityLabel": "CascadeEngine.getModelCache area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getProviderCache::method",
+      "communityId": 139,
+      "communityLabel": "CascadeEngine.getProviderCache area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.getResponseCache::method",
+      "communityId": 140,
+      "communityLabel": "CascadeEngine.getResponseCache area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.handleRequest::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.handleStreamingRequest::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.initializeCaches::method",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.initializeFallbackConfig::method",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.logRequest::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeAnthropicStreamingCall::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeGeminiStreamingCall::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeOpenAIStreamingCall::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.parseProviderError::method",
+      "communityId": 135,
+      "communityLabel": "src/server/routes/api/cascade.ts"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.processQueuedRequest::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.refreshCaches::method",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.resetCounters::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.selectModel::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.startQueueProcessor::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.updateProviderUsage::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.wrapStreamingWithLogging::method",
+      "communityId": 136,
+      "communityLabel": "CascadeEngine.tryProviderWithSpillover area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::GET::function",
+      "communityId": 141,
+      "communityLabel": "src/server/routes/api (2)"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::POST::function",
+      "communityId": 116,
+      "communityLabel": "decrypt area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::cascadeEngine::variable",
+      "communityId": 142,
+      "communityLabel": "src/server/routes/api (3)"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::cascadeRoutes::variable",
+      "communityId": 143,
+      "communityLabel": "src/server/routes/api (4)"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::cascadeSchema::variable",
+      "communityId": 144,
+      "communityLabel": "cascadeSchema area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::makeApiCall::function",
+      "communityId": 145,
+      "communityLabel": "makeApiCall area"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::modelCache::variable",
+      "communityId": 146,
+      "communityLabel": "src/server/routes/api (5)"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::providerCache::variable",
+      "communityId": 147,
+      "communityLabel": "src/server/routes/api (6)"
+    },
+    {
+      "symbolId": "src/server/routes/api/cascade.ts::responseCache::variable",
+      "communityId": 148,
+      "communityLabel": "responseCache area"
+    }
+  ],
+  "godNodes": [],
+  "edgeQuality": "full",
+  "crossClusterEdges": 4
+}

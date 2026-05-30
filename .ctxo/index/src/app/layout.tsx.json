@@ -1,0 +1,53 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/app/layout.tsx::RootLayout::function"
+    }
+  ],
+  "contentHash": "62b20a602bdb82d8ce159d792de27b067337d282985fa2eb487f1b2de9d81e71",
+  "edges": [],
+  "file": "src/app/layout.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-04-29T00:34:52+00:00",
+      "hash": "3cfcdff551a4944b8c264ef0fcb7b8a8f03a5604",
+      "kind": "commit",
+      "message": "Initial commit"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": [
+    {
+      "endLine": 40,
+      "endOffset": 1000,
+      "kind": "function",
+      "name": "RootLayout",
+      "startLine": 22,
+      "startOffset": 584,
+      "symbolId": "src/app/layout.tsx::RootLayout::function"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 581,
+      "kind": "variable",
+      "name": "metadata",
+      "startLine": 17,
+      "startOffset": 475,
+      "symbolId": "src/app/layout.tsx::metadata::variable"
+    }
+  ]
+}

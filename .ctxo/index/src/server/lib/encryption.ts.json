@@ -1,0 +1,105 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/lib/encryption.ts::encrypt::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/server/lib/encryption.ts::decrypt::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/lib/encryption.ts::isEncrypted::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/lib/encryption.ts::generateToken::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "src/server/lib/encryption.ts::verifyToken::function"
+    }
+  ],
+  "contentHash": "1c53f0722a38a1d5448ef7f6066bf03c7babe8b2c6622f1cb759021f699d1cc7",
+  "edges": [
+    {
+      "from": "src/server/lib/encryption.ts::encrypt::function",
+      "kind": "calls",
+      "to": "src/server/lib/encryption.ts::getEncryptionKey::function"
+    },
+    {
+      "from": "src/server/lib/encryption.ts::decrypt::function",
+      "kind": "calls",
+      "to": "src/server/lib/encryption.ts::getEncryptionKey::function"
+    },
+    {
+      "from": "src/server/lib/encryption.ts::generateToken::function",
+      "kind": "calls",
+      "to": "src/server/lib/encryption.ts::getEncryptionKey::function"
+    },
+    {
+      "from": "src/server/lib/encryption.ts::verifyToken::function",
+      "kind": "calls",
+      "to": "src/server/lib/encryption.ts::getEncryptionKey::function"
+    }
+  ],
+  "file": "src/server/lib/encryption.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 31,
+      "endOffset": 1071,
+      "kind": "function",
+      "name": "encrypt",
+      "startLine": 19,
+      "startOffset": 630,
+      "symbolId": "src/server/lib/encryption.ts::encrypt::function"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 1635,
+      "kind": "function",
+      "name": "decrypt",
+      "startLine": 33,
+      "startOffset": 1073,
+      "symbolId": "src/server/lib/encryption.ts::decrypt::function"
+    },
+    {
+      "endLine": 57,
+      "endOffset": 1806,
+      "kind": "function",
+      "name": "isEncrypted",
+      "startLine": 55,
+      "startOffset": 1694,
+      "symbolId": "src/server/lib/encryption.ts::isEncrypted::function"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 2379,
+      "kind": "function",
+      "name": "generateToken",
+      "startLine": 60,
+      "startOffset": 1857,
+      "symbolId": "src/server/lib/encryption.ts::generateToken::function"
+    },
+    {
+      "endLine": 99,
+      "endOffset": 3044,
+      "kind": "function",
+      "name": "verifyToken",
+      "startLine": 76,
+      "startOffset": 2381,
+      "symbolId": "src/server/lib/encryption.ts::verifyToken::function"
+    }
+  ]
+}

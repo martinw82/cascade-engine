@@ -12,7 +12,7 @@ import { authenticateRequest, getUserId, hasPermission, isAdmin } from './middle
 import { validateRequest, validateProviderInput, validateModelInput, validateCascadeRuleInput, validateAuthKeyInput } from './middleware/validation';
 import { auditLogPlugin, createAuditLog } from './middleware/audit';
 import { enhancedRateLimit, getRateLimitStatus } from './middleware/rate-limit';
-import { encrypt, isEncrypted } from './lib/encryption';
+import { encrypt, decrypt, isEncrypted } from './lib/encryption';
 import { validateEnv } from './lib/env';
 import { db, hashPassword, verifyPassword } from './lib/db';
 import { eq, and, sql } from 'drizzle-orm';
@@ -1272,18 +1272,19 @@ fastify.post('/api/models/test', {
         return reply.code(404).send({ error: 'Provider not found' });
       }
 
-     const p = provider[0];
-     const baseUrl = p.baseUrl.endsWith('/') ? p.baseUrl.slice(0, -1) : p.baseUrl;
+      const p = provider[0];
+      const apiKey = isEncrypted(p.apiKey) ? decrypt(p.apiKey) : p.apiKey;
+      const baseUrl = p.baseUrl.endsWith('/') ? p.baseUrl.slice(0, -1) : p.baseUrl;
 
-     // Determine API format based on provider
-     let url: string;
-     let headers: Record<string, string>;
-     let body: any;
+      // Determine API format based on provider
+      let url: string;
+      let headers: Record<string, string>;
+      let body: any;
 
-     if (p.id === 'gemini' || p.id === 'google') {
-       // Google Gemini format
-        url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId.replace(/^models\//, '')}:generateContent?key=${p.apiKey}`;
-       headers = { 'Content-Type': 'application/json' };
+      if (p.id === 'gemini' || p.id === 'google') {
+        // Google Gemini format
+         url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId.replace(/^models\//, '')}:generateContent?key=${apiKey}`;
+        headers = { 'Content-Type': 'application/json' };
        body = {
          contents: [{ role: 'user', parts: [{ text: 'Say "OK" in one word.' }] }],
          generationConfig: { maxOutputTokens: 10 }
@@ -1292,11 +1293,11 @@ fastify.post('/api/models/test', {
        // OpenAI-compatible format
        url = `${baseUrl}/chat/completions`;
        headers = {
-         'Authorization': `Bearer ${p.apiKey}`,
-         'Content-Type': 'application/json'
-       };
-       body = {
-         model: modelId,
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        };
+        body = {
+          model: modelId,
          messages: [{ role: 'user', content: 'Say "OK" in one word.' }],
          max_tokens: 10
        };
@@ -1365,11 +1366,12 @@ fastify.post('/api/models/benchmark', {
       const startTime = Date.now();
       try {
         const baseUrl = provider.baseUrl.endsWith('/') ? provider.baseUrl.slice(0, -1) : provider.baseUrl;
+        const providerApiKey = isEncrypted(provider.apiKey) ? decrypt(provider.apiKey) : provider.apiKey;
         const response = await fetch(`${baseUrl}/chat/completions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${provider.apiKey}`,
+            'Authorization': `Bearer ${providerApiKey}`,
           },
           body: JSON.stringify({
             model: model.modelId,
@@ -1500,6 +1502,16 @@ fastify.post('/api/models/import', async (request, reply) => {
 });
 
 // Model discovery routes
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 fastify.get('/api/models/discover/:providerId', async (request, reply) => {
   try {
     const userId = getUserId(request);
@@ -1511,15 +1523,15 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
     }
 
     const p = provider[0];
+    const apiKey = isEncrypted(p.apiKey) ? decrypt(p.apiKey) : p.apiKey;
     console.log(`[DISCOVERY] Looking up: ${providerId}, Found: ${p.id} (${p.name}), Base URL: ${p.baseUrl}`);
     let models: any[] = [];
 
     try {
       if (p.id === 'openrouter') {
-        // OpenRouter model discovery
-        const response = await fetch('https://openrouter.ai/api/v1/models', {
+        const response = await fetchWithTimeout('https://openrouter.ai/api/v1/models', {
           headers: {
-            'Authorization': `Bearer ${p.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           }
         });
@@ -1549,10 +1561,9 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
           }
         }
       } else if (p.id === 'groq') {
-        // Groq model discovery
-        const response = await fetch('https://api.groq.com/openai/v1/models', {
+        const response = await fetchWithTimeout('https://api.groq.com/openai/v1/models', {
           headers: {
-            'Authorization': `Bearer ${p.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           }
         });
@@ -1573,10 +1584,9 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
           }));
         }
       } else if (p.id === 'nvidia-nim') {
-        // NVIDIA NIM - use their model catalog
-        const response = await fetch('https://integrate.api.nvidia.com/v1/models', {
+        const response = await fetchWithTimeout('https://integrate.api.nvidia.com/v1/models', {
           headers: {
-            'Authorization': `Bearer ${p.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           }
         });
@@ -1597,10 +1607,9 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
           })) || [];
         }
       } else if (p.id === 'mistral') {
-        // Mistral AI model discovery
-        const response = await fetch('https://api.mistral.ai/v1/models', {
+        const response = await fetchWithTimeout('https://api.mistral.ai/v1/models', {
           headers: {
-            'Authorization': `Bearer ${p.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           }
         });
@@ -1621,8 +1630,7 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
           })) || [];
         }
       } else if (p.id === 'gemini' || p.id === 'google') {
-        // Google Gemini model discovery
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${p.apiKey}`);
+        const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -1640,13 +1648,11 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
           })) || [];
         }
       } else {
-        // Generic OpenAI-compatible provider discovery
-        // Try the standard OpenAI /models endpoint
         const modelsUrl = p.baseUrl.endsWith('/') ? `${p.baseUrl}models` : `${p.baseUrl}/models`;
         console.log(`[DISCOVERY] Provider: ${p.id}, Base URL: ${p.baseUrl}, Models URL: ${modelsUrl}`);
-        const response = await fetch(modelsUrl, {
+        const response = await fetchWithTimeout(modelsUrl, {
           headers: {
-            'Authorization': `Bearer ${p.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           }
         });
@@ -1671,6 +1677,10 @@ fastify.get('/api/models/discover/:providerId', async (request, reply) => {
 
       return reply.send(models);
     } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error(`Discovery timeout for ${p.id}`);
+        return reply.code(504).send({ error: 'Provider did not respond within 15 seconds' });
+      }
       console.error(`Failed to discover models for ${p.id}:`, error);
       return reply.code(500).send({ error: `Failed to discover models: ${error.message}` });
     }
@@ -2115,8 +2125,16 @@ fastify.post('/api/users/register', {
         const defaultRulesCheck = await db.select().from(cascadeRules).where(eq(cascadeRules.userId, 'default-user'));
         if (defaultRulesCheck.length === 0) {
           const defaultRuleDefs = [
+            // ── Keyword-based rules (trigger on first words of message) ──
             { id: 'coding-rule', name: 'Coding Tasks', priority: 1, triggerType: 'keyword', triggerValue: 'code|program|function|debug|programming', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
             { id: 'summarization-rule', name: 'Summarization Tasks', priority: 2, triggerType: 'keyword', triggerValue: 'summarize|extract|analyze|document|summary', modelOrder: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']), wordLimit: 5, enabled: true },
+            // ── Auto-detected task_type rules (set by User-Agent header) ──
+            // These match when a CLI tool sends requests without an explicit taskType.
+            { id: 'opencode-rule', name: 'OpenCode CLI', priority: 3, triggerType: 'task_type', triggerValue: 'opencode', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
+            { id: 'coding-tools-rule', name: 'AI Coding Assistant', priority: 4, triggerType: 'task_type', triggerValue: 'coding', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
+            { id: 'chat-tools-rule', name: 'Chat Assistant', priority: 5, triggerType: 'task_type', triggerValue: 'chat', modelOrder: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']), wordLimit: 5, enabled: true },
+            { id: 'cli-tools-rule', name: 'API / CLI Tools', priority: 6, triggerType: 'task_type', triggerValue: 'cli', modelOrder: JSON.stringify(['llama-3.1-8b-instant', 'gemini-1.5-flash', 'llama-3.1-70b']), wordLimit: 5, enabled: true },
+            // ── Catch-all fallback ──
             { id: 'default-rule', name: 'Default Fallback', priority: 99, triggerType: 'task_type', triggerValue: 'general', modelOrder: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']), wordLimit: 5, enabled: true },
           ];
           for (const dr of defaultRuleDefs) {

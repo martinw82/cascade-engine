@@ -625,11 +625,14 @@ export function Models() {
           onClose={() => setIsDiscovering(false)}
           apiKey={apiKey || ''}
           onDiscover={async (providerId) => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
             try {
               const response = await fetch(`/api/models/discover/${providerId}`, {
                 headers: {
                   'X-API-Key': apiKey || FALLBACK_KEY
-                }
+                },
+                signal: controller.signal
               });
 
               if (response.ok) {
@@ -641,6 +644,8 @@ export function Models() {
               }
             } catch (error) {
               throw error;
+            } finally {
+              clearTimeout(timeoutId);
             }
           }}
           onImport={async (modelsToImport) => {
@@ -820,7 +825,7 @@ function BulkImportModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 pt-12">
       <div className="glass rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Bulk Model Import</h3>
@@ -983,7 +988,7 @@ function ModelDiscoveryModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 pt-12">
       <div className="glass rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Discover Models</h3>

@@ -1,0 +1,302 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "dca412de7dd56060ed5a7b1d0c0c92101ed96260ef566c32bc920be3925eb8e7",
+  "edges": [
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/routes/api/cascade.ts::cascadeRoutes::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/routes/api/cascade.ts::providerCache::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/routes/api/cascade.ts::modelCache::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/routes/api/cascade.ts::cascadeEngine::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/routes/api/cascade.ts::cascadeSchema::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/auth.ts::authenticateRequest::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/auth.ts::getUserId::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/auth.ts::hasPermission::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/auth.ts::isAdmin::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/validation.ts::validateRequest::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/validation.ts::validateProviderInput::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/validation.ts::validateModelInput::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/validation.ts::validateCascadeRuleInput::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/validation.ts::validateAuthKeyInput::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/audit.ts::auditLogPlugin::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/audit.ts::createAuditLog::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/middleware/rate-limit.ts::getRateLimitStatus::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/encryption.ts::encrypt::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/encryption.ts::decrypt::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/encryption.ts::isEncrypted::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/env.ts::validateEnv::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::hashPassword::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::verifyPassword::function"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::requestLogs::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::providers::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::models::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::authKeys::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::users::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::auditLogs::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::webhooks::variable"
+    },
+    {
+      "from": "src/server/index.ts::index::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::marketplaceRules::variable"
+    }
+  ],
+  "file": "src/server/index.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:27:23+08:00",
+      "hash": "a9430555ddc679a1c46b7378730c113cb7ece56e",
+      "kind": "commit",
+      "message": "feat: v0.9 - export/import for all resources, community marketplace"
+    },
+    {
+      "date": "2026-05-25T17:20:35+08:00",
+      "hash": "0de90e93880c9e11844a8d89940bce1d1a4f19d4",
+      "kind": "commit",
+      "message": "feat: v0.9 features - benchmark, cost calc, A/B test, Postman collection"
+    },
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T11:47:33+08:00",
+      "hash": "313e1e0868ba84a28a2f915c690fbe84ab233652",
+      "kind": "commit",
+      "message": "docs: finalize documentation for public release and fix lint/typecheck issues"
+    },
+    {
+      "date": "2026-05-19T11:26:01+08:00",
+      "hash": "d90c16e427deae10f4c5b120d815e60ce2d72989",
+      "kind": "commit",
+      "message": "fix: critical bug fixes from testing - Drizzle ORM queries, auth flow, ID collisions, and OpenAI-compatible endpoint"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-17T00:42:21+08:00",
+      "hash": "050247d4449d65d07ed77344c0672dc521f0092e",
+      "kind": "commit",
+      "message": "feat: security hardening - rate limiting, CORS, auth improvements, graceful shutdown, secure key generation"
+    },
+    {
+      "date": "2026-05-16T23:55:21+08:00",
+      "hash": "6b4279cc305a725a253ff5d177662a58b88c48fa",
+      "kind": "commit",
+      "message": "docs: update documentation and add production readiness report"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-02T22:11:30+00:00",
+      "hash": "bb277802271812c504d366b66b1b270bb89f1f0e",
+      "kind": "commit",
+      "message": "feat(cascade): upgrade routing from provider-level to model-specific"
+    },
+    {
+      "date": "2026-05-02T15:48:30+00:00",
+      "hash": "7906f427841d4f155881436bba42b00a0f3b96b0",
+      "kind": "commit",
+      "message": "Add bypass cascade option to Test tab for direct provider/model testing"
+    },
+    {
+      "date": "2026-05-02T09:39:39+00:00",
+      "hash": "6b6bdb0cd48e88baad0287f39387f3c69b802ac4",
+      "kind": "commit",
+      "message": "Add timeout to API calls and Reset button for providers"
+    },
+    {
+      "date": "2026-05-02T07:34:12+00:00",
+      "hash": "d949d2e02228c01e263d4bbb8930336ad7ecc3c4",
+      "kind": "commit",
+      "message": "Add persistence for models component and API routes"
+    },
+    {
+      "date": "2026-05-02T07:17:56+00:00",
+      "hash": "330ae72f2afb4b659f2b5b90f8d3e130149a08a5",
+      "kind": "commit",
+      "message": "feat(ui): add test tab and map model API response"
+    },
+    {
+      "date": "2026-05-02T07:11:24+00:00",
+      "hash": "93aad534dcabe101c587ecf887989fe4bd29b888",
+      "kind": "commit",
+      "message": "Implement upsert for providers to handle existing IDs"
+    },
+    {
+      "date": "2026-05-02T07:00:46+00:00",
+      "hash": "31e698ac3abb3b4af758dbac92c040f17b649e5e",
+      "kind": "commit",
+      "message": "Fix field mapping between UI and database schema for providers API"
+    },
+    {
+      "date": "2026-05-02T06:42:19+00:00",
+      "hash": "ebd95cb0f5c7707cfca39acec31c8ce827a03b52",
+      "kind": "commit",
+      "message": "Add CORS support to API server for cross-origin requests from UI"
+    },
+    {
+      "date": "2026-05-02T00:44:40+00:00",
+      "hash": "efb16b5c63c6df3ff5998ab19117a253cdf57684",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T19:30:32+00:00",
+      "hash": "b7fbf8ecc9bbaf62f32789099277c9c8c4d9290d",
+      "kind": "commit",
+      "message": "Fix cascade_rules table schema and bun:sqlite compatibility"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": []
+}

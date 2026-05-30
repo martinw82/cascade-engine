@@ -1,0 +1,58 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/components/cascade/Skeleton.tsx::CardSkeleton::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/components/cascade/Skeleton.tsx::TableSkeleton::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/components/cascade/Skeleton.tsx::ListSkeleton::function"
+    }
+  ],
+  "contentHash": "09d7f3350f158a995e7c2dcd5b29bfa5e54874fc74eb09c75be94562f51b3d4b",
+  "edges": [],
+  "file": "src/components/cascade/Skeleton.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 459,
+      "kind": "function",
+      "name": "CardSkeleton",
+      "startLine": 2,
+      "startOffset": 15,
+      "symbolId": "src/components/cascade/Skeleton.tsx::CardSkeleton::function"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 1072,
+      "kind": "function",
+      "name": "TableSkeleton",
+      "startLine": 16,
+      "startOffset": 461,
+      "symbolId": "src/components/cascade/Skeleton.tsx::TableSkeleton::function"
+    },
+    {
+      "endLine": 53,
+      "endOffset": 1732,
+      "kind": "function",
+      "name": "ListSkeleton",
+      "startLine": 35,
+      "startOffset": 1074,
+      "symbolId": "src/components/cascade/Skeleton.tsx::ListSkeleton::function"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "b0c0c25c735fc205eb5263efedad21ce9af230fb6d28cc572cad08986e68e287",
+  "edges": [],
+  "file": "bin/cascade-master.js",
+  "intent": [
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-04-29T11:20:57+00:00",
+      "hash": "9f2abbaadf6fb02590c2c7de0cf937cab182943b",
+      "kind": "commit",
+      "message": "chore(config): add installation scripts, systemd service, and project documentation"
+    }
+  ],
+  "lastModified": 1779995839,
+  "symbols": []
+}

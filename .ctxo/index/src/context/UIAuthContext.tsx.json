@@ -1,0 +1,57 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "src/context/UIAuthContext.tsx::UIAuthProvider::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/context/UIAuthContext.tsx::useUIAuth::function"
+    }
+  ],
+  "contentHash": "42b2a08d8335d1102df95e85cf58a62ae3c8f946aaeb5d694a2c79d94211af77",
+  "edges": [],
+  "file": "src/context/UIAuthContext.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T11:26:01+08:00",
+      "hash": "d90c16e427deae10f4c5b120d815e60ce2d72989",
+      "kind": "commit",
+      "message": "fix: critical bug fixes from testing - Drizzle ORM queries, auth flow, ID collisions, and OpenAI-compatible endpoint"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 89,
+      "endOffset": 2495,
+      "kind": "function",
+      "name": "UIAuthProvider",
+      "startLine": 15,
+      "startOffset": 437,
+      "symbolId": "src/context/UIAuthContext.tsx::UIAuthProvider::function"
+    },
+    {
+      "endLine": 97,
+      "endOffset": 2697,
+      "kind": "function",
+      "name": "useUIAuth",
+      "startLine": 91,
+      "startOffset": 2497,
+      "symbolId": "src/context/UIAuthContext.tsx::useUIAuth::function"
+    }
+  ]
+}

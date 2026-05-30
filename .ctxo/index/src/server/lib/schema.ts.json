@@ -1,0 +1,144 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "2dd39f8030481eb8df54117e02b0198e4d4d15528fc5059a4476b8c863b08c24",
+  "edges": [],
+  "file": "src/server/lib/schema.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:27:23+08:00",
+      "hash": "a9430555ddc679a1c46b7378730c113cb7ece56e",
+      "kind": "commit",
+      "message": "feat: v0.9 - export/import for all resources, community marketplace"
+    },
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-02T22:11:30+00:00",
+      "hash": "bb277802271812c504d366b66b1b270bb89f1f0e",
+      "kind": "commit",
+      "message": "feat(cascade): upgrade routing from provider-level to model-specific"
+    },
+    {
+      "date": "2026-04-29T11:07:59+00:00",
+      "hash": "a9c5c7bda33fdd18739fc04e6e64e15e87cd68fc",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T10:53:16+00:00",
+      "hash": "fe515ee0c12c64e143083b3c42a6bbc483c198a8",
+      "kind": "commit",
+      "message": "feat(cascade): implement persistence, authentication, and enhanced engine"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 12,
+      "endOffset": 538,
+      "kind": "variable",
+      "name": "users",
+      "startLine": 3,
+      "startOffset": 105,
+      "symbolId": "src/server/lib/schema.ts::users::variable"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 1009,
+      "kind": "variable",
+      "name": "providers",
+      "startLine": 15,
+      "startOffset": 573,
+      "symbolId": "src/server/lib/schema.ts::providers::variable"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 1809,
+      "kind": "variable",
+      "name": "models",
+      "startLine": 27,
+      "startOffset": 1041,
+      "symbolId": "src/server/lib/schema.ts::models::variable"
+    },
+    {
+      "endLine": 56,
+      "endOffset": 2469,
+      "kind": "variable",
+      "name": "cascadeRules",
+      "startLine": 44,
+      "startOffset": 1848,
+      "symbolId": "src/server/lib/schema.ts::cascadeRules::variable"
+    },
+    {
+      "endLine": 72,
+      "endOffset": 3281,
+      "kind": "variable",
+      "name": "authKeys",
+      "startLine": 59,
+      "startOffset": 2504,
+      "symbolId": "src/server/lib/schema.ts::authKeys::variable"
+    },
+    {
+      "endLine": 92,
+      "endOffset": 4156,
+      "kind": "variable",
+      "name": "requestLogs",
+      "startLine": 75,
+      "startOffset": 3319,
+      "symbolId": "src/server/lib/schema.ts::requestLogs::variable"
+    },
+    {
+      "endLine": 98,
+      "endOffset": 4296,
+      "kind": "variable",
+      "name": "settings",
+      "startLine": 95,
+      "startOffset": 4190,
+      "symbolId": "src/server/lib/schema.ts::settings::variable"
+    },
+    {
+      "endLine": 114,
+      "endOffset": 4863,
+      "kind": "variable",
+      "name": "auditLogs",
+      "startLine": 101,
+      "startOffset": 4332,
+      "symbolId": "src/server/lib/schema.ts::auditLogs::variable"
+    },
+    {
+      "endLine": 129,
+      "endOffset": 5493,
+      "kind": "variable",
+      "name": "webhooks",
+      "startLine": 117,
+      "startOffset": 4897,
+      "symbolId": "src/server/lib/schema.ts::webhooks::variable"
+    },
+    {
+      "endLine": 149,
+      "endOffset": 6411,
+      "kind": "variable",
+      "name": "marketplaceRules",
+      "startLine": 132,
+      "startOffset": 5578,
+      "symbolId": "src/server/lib/schema.ts::marketplaceRules::variable"
+    }
+  ]
+}

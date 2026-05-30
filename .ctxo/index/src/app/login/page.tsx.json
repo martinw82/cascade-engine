@@ -1,0 +1,56 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "src/app/login/page.tsx::LoginPage::function"
+    }
+  ],
+  "contentHash": "c4a9399679c2d1bdc30f0d196ab2dd8928eb885affd463bffacb64d780ea0323",
+  "edges": [],
+  "file": "src/app/login/page.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-19T11:26:01+08:00",
+      "hash": "d90c16e427deae10f4c5b120d815e60ce2d72989",
+      "kind": "commit",
+      "message": "fix: critical bug fixes from testing - Drizzle ORM queries, auth flow, ID collisions, and OpenAI-compatible endpoint"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-01T23:57:37+00:00",
+      "hash": "78788a048cad71cea09e4e06247e33455d72629a",
+      "kind": "commit",
+      "message": "refactor(ui): remove authentication logic and login page"
+    },
+    {
+      "date": "2026-04-29T21:58:06+00:00",
+      "hash": "89d6966d63c6f7d283c903f060b75e27b6f97cff",
+      "kind": "commit",
+      "message": "Add UI authentication with login/logout for secure dashboard access"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": [
+    {
+      "endLine": 114,
+      "endOffset": 4390,
+      "kind": "function",
+      "name": "LoginPage",
+      "startLine": 5,
+      "startOffset": 106,
+      "symbolId": "src/app/login/page.tsx::LoginPage::function"
+    }
+  ]
+}

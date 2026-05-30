@@ -1187,6 +1187,23 @@ export async function POST(request: FastifyRequest, reply: FastifyReply) {
       userId
     };
 
+    // Auto-detect taskType from User-Agent if not explicitly set
+    if (!body.taskType) {
+      const ua = (request.headers['user-agent'] || '').toLowerCase();
+      if (ua.includes('opencode')) body.taskType = 'opencode';
+      else if (ua.includes('kilocode') || ua.includes('kilo code')) body.taskType = 'coding';
+      else if (ua.includes('claude')) body.taskType = 'chat';
+      else if (ua.includes('cursor')) body.taskType = 'coding';
+      else if (ua.includes('github') && ua.includes('copilot')) body.taskType = 'coding';
+      else if (ua.includes('vscode') || ua.includes('visual studio')) body.taskType = 'coding';
+      else if (ua.includes('windsurf')) body.taskType = 'coding';
+      else if (ua.includes('continue') || ua.includes('continue.dev')) body.taskType = 'coding';
+      else if (ua.includes('aider')) body.taskType = 'coding';
+      else if (ua.includes('zed')) body.taskType = 'coding';
+      else if (ua.includes('jetbrains') || ua.includes('idea')) body.taskType = 'coding';
+      else if (ua.includes('curl') || ua.includes('httpie') || ua.includes('wget')) body.taskType = 'cli';
+    }
+
     if (body.stream) {
       reply.hijack();
       reply.raw.writeHead(200, {

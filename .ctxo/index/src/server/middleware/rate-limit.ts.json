@@ -1,0 +1,96 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 13,
+      "symbolId": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "src/server/middleware/rate-limit.ts::getRateLimitStatus::function"
+    }
+  ],
+  "contentHash": "42bc50f7a2d0e5b49c6a8708d2914ccc0e5006537e1fdbe1ebe9aad0b4c6ae46",
+  "edges": [
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::authKeys::variable"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "imports",
+      "to": "src/server/middleware/auth.ts::authenticateRequest::function"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "calls",
+      "to": "src/server/middleware/auth.ts::authenticateRequest::function"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "calls",
+      "to": "src/server/middleware/rate-limit.ts::parseTimeWindow::function"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "uses",
+      "to": "src/server/middleware/auth.ts::authenticateRequest::function"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "uses",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::authKeys::variable"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::getRateLimitStatus::function",
+      "kind": "uses",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/middleware/rate-limit.ts::getRateLimitStatus::function",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::authKeys::variable"
+    }
+  ],
+  "file": "src/server/middleware/rate-limit.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 109,
+      "endOffset": 3085,
+      "kind": "function",
+      "name": "enhancedRateLimit",
+      "startLine": 24,
+      "startOffset": 612,
+      "symbolId": "src/server/middleware/rate-limit.ts::enhancedRateLimit::function"
+    },
+    {
+      "endLine": 160,
+      "endOffset": 4459,
+      "kind": "function",
+      "name": "getRateLimitStatus",
+      "startLine": 130,
+      "startOffset": 3650,
+      "symbolId": "src/server/middleware/rate-limit.ts::getRateLimitStatus::function"
+    }
+  ]
+}

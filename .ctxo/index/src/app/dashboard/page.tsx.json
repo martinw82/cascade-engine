@@ -1,0 +1,109 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "src/app/dashboard/page.tsx::DashboardPage::function"
+    }
+  ],
+  "contentHash": "cdb3cdf254747c1c1b1b5982cac324e09e6d1bfc93cd7fac9cb25f774262cbb0",
+  "edges": [
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Dashboard.ts::Dashboard::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Providers.ts::Providers::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Models.ts::Models::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Cascade.ts::Cascade::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Analytics.ts::Analytics::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Auth.ts::Auth::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Test.ts::Test::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Dashboard.ts::Dashboard::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Providers.ts::Providers::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Models.ts::Models::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Cascade.ts::Cascade::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Analytics.ts::Analytics::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Auth.ts::Auth::class"
+    },
+    {
+      "from": "src/app/dashboard/page.tsx::DashboardPage::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Test.ts::Test::class"
+    }
+  ],
+  "file": "src/app/dashboard/page.tsx",
+  "intent": [
+    {
+      "date": "2026-05-19T11:47:33+08:00",
+      "hash": "313e1e0868ba84a28a2f915c690fbe84ab233652",
+      "kind": "commit",
+      "message": "docs: finalize documentation for public release and fix lint/typecheck issues"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": [
+    {
+      "endLine": 76,
+      "endOffset": 3137,
+      "kind": "function",
+      "name": "DashboardPage",
+      "startLine": 14,
+      "startOffset": 627,
+      "symbolId": "src/app/dashboard/page.tsx::DashboardPage::function"
+    }
+  ]
+}

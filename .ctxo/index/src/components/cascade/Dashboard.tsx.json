@@ -1,0 +1,56 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "src/components/cascade/Dashboard.tsx::Dashboard::function"
+    }
+  ],
+  "contentHash": "2677b3d3391d5bbf8d023f84414d019d5fea40ede3c704cde8d6657814711197",
+  "edges": [],
+  "file": "src/components/cascade/Dashboard.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-01T21:39:44+00:00",
+      "hash": "447f29b4f014b76cbff31ef0557bd63826cc4325",
+      "kind": "commit",
+      "message": "feat(ui): replace simulated metrics with real API data in dashboard"
+    },
+    {
+      "date": "2026-04-29T10:21:42+00:00",
+      "hash": "3e93c1fa4303b84702696ea813327abfcfc4a313",
+      "kind": "commit",
+      "message": "feat(ui): implement tabbed management interface and analytics dashboard"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 199,
+      "endOffset": 6938,
+      "kind": "function",
+      "name": "Dashboard",
+      "startLine": 15,
+      "startOffset": 324,
+      "symbolId": "src/components/cascade/Dashboard.tsx::Dashboard::function"
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/lib/db.ts::hashPassword::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "src/server/lib/db.ts::verifyPassword::function"
+    }
+  ],
+  "contentHash": "23721550595b08b6a18a85f8f373104189d7916b1442bbcd111a98f6d39ff3f6",
+  "edges": [
+    {
+      "from": "src/server/lib/db.ts::hashPassword::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::schema::variable"
+    },
+    {
+      "from": "src/server/lib/db.ts::verifyPassword::function",
+      "kind": "calls",
+      "to": "src/server/lib/db.ts::hashPassword::function"
+    }
+  ],
+  "file": "src/server/lib/db.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-17T00:42:21+08:00",
+      "hash": "050247d4449d65d07ed77344c0672dc521f0092e",
+      "kind": "commit",
+      "message": "feat: security hardening - rate limiting, CORS, auth improvements, graceful shutdown, secure key generation"
+    },
+    {
+      "date": "2026-05-02T23:59:14+00:00",
+      "hash": "38c841ca612f785f19b88c1bc9b7c2f5cf46047d",
+      "kind": "commit",
+      "message": "fix: add database migration for modelOrder column rename and data migration"
+    },
+    {
+      "date": "2026-05-02T22:11:30+00:00",
+      "hash": "bb277802271812c504d366b66b1b270bb89f1f0e",
+      "kind": "commit",
+      "message": "feat(cascade): upgrade routing from provider-level to model-specific"
+    },
+    {
+      "date": "2026-05-02T06:27:30+00:00",
+      "hash": "d21e44184a846863aca42a41dd18706658ba9ece",
+      "kind": "commit",
+      "message": "Use exec for PRAGMA in bun:sqlite"
+    },
+    {
+      "date": "2026-05-02T06:26:06+00:00",
+      "hash": "d1d79bee4597b4ca0506c9c6bad8f91725c54db1",
+      "kind": "commit",
+      "message": "Switch API server back to bun:sqlite for compatibility"
+    },
+    {
+      "date": "2026-04-29T19:30:32+00:00",
+      "hash": "b7fbf8ecc9bbaf62f32789099277c9c8c4d9290d",
+      "kind": "commit",
+      "message": "Fix cascade_rules table schema and bun:sqlite compatibility"
+    },
+    {
+      "date": "2026-04-29T19:19:46+00:00",
+      "hash": "78462acd2d481cc795f61012597d7c7c85af909d",
+      "kind": "commit",
+      "message": "fix(server): use exec for setting journal_mode to WAL"
+    },
+    {
+      "date": "2026-04-29T19:10:25+00:00",
+      "hash": "0eaa68f655a906d34b071b1ad14127cd460d1405",
+      "kind": "commit",
+      "message": "refactor(server): migrate from better-sqlite3 to bun:sqlite"
+    },
+    {
+      "date": "2026-04-29T11:07:59+00:00",
+      "hash": "a9c5c7bda33fdd18739fc04e6e64e15e87cd68fc",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T10:53:16+00:00",
+      "hash": "fe515ee0c12c64e143083b3c42a6bbc483c198a8",
+      "kind": "commit",
+      "message": "feat(cascade): implement persistence, authentication, and enhanced engine"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 454,
+      "endOffset": 14582,
+      "kind": "function",
+      "name": "hashPassword",
+      "startLine": 448,
+      "startOffset": 14266,
+      "symbolId": "src/server/lib/db.ts::hashPassword::function"
+    },
+    {
+      "endLine": 459,
+      "endOffset": 14740,
+      "kind": "function",
+      "name": "verifyPassword",
+      "startLine": 457,
+      "startOffset": 14623,
+      "symbolId": "src/server/lib/db.ts::verifyPassword::function"
+    },
+    {
+      "endLine": 11,
+      "endOffset": 355,
+      "kind": "variable",
+      "name": "db",
+      "startLine": 11,
+      "startOffset": 323,
+      "symbolId": "src/server/lib/db.ts::db::variable"
+    }
+  ]
+}

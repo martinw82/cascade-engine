@@ -1,0 +1,57 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "src/context/AuthContext.tsx::AuthProvider::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "src/context/AuthContext.tsx::useAuth::function"
+    }
+  ],
+  "contentHash": "46f3ed5e411bcfeca0a163fe8950d6db451eb55e8982989383389bd6c5a2bcdb",
+  "edges": [],
+  "file": "src/context/AuthContext.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T11:47:33+08:00",
+      "hash": "313e1e0868ba84a28a2f915c690fbe84ab233652",
+      "kind": "commit",
+      "message": "docs: finalize documentation for public release and fix lint/typecheck issues"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 53,
+      "endOffset": 1446,
+      "kind": "function",
+      "name": "AuthProvider",
+      "startLine": 14,
+      "startOffset": 359,
+      "symbolId": "src/context/AuthContext.tsx::AuthProvider::function"
+    },
+    {
+      "endLine": 61,
+      "endOffset": 1641,
+      "kind": "function",
+      "name": "useAuth",
+      "startLine": 55,
+      "startOffset": 1448,
+      "symbolId": "src/context/AuthContext.tsx::useAuth::function"
+    }
+  ]
+}

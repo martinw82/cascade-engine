@@ -1,0 +1,104 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 58,
+      "symbolId": "src/components/cascade/Providers.tsx::Providers::function"
+    }
+  ],
+  "contentHash": "89aa4d71c236560f66d51f8a7eb63a0b5e43bfa659a0c1c90d97d68f6574bbca",
+  "edges": [
+    {
+      "from": "src/components/cascade/Providers.tsx::Providers::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Skeleton.ts::ListSkeleton::class"
+    }
+  ],
+  "file": "src/components/cascade/Providers.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:44:18+08:00",
+      "hash": "249b47b90d324bf360c059922f123554e76bf888",
+      "kind": "commit",
+      "message": "feat: add export/import buttons to Providers, Models, Cascade Rules UI"
+    },
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T11:26:01+08:00",
+      "hash": "d90c16e427deae10f4c5b120d815e60ce2d72989",
+      "kind": "commit",
+      "message": "fix: critical bug fixes from testing - Drizzle ORM queries, auth flow, ID collisions, and OpenAI-compatible endpoint"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-16T23:55:21+08:00",
+      "hash": "6b4279cc305a725a253ff5d177662a58b88c48fa",
+      "kind": "commit",
+      "message": "docs: update documentation and add production readiness report"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-02T09:50:23+00:00",
+      "hash": "e739e080850d2624686b67ba33e492dab8250996",
+      "kind": "commit",
+      "message": "Add refresh buttons and better logging for data loading issues"
+    },
+    {
+      "date": "2026-05-02T09:39:39+00:00",
+      "hash": "6b6bdb0cd48e88baad0287f39387f3c69b802ac4",
+      "kind": "commit",
+      "message": "Add timeout to API calls and Reset button for providers"
+    },
+    {
+      "date": "2026-05-02T01:10:33+00:00",
+      "hash": "3ab405d1c05d5f1aaa79bd5bd821216f06a61d3c",
+      "kind": "commit",
+      "message": "fix(ui): align provider field mapping with API and improve error feedback"
+    },
+    {
+      "date": "2026-05-02T00:44:40+00:00",
+      "hash": "efb16b5c63c6df3ff5998ab19117a253cdf57684",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T10:21:42+00:00",
+      "hash": "3e93c1fa4303b84702696ea813327abfcfc4a313",
+      "kind": "commit",
+      "message": "feat(ui): implement tabbed management interface and analytics dashboard"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 456,
+      "endOffset": 16608,
+      "kind": "function",
+      "name": "Providers",
+      "startLine": 18,
+      "startOffset": 423,
+      "symbolId": "src/components/cascade/Providers.tsx::Providers::function"
+    }
+  ]
+}

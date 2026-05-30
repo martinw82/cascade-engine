@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "src/server/middleware/security.ts::securityHeadersPlugin::function"
+    }
+  ],
+  "contentHash": "a2d1d564a8baf6399198fc550ba3c4e96d7320357bf5b936d28b6746f0f75e09",
+  "edges": [],
+  "file": "src/server/middleware/security.ts",
+  "intent": [
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 50,
+      "endOffset": 1816,
+      "kind": "function",
+      "name": "securityHeadersPlugin",
+      "startLine": 2,
+      "startOffset": 74,
+      "symbolId": "src/server/middleware/security.ts::securityHeadersPlugin::function"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "src/server/lib/webhooks.ts::triggerWebhooks::function"
+    }
+  ],
+  "contentHash": "7fd91038439fa0aebde2ef94225422d6ebee18621b1d128210b68383dd7970b1",
+  "edges": [
+    {
+      "from": "src/server/lib/webhooks.ts::triggerWebhooks::function",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/lib/webhooks.ts::triggerWebhooks::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::webhooks::variable"
+    },
+    {
+      "from": "src/server/lib/webhooks.ts::triggerWebhooks::function",
+      "kind": "calls",
+      "to": "src/server/lib/webhooks.ts::fireWebhook::function"
+    },
+    {
+      "from": "src/server/lib/webhooks.ts::triggerWebhooks::function",
+      "kind": "uses",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/lib/webhooks.ts::triggerWebhooks::function",
+      "kind": "uses",
+      "to": "src/server/lib/schema.ts::webhooks::variable"
+    }
+  ],
+  "file": "src/server/lib/webhooks.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 30,
+      "endOffset": 781,
+      "kind": "function",
+      "name": "triggerWebhooks",
+      "startLine": 11,
+      "startOffset": 206,
+      "symbolId": "src/server/lib/webhooks.ts::triggerWebhooks::function"
+    }
+  ]
+}

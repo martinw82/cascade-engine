@@ -1,0 +1,83 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 48,
+      "symbolId": "src/components/cascade/Analytics.tsx::Analytics::function"
+    }
+  ],
+  "contentHash": "179f538b1c2d7d371507d84091ac76a6fc190f2b896cc78dd4a7739dc17fc853",
+  "edges": [
+    {
+      "from": "src/components/cascade/Analytics.tsx::Analytics::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Skeleton.ts::CardSkeleton::class"
+    },
+    {
+      "from": "src/components/cascade/Analytics.tsx::Analytics::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Skeleton.ts::TableSkeleton::class"
+    },
+    {
+      "from": "src/components/cascade/Analytics.tsx::Analytics::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Skeleton.ts::CardSkeleton::class"
+    },
+    {
+      "from": "src/components/cascade/Analytics.tsx::Analytics::function",
+      "kind": "uses",
+      "to": "src/components/cascade/Skeleton.ts::TableSkeleton::class"
+    }
+  ],
+  "file": "src/components/cascade/Analytics.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-04-29T10:21:42+00:00",
+      "hash": "3e93c1fa4303b84702696ea813327abfcfc4a313",
+      "kind": "commit",
+      "message": "feat(ui): implement tabbed management interface and analytics dashboard"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": [
+    {
+      "endLine": 643,
+      "endOffset": 28591,
+      "kind": "function",
+      "name": "Analytics",
+      "startLine": 81,
+      "startOffset": 1816,
+      "symbolId": "src/components/cascade/Analytics.tsx::Analytics::function"
+    }
+  ]
+}

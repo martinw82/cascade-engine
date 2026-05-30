@@ -34,6 +34,7 @@
     "semver": "^7.6.0"
   },
   "devDependencies": {
+    "@ctxo/lang-typescript": "^0.7.1",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.7",

@@ -283,39 +283,85 @@ function initializeDefaultData() {
 
   // Insert default cascade rules
   const ruleCount = sqlite.prepare('SELECT COUNT(*) as count FROM cascade_rules').get() as { count: number };
-  if (ruleCount.count === 0) {
-    const cascadeRules = [
-      {
-        id: 'coding-rule',
-        name: 'Coding Tasks',
-        priority: 1,
-        trigger_type: 'keyword',
-        trigger_value: 'code|program|function|debug|programming',
-        model_order: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']),
-        word_limit: 5,
-        enabled: 1
-      },
-      {
-        id: 'summarization-rule',
-        name: 'Summarization Tasks',
-        priority: 2,
-        trigger_type: 'keyword',
-        trigger_value: 'summarize|extract|analyze|document|summary',
-        model_order: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']),
-        word_limit: 5,
-        enabled: 1
-      },
-      {
-        id: 'default-rule',
-        name: 'Default Fallback',
-        priority: 99,
-        trigger_type: 'task_type',
-        trigger_value: 'general',
-        model_order: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']),
-        word_limit: 5,
-        enabled: 1
-      }
-    ];
+    if (ruleCount.count === 0) {
+      const cascadeRules = [
+        // ── Keyword-based rules (trigger on first words of message) ──
+        {
+          id: 'coding-rule',
+          name: 'Coding Tasks',
+          priority: 1,
+          trigger_type: 'keyword',
+          trigger_value: 'code|program|function|debug|programming',
+          model_order: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']),
+          word_limit: 5,
+          enabled: 1
+        },
+        {
+          id: 'summarization-rule',
+          name: 'Summarization Tasks',
+          priority: 2,
+          trigger_type: 'keyword',
+          trigger_value: 'summarize|extract|analyze|document|summary',
+          model_order: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']),
+          word_limit: 5,
+          enabled: 1
+        },
+        // ── Auto-detected task_type rules (set by User-Agent header) ──
+        // These match when a CLI tool sends requests without an explicit taskType.
+        // The cascade engine auto-detects the tool from the User-Agent header
+        // and injects the corresponding taskType value below.
+        {
+          id: 'opencode-rule',
+          name: 'OpenCode CLI',
+          priority: 3,
+          trigger_type: 'task_type',
+          trigger_value: 'opencode',
+          model_order: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']),
+          word_limit: 5,
+          enabled: 1
+        },
+        {
+          id: 'coding-tools-rule',
+          name: 'AI Coding Assistant',
+          priority: 4,
+          trigger_type: 'task_type',
+          trigger_value: 'coding',
+          model_order: JSON.stringify(['llama-3.1-8b-instant', 'llama-3.1-70b', 'gemini-1.5-flash']),
+          word_limit: 5,
+          enabled: 1
+        },
+        {
+          id: 'chat-tools-rule',
+          name: 'Chat Assistant',
+          priority: 5,
+          trigger_type: 'task_type',
+          trigger_value: 'chat',
+          model_order: JSON.stringify(['gemini-1.5-flash', 'llama-3.1-70b', 'llama-3.1-8b-instant']),
+          word_limit: 5,
+          enabled: 1
+        },
+        {
+          id: 'cli-tools-rule',
+          name: 'API / CLI Tools',
+          priority: 6,
+          trigger_type: 'task_type',
+          trigger_value: 'cli',
+          model_order: JSON.stringify(['llama-3.1-8b-instant', 'gemini-1.5-flash', 'llama-3.1-70b']),
+          word_limit: 5,
+          enabled: 1
+        },
+        // ── Catch-all fallback ──
+        {
+          id: 'default-rule',
+          name: 'Default Fallback',
+          priority: 99,
+          trigger_type: 'task_type',
+          trigger_value: 'general',
+          model_order: JSON.stringify(['llama-3.1-70b', 'llama-3.1-8b-instant', 'gemini-1.5-flash']),
+          word_limit: 5,
+          enabled: 1
+        }
+      ];
 
     const insertRule = sqlite.prepare(`
       INSERT OR IGNORE INTO cascade_rules (id, user_id, name, priority, trigger_type, trigger_value, model_order, word_limit, enabled)

@@ -1,0 +1,97 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 11,
+      "symbolId": "src/server/middleware/audit.ts::auditLogPlugin::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "src/server/middleware/audit.ts::createAuditLog::function"
+    }
+  ],
+  "contentHash": "a7401e1e07de3277ad0e7771d8dad0e373054a8aa81364bf428c6112130ef2eb",
+  "edges": [
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::auditLogs::variable"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "calls",
+      "to": "src/server/middleware/audit.ts::getClientIp::function"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "calls",
+      "to": "src/server/middleware/audit.ts::getResponseTime::function"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "calls",
+      "to": "src/server/middleware/audit.ts::determineAction::function"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "calls",
+      "to": "src/server/middleware/audit.ts::determineResource::function"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "calls",
+      "to": "src/server/middleware/audit.ts::determineSeverity::function"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::auditLogPlugin::function",
+      "kind": "calls",
+      "to": "src/server/middleware/audit.ts::insertAuditLog::function"
+    },
+    {
+      "from": "src/server/middleware/audit.ts::createAuditLog::function",
+      "kind": "calls",
+      "to": "src/server/middleware/audit.ts::insertAuditLog::function"
+    }
+  ],
+  "file": "src/server/middleware/audit.ts",
+  "intent": [
+    {
+      "date": "2026-05-25T17:08:33+08:00",
+      "hash": "e00fd14709215159827756c6890432a7ef411b0c",
+      "kind": "commit",
+      "message": "feat: v0.9 pre-release - enterprise features, admin panel, webhooks, and more"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 166,
+      "endOffset": 5164,
+      "kind": "function",
+      "name": "auditLogPlugin",
+      "startLine": 95,
+      "startOffset": 2991,
+      "symbolId": "src/server/middleware/audit.ts::auditLogPlugin::function"
+    },
+    {
+      "endLine": 193,
+      "endOffset": 5877,
+      "kind": "function",
+      "name": "createAuditLog",
+      "startLine": 169,
+      "startOffset": 5249,
+      "symbolId": "src/server/middleware/audit.ts::createAuditLog::function"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 35,
+      "symbolId": "src/components/cascade/Test.tsx::Test::function"
+    }
+  ],
+  "contentHash": "f1b38475539c29b76e9a0bf8e82b5fbf1319b659c4e993eed78c7a32ab40d2e9",
+  "edges": [
+    {
+      "from": "src/components/cascade/Test.tsx::Test::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Skeleton.ts::CardSkeleton::class"
+    }
+  ],
+  "file": "src/components/cascade/Test.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-19T11:47:33+08:00",
+      "hash": "313e1e0868ba84a28a2f915c690fbe84ab233652",
+      "kind": "commit",
+      "message": "docs: finalize documentation for public release and fix lint/typecheck issues"
+    },
+    {
+      "date": "2026-05-19T01:52:11+08:00",
+      "hash": "1c92ddf475bf920cd9bc8f518e6e0bf9ec04bbce",
+      "kind": "commit",
+      "message": "feat: multi-user auth system, input validation, rate limiting, and deployment improvements"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-02T15:48:30+00:00",
+      "hash": "7906f427841d4f155881436bba42b00a0f3b96b0",
+      "kind": "commit",
+      "message": "Add bypass cascade option to Test tab for direct provider/model testing"
+    },
+    {
+      "date": "2026-05-02T07:41:41+00:00",
+      "hash": "2182f2968214fc8e5d33e93400b1ddfdeb436317",
+      "kind": "commit",
+      "message": "Add internal auth bypass for test requests"
+    },
+    {
+      "date": "2026-05-02T07:17:56+00:00",
+      "hash": "330ae72f2afb4b659f2b5b90f8d3e130149a08a5",
+      "kind": "commit",
+      "message": "feat(ui): add test tab and map model API response"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 255,
+      "endOffset": 8514,
+      "kind": "function",
+      "name": "Test",
+      "startLine": 33,
+      "startOffset": 568,
+      "symbolId": "src/components/cascade/Test.tsx::Test::function"
+    }
+  ]
+}

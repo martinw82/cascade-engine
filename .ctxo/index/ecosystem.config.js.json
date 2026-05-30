@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "a2961887705d779ea5126e15195a91b835ea5cf4a0e59bd6e2a708f5c6295ba6",
+  "edges": [],
+  "file": "ecosystem.config.js",
+  "intent": [
+    {
+      "date": "2026-04-29T11:20:57+00:00",
+      "hash": "9f2abbaadf6fb02590c2c7de0cf937cab182943b",
+      "kind": "commit",
+      "message": "chore(config): add installation scripts, systemd service, and project documentation"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": []
+}

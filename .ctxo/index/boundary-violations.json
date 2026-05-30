@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "computedAt": "2026-05-28T19:19:15.309Z",
+  "commitSha": "a9bd953",
+  "confidence": "low",
+  "snapshotsAvailable": 0,
+  "hint": "Insufficient snapshot history — enable `ctxo init` hook or add `ctxo index --check` to CI for boundary-violation signal.",
+  "violations": [
+    {
+      "from": {
+        "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine::class",
+        "communityId": 116,
+        "label": "decrypt area"
+      },
+      "to": {
+        "symbolId": "src/server/lib/db.ts::db::variable",
+        "communityId": 114,
+        "label": "src/server"
+      },
+      "edgeKind": "uses",
+      "historicalEdgesBetweenClusters": -1,
+      "severity": "medium"
+    },
+    {
+      "from": {
+        "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderStreaming::method",
+        "communityId": 136,
+        "label": "CascadeEngine.tryProviderWithSpillover area"
+      },
+      "to": {
+        "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeStreamingApiCall::method",
+        "communityId": 135,
+        "label": "src/server/routes/api/cascade.ts"
+      },
+      "edgeKind": "calls",
+      "historicalEdgesBetweenClusters": -1,
+      "severity": "medium"
+    },
+    {
+      "from": {
+        "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.tryProviderWithSpillover::method",
+        "communityId": 136,
+        "label": "CascadeEngine.tryProviderWithSpillover area"
+      },
+      "to": {
+        "symbolId": "src/server/routes/api/cascade.ts::CascadeEngine.makeApiCall::method",
+        "communityId": 135,
+        "label": "src/server/routes/api/cascade.ts"
+      },
+      "edgeKind": "calls",
+      "historicalEdgesBetweenClusters": -1,
+      "severity": "medium"
+    },
+    {
+      "from": {
+        "symbolId": "src/server/routes/api/cascade.ts::POST::function",
+        "communityId": 116,
+        "label": "decrypt area"
+      },
+      "to": {
+        "symbolId": "src/server/lib/db.ts::db::variable",
+        "communityId": 114,
+        "label": "src/server"
+      },
+      "edgeKind": "imports",
+      "historicalEdgesBetweenClusters": -1,
+      "severity": "medium"
+    }
+  ]
+}

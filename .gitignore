@@ -57,3 +57,6 @@ cascade-deploy.tar.gz
 
 # local opencode config (contains API keys)
 opencode.json
+
+# Ctxo local cache (auto-rebuilt, never committed)
+.ctxo/.cache/

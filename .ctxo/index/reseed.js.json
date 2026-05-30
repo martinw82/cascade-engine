@@ -1,0 +1,53 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "d967ecb4719270971bc42209c0fa3de545e18d83074145139072c86f716933f8",
+  "edges": [
+    {
+      "from": "reseed.js::reseed::variable",
+      "kind": "imports",
+      "to": "src/server/lib/db.ts::db::variable"
+    },
+    {
+      "from": "reseed.js::reseed::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::providers::variable"
+    },
+    {
+      "from": "reseed.js::reseed::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::models::variable"
+    },
+    {
+      "from": "reseed.js::reseed::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+    },
+    {
+      "from": "reseed.js::reseed::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::authKeys::variable"
+    },
+    {
+      "from": "reseed.js::reseed::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::users::variable"
+    },
+    {
+      "from": "reseed.js::reseed::variable",
+      "kind": "imports",
+      "to": "src/server/lib/schema.ts::settings::variable"
+    }
+  ],
+  "file": "reseed.js",
+  "intent": [
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": []
+}

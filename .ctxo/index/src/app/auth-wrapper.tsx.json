@@ -1,0 +1,44 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "src/app/auth-wrapper.tsx::AuthWrapper::function"
+    }
+  ],
+  "contentHash": "a19ebde6ac50f4b5edacd4f69d63b3b23df84251316a696b4c9d3e36be4ef5dd",
+  "edges": [],
+  "file": "src/app/auth-wrapper.tsx",
+  "intent": [
+    {
+      "date": "2026-05-19T11:47:33+08:00",
+      "hash": "313e1e0868ba84a28a2f915c690fbe84ab233652",
+      "kind": "commit",
+      "message": "docs: finalize documentation for public release and fix lint/typecheck issues"
+    },
+    {
+      "date": "2026-05-19T11:26:01+08:00",
+      "hash": "d90c16e427deae10f4c5b120d815e60ce2d72989",
+      "kind": "commit",
+      "message": "fix: critical bug fixes from testing - Drizzle ORM queries, auth flow, ID collisions, and OpenAI-compatible endpoint"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    }
+  ],
+  "lastModified": 1779995879,
+  "symbols": [
+    {
+      "endLine": 41,
+      "endOffset": 1214,
+      "kind": "function",
+      "name": "AuthWrapper",
+      "startLine": 6,
+      "startOffset": 149,
+      "symbolId": "src/app/auth-wrapper.tsx::AuthWrapper::function"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 63,
+      "symbolId": "src/components/cascade/Cascade.tsx::Cascade::function"
+    }
+  ],
+  "contentHash": "17c7429755c04640ce734d168ea29007293be71c7835fca1f3cf34768eb54bb4",
+  "edges": [
+    {
+      "from": "src/components/cascade/Cascade.tsx::Cascade::function",
+      "kind": "imports",
+      "to": "src/components/cascade/Skeleton.ts::ListSkeleton::class"
+    }
+  ],
+  "file": "src/components/cascade/Cascade.tsx",
+  "intent": [
+    {
+      "date": "2026-05-25T17:44:18+08:00",
+      "hash": "249b47b90d324bf360c059922f123554e76bf888",
+      "kind": "commit",
+      "message": "feat: add export/import buttons to Providers, Models, Cascade Rules UI"
+    },
+    {
+      "date": "2026-05-25T17:39:51+08:00",
+      "hash": "777bc1ee2da71252baa14fff2d26ee4784fef464",
+      "kind": "commit",
+      "message": "feat: UI overhaul - glassmorphism, skeleton loaders, toast notifications"
+    },
+    {
+      "date": "2026-05-25T16:42:04+08:00",
+      "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
+      "kind": "commit",
+      "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
+    },
+    {
+      "date": "2026-05-16T23:55:21+08:00",
+      "hash": "6b4279cc305a725a253ff5d177662a58b88c48fa",
+      "kind": "commit",
+      "message": "docs: update documentation and add production readiness report"
+    },
+    {
+      "date": "2026-05-16T22:46:26+08:00",
+      "hash": "94dbbf7a313ab6a34d1fc1dc83a18ec7fd527ba9",
+      "kind": "commit",
+      "message": "feat: complete auth system, multi-format API support, and real analytics dashboard"
+    },
+    {
+      "date": "2026-05-02T22:11:30+00:00",
+      "hash": "bb277802271812c504d366b66b1b270bb89f1f0e",
+      "kind": "commit",
+      "message": "feat(cascade): upgrade routing from provider-level to model-specific"
+    },
+    {
+      "date": "2026-04-29T19:30:32+00:00",
+      "hash": "b7fbf8ecc9bbaf62f32789099277c9c8c4d9290d",
+      "kind": "commit",
+      "message": "Fix cascade_rules table schema and bun:sqlite compatibility"
+    },
+    {
+      "date": "2026-04-29T11:07:59+00:00",
+      "hash": "a9c5c7bda33fdd18739fc04e6e64e15e87cd68fc",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T11:02:21+00:00",
+      "hash": "ae464f925426a082f57d219fb6829233202ea058",
+      "kind": "commit",
+      "message": "wip"
+    },
+    {
+      "date": "2026-04-29T10:53:16+00:00",
+      "hash": "fe515ee0c12c64e143083b3c42a6bbc483c198a8",
+      "kind": "commit",
+      "message": "feat(cascade): implement persistence, authentication, and enhanced engine"
+    }
+  ],
+  "lastModified": 1779995880,
+  "symbols": [
+    {
+      "endLine": 646,
+      "endOffset": 24425,
+      "kind": "function",
+      "name": "Cascade",
+      "startLine": 27,
+      "startOffset": 616,
+      "symbolId": "src/components/cascade/Cascade.tsx::Cascade::function"
+    }
+  ]
+}
