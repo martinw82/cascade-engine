@@ -102,6 +102,20 @@ db.select().from(table).where(and(eq(table.a, x), eq(table.b, y)))
 - Three provider streaming implementations: OpenAI-compatible (SSE parser), Gemini (`streamGenerateContent`), Anthropic (content_block_delta events)
 - Spillover: retries on HTTP/connection errors before first chunk; once streaming, commits to that model
 
+### User-Agent Task Type Auto-Detection
+- When `taskType` is not explicitly set in the request body, the cascade engine inspects `User-Agent` header:
+  - opencode → `opencode`
+  - claude → `chat`
+  - cursor/vscode/windsurf/continue/aider/zed/jetbrains → `coding`
+  - github copilot → `coding`
+  - curl/httpie/wget → `cli`
+- Matches against `task_type` cascade rules; falls through to keyword matching then `general` default
+
+### Model Discovery Timeout
+- All discovery endpoints use `fetchWithTimeout(url, options, 15000)` — 15 second timeout
+- UI discovery modal uses AbortController with 30 second timeout
+- Returns `504 Gateway Timeout` if provider doesn't respond in time
+
 ### Users
 - `POST /api/users/register` — Create user + API key
 - `POST /api/users/login` — Authenticate, get API key

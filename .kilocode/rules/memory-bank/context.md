@@ -3,7 +3,7 @@
 ## Current State
 
 **Project Status**: 🚀 Cascade Master - Universal AI Traffic Controller
-**Version**: 2.1 (streaming, tool calling, response caching)
+**Version**: 2.2 (User-Agent task detection, encrypted key support, Ctxo tooling)
 
 Intelligent API gateway that routes LLM requests through cascading model chains with task-aware routing, automatic failover, multi-user auth, and real-time analytics.
 
@@ -75,7 +75,7 @@ Chained `.where()` calls in Drizzle ORM **overwrite** each other instead of comb
 ## Next Steps
 
 - [x] Full documentation run (README, USER_GUIDE, API docs)
-- [ ] Prepare for public GitHub release
+- [x] Public GitHub release (pushed to `origin/main`)
 - [ ] Consider: per-endpoint rate limiting UI, audit log viewer in UI
 - [ ] Consider: password reset flow, email notifications
 
@@ -96,20 +96,8 @@ Chained `.where()` calls in Drizzle ORM **overwrite** each other instead of comb
 | Date | Changes |
 |------|---------|
 | 2026-05-18 PM | User testing session: fixed auth-wrapper hang, login endpoint mismatch, API key storage, Drizzle `.where()` bug (13+ endpoints), model discovery, bulk import, unique ID generation. Created cascade rules. Added OpenAI-compatible endpoint. Tested cascade routing end-to-end. Created opencode.json config. |
-
-## Latest Session (2026-05-25)
-
-### Discussion
-- User inquired about which cascade is used when hitting the API raw, confirming it should be cascade rules set 1, general, trigger "tasks general" unless prepending prompts with keywords like "code"
-- User asked about the model I am using; I responded that I am powered by the model named cascade with ID cascade-master/cascade
-- User requested updating cascade-engine documentation with latest session history and progress
-- Noted that tool calling within opencode appears to have issues where tool calls stop output and return control without results
-
-### Progress
-- Updated session history in memory bank
-- Verified file paths and project structure
-- Confirmed cascade engine logic resides in `src/server/routes/api/cascade.ts`
-
+| 2026-05-25 AM | SSE streaming, tool calling, response caching, fallback analytics UI. Full documentation run (README, USER_GUIDE, API docs). |
+| 2026-05-25 PM | v0.9 pre-release: rate limiting, audit logging, enterprise security (JWT, AES-256-GCM encryption, CIDR IP restrictions), admin panel, monitoring dashboard, webhook system, backup/restore, CLI tool enhancement. All 13 files committed as `e00fd14`. |
 
 ## Latest Session (2026-05-25 PM)
 
@@ -151,3 +139,51 @@ Chained `.where()` calls in Drizzle ORM **overwrite** each other instead of comb
 - 13 files changed, 2095 insertions, 104 deletions
 - Push blocked by GitHub internal server error (transient)
 - To push: `git push origin main`
+
+## Latest Session (2026-05-30)
+
+### Completed: Post-v0.9 Fixes & Ctxo Tooling Integration
+
+**Bug Fixes**
+- ✅ **API key decryption in model ops** — Model test (`POST /api/models/test`) and benchmark (`POST /api/models/benchmark`) now properly decrypt AES-256-GCM encrypted provider API keys before use. Affected: `src/server/index.ts` lines 1275-1302 (test) and 1366-1374 (benchmark)
+- ✅ **Fetch timeout protection** — Added `fetchWithTimeout()` utility with 15s timeout for all model discovery endpoints (`GET /api/models/discover/:providerId`) to prevent hanging requests. Returns `504 Gateway Timeout` on timeout. Affected: `src/server/index.ts` lines 1505-1512
+- ✅ **Model discovery modal timeout** — Added AbortController with 30s timeout in the discovery modal UI to prevent infinite loading. Affected: `src/components/cascade/Models.tsx` lines 628-647
+- ✅ **Modal positioning** — Changed discovery and bulk import modals from `items-center` to `items-start pt-12` so they scroll from the top instead of being vertically centered (better UX on long model lists). Affected: `src/components/cascade/Models.tsx` lines 828, 991
+
+**New Features**
+- ✅ **User-Agent based task type auto-detection** — Cascade engine now detects the calling tool from `User-Agent` header and auto-sets `taskType`. Mappings: opencode→opencode, claude→chat, cursor/vscode/windsurf/continue/aider/zed/jetbrains→coding, curl/httpie/wget→cli. Falls through to rule matching if no match. Affected: `src/server/routes/api/cascade.ts` lines 1190-1206
+- ✅ **New cascade rules** — Added 4 new task_type-based cascade rules for better routing:
+  - `opencode-rule` (priority 3): OpenCode CLI tasks
+  - `coding-tools-rule` (priority 4): AI coding assistant tasks
+  - `chat-tools-rule` (priority 5): Chat assistant tasks
+  - `cli-tools-rule` (priority 6): API / CLI tool tasks
+  - Fallback: existing `default-rule` at priority 99
+  Affected: `src/server/lib/db.ts`, `src/server/index.ts`, `reseed.js`
+- ✅ **Ctxo tooling setup** — Full Ctxo MCP integration for improved AI agent code comprehension:
+  - `.ctxo/` (config + symbol index with dependency graphs, co-change data, community detection)
+  - `.cursor/rules/ctxo.mdc` + `CLAUDE.md` — Agent instructions to use Ctxo before edits
+  - `.mcp.json` — MCP server registration for `@ctxo/cli`
+  - `CTXO-REFERENCE.md` — Quick reference for all 14 Ctxo MCP tools
+  - `@ctxo/lang-typescript` dev dependency in `package.json`
+  - `.ctxo/.cache/` added to `.gitignore`
+
+**Structural Changes**
+- `package-lock.json` added (was missing, now committed for dependency lock consistency)
+- All changes committed as `7c3af15` and pushed to `origin/main` (also pushed previous 6 unpushed commits)
+
+**Files Changed (55 files, +12544/-71)**
+| File | Change |
+|------|--------|
+| `src/server/routes/api/cascade.ts` | +17 lines — User-Agent task detection |
+| `src/server/index.ts` | ~50 lines — API key decrypt, fetchWithTimeout, new rules |
+| `src/server/lib/db.ts` | ~50 lines — New cascade rules in seed data |
+| `reseed.js` | ~10 lines — New cascade rules in reseed |
+| `src/components/cascade/Models.tsx` | ~10 lines — Timeout + modal position fix |
+| `.gitignore` | +3 lines — `.ctxo/.cache/` |
+| `package.json` | +1 line — `@ctxo/lang-typescript` dep |
+| `.ctxo/`, `.cursor/`, `.mcp.json`, `CLAUDE.md`, `CTXO-REFERENCE.md` | New — Ctxo tooling files |
+| `package-lock.json` | New — lockfile |
+
+**Git Status**
+- Commit `7c3af15` pushed to `origin/main` (along with 6 prior commits)
+- All changes on GitHub at `https://github.com/martinw82/cascade-engine`

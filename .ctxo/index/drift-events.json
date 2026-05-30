@@ -1,9 +1,8 @@
 {
   "version": 1,
-  "computedAt": "2026-05-28T19:19:15.309Z",
-  "commitSha": "a9bd953",
-  "confidence": "low",
-  "snapshotsAvailable": 0,
-  "hint": "No prior snapshot available — install the post-commit hook (`ctxo init`), run `ctxo watch`, or add `ctxo index --check` to CI so the drift history accumulates.",
+  "computedAt": "2026-05-30T12:37:58.417Z",
+  "commitSha": "7c3af15",
+  "confidence": "medium",
+  "snapshotsAvailable": 5,
   "events": []
 }

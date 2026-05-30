@@ -1,32 +1,32 @@
 {
   "antiPatterns": [],
   "complexity": [],
-  "contentHash": "dca412de7dd56060ed5a7b1d0c0c92101ed96260ef566c32bc920be3925eb8e7",
+  "contentHash": "8bc9e4c6884fe808f30024c2dee09148466bfc1684a0d72d688f57e763d22a58",
   "edges": [
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/routes/api/cascade.ts::cascadeRoutes::variable"
+      "to": "src/server/routes/api/cascade.ts::cascadeRoutes::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/routes/api/cascade.ts::providerCache::variable"
+      "to": "src/server/routes/api/cascade.ts::providerCache::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/routes/api/cascade.ts::modelCache::variable"
+      "to": "src/server/routes/api/cascade.ts::modelCache::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/routes/api/cascade.ts::cascadeEngine::variable"
+      "to": "src/server/routes/api/cascade.ts::cascadeEngine::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/routes/api/cascade.ts::cascadeSchema::variable"
+      "to": "src/server/routes/api/cascade.ts::cascadeSchema::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
@@ -116,7 +116,7 @@
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/db.ts::db::variable"
+      "to": "src/server/lib/db.ts::db::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
@@ -131,51 +131,57 @@
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::requestLogs::variable"
+      "to": "src/server/lib/schema.ts::requestLogs::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::providers::variable"
+      "to": "src/server/lib/schema.ts::providers::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::models::variable"
+      "to": "src/server/lib/schema.ts::models::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+      "to": "src/server/lib/schema.ts::cascadeRules::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::authKeys::variable"
+      "to": "src/server/lib/schema.ts::authKeys::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::users::variable"
+      "to": "src/server/lib/schema.ts::users::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::auditLogs::variable"
+      "to": "src/server/lib/schema.ts::auditLogs::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::webhooks::variable"
+      "to": "src/server/lib/schema.ts::webhooks::function"
     },
     {
       "from": "src/server/index.ts::index::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::marketplaceRules::variable"
+      "to": "src/server/lib/schema.ts::marketplaceRules::function"
     }
   ],
   "file": "src/server/index.ts",
   "intent": [
+    {
+      "date": "2026-05-30T20:37:12+08:00",
+      "hash": "7c3af159fc538f4bd2e6da9ba1da39c4f929129c",
+      "kind": "commit",
+      "message": "feat: API key decryption in model ops, User-Agent task detection, ctxo tooling"
+    },
     {
       "date": "2026-05-25T17:27:23+08:00",
       "hash": "a9430555ddc679a1c46b7378730c113cb7ece56e",
@@ -289,14 +295,8 @@
       "hash": "efb16b5c63c6df3ff5998ab19117a253cdf57684",
       "kind": "commit",
       "message": "wip"
-    },
-    {
-      "date": "2026-04-29T19:30:32+00:00",
-      "hash": "b7fbf8ecc9bbaf62f32789099277c9c8c4d9290d",
-      "kind": "commit",
-      "message": "Fix cascade_rules table schema and bun:sqlite compatibility"
     }
   ],
-  "lastModified": 1779995880,
+  "lastModified": 1780144674,
   "symbols": []
 }

@@ -131,27 +131,27 @@
     {
       "from": "src/server/routes/api/cascade.ts::POST::function",
       "kind": "imports",
-      "to": "src/server/lib/db.ts::db::variable"
+      "to": "src/server/lib/db.ts::db::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::POST::function",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::providers::variable"
+      "to": "src/server/lib/schema.ts::providers::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::POST::function",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::models::variable"
+      "to": "src/server/lib/schema.ts::models::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::POST::function",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+      "to": "src/server/lib/schema.ts::cascadeRules::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::POST::function",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::requestLogs::variable"
+      "to": "src/server/lib/schema.ts::requestLogs::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::POST::function",
@@ -381,12 +381,12 @@
     {
       "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
       "kind": "uses",
-      "to": "src/server/lib/db.ts::db::variable"
+      "to": "src/server/lib/db.ts::db::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
       "kind": "uses",
-      "to": "src/server/lib/schema.ts::providers::variable"
+      "to": "src/server/lib/schema.ts::providers::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
@@ -396,21 +396,27 @@
     {
       "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
       "kind": "uses",
-      "to": "src/server/lib/schema.ts::models::variable"
+      "to": "src/server/lib/schema.ts::models::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
       "kind": "uses",
-      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+      "to": "src/server/lib/schema.ts::cascadeRules::function"
     },
     {
       "from": "src/server/routes/api/cascade.ts::CascadeEngine::class",
       "kind": "uses",
-      "to": "src/server/lib/schema.ts::requestLogs::variable"
+      "to": "src/server/lib/schema.ts::requestLogs::function"
     }
   ],
   "file": "src/server/routes/api/cascade.ts",
   "intent": [
+    {
+      "date": "2026-05-30T20:37:12+08:00",
+      "hash": "7c3af159fc538f4bd2e6da9ba1da39c4f929129c",
+      "kind": "commit",
+      "message": "feat: API key decryption in model ops, User-Agent task detection, ctxo tooling"
+    },
     {
       "date": "2026-05-25T17:08:33+08:00",
       "hash": "e00fd14709215159827756c6890432a7ef411b0c",
@@ -508,7 +514,7 @@
       "message": "wip"
     }
   ],
-  "lastModified": 1779995880,
+  "lastModified": 1780144677,
   "symbols": [
     {
       "endLine": 1254,

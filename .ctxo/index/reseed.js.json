@@ -6,41 +6,47 @@
     {
       "from": "reseed.js::reseed::variable",
       "kind": "imports",
-      "to": "src/server/lib/db.ts::db::variable"
+      "to": "src/server/lib/db.ts::db::function"
     },
     {
       "from": "reseed.js::reseed::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::providers::variable"
+      "to": "src/server/lib/schema.ts::providers::function"
     },
     {
       "from": "reseed.js::reseed::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::models::variable"
+      "to": "src/server/lib/schema.ts::models::function"
     },
     {
       "from": "reseed.js::reseed::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::cascadeRules::variable"
+      "to": "src/server/lib/schema.ts::cascadeRules::function"
     },
     {
       "from": "reseed.js::reseed::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::authKeys::variable"
+      "to": "src/server/lib/schema.ts::authKeys::function"
     },
     {
       "from": "reseed.js::reseed::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::users::variable"
+      "to": "src/server/lib/schema.ts::users::function"
     },
     {
       "from": "reseed.js::reseed::variable",
       "kind": "imports",
-      "to": "src/server/lib/schema.ts::settings::variable"
+      "to": "src/server/lib/schema.ts::settings::function"
     }
   ],
   "file": "reseed.js",
   "intent": [
+    {
+      "date": "2026-05-30T20:37:12+08:00",
+      "hash": "7c3af159fc538f4bd2e6da9ba1da39c4f929129c",
+      "kind": "commit",
+      "message": "feat: API key decryption in model ops, User-Agent task detection, ctxo tooling"
+    },
     {
       "date": "2026-05-25T16:42:04+08:00",
       "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
@@ -48,6 +54,6 @@
       "message": "feat: v0.8 release - complete cascade engine with SSE streaming, tool calling, and response caching"
     }
   ],
-  "lastModified": 1779995879,
+  "lastModified": 1780144668,
   "symbols": []
 }

@@ -6,7 +6,7 @@
       "symbolId": "src/components/cascade/Models.tsx::Models::function"
     }
   ],
-  "contentHash": "a032f6d9a58648895ebff862080b3cd95c75efcc1f081fd7c0f827a9e13deb2a",
+  "contentHash": "606c3d2b1739280f82bb8cc72310e72ea81e55798c0b6cbde2f1b4cae348b9a1",
   "edges": [
     {
       "from": "src/components/cascade/Models.tsx::Models::function",
@@ -16,6 +16,12 @@
   ],
   "file": "src/components/cascade/Models.tsx",
   "intent": [
+    {
+      "date": "2026-05-30T20:37:12+08:00",
+      "hash": "7c3af159fc538f4bd2e6da9ba1da39c4f929129c",
+      "kind": "commit",
+      "message": "feat: API key decryption in model ops, User-Agent task detection, ctxo tooling"
+    },
     {
       "date": "2026-05-25T17:55:26+08:00",
       "hash": "a9bd953fd043df0e88a4b46baddc775ac8fe8e10",
@@ -95,11 +101,11 @@
       "message": "feat(ui): implement tabbed management interface and analytics dashboard"
     }
   ],
-  "lastModified": 1779995880,
+  "lastModified": 1780144672,
   "symbols": [
     {
-      "endLine": 765,
-      "endOffset": 29987,
+      "endLine": 770,
+      "endOffset": 30222,
       "kind": "function",
       "name": "Models",
       "startLine": 32,

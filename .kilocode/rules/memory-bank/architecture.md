@@ -46,6 +46,12 @@ Dual-server architecture: Next.js UI (port 3000) + Fastify API (port 3001). Next
 POST /api/cascade
        │
        ▼
+┌──────────────────┐
+│ Auto-detect      │  ← User-Agent → taskType (opencode/coding/chat/cli)
+│ taskType (new)   │     Falls through if no match
+└───────┬──────────┘
+        │
+        ▼
 ┌─────────────────┐
 │  Input Valid.   │  ← messages, stream, max_tokens, tools, temperature
 └───────┬─────────┘
@@ -71,6 +77,17 @@ POST /api/cascade
 └─────────────────┘
 ```
 
+### Cascade Rules (updated 2026-05-30)
+| Priority | Rule | Trigger | Model Order |
+|----------|------|---------|-------------|
+| 1 | Coding Tasks | keyword: `code\|program\|...` | 8b → 70b → flash |
+| 2 | Summarization | keyword: `summarize\|extract\|...` | flash → 70b → 8b |
+| 3 | OpenCode CLI | task_type: `opencode` | 8b → 70b → flash |
+| 4 | AI Coding Assistant | task_type: `coding` | 8b → 70b → flash |
+| 5 | Chat Assistant | task_type: `chat` | flash → 70b → 8b |
+| 6 | API / CLI Tools | task_type: `cli` | 8b → flash → 70b |
+| 99 | Default Fallback | task_type: `general` | 70b → 8b → flash |
+
 ## Database Schema
 
 ```
@@ -84,6 +101,14 @@ users ──┬── providers ──┬── models
 ```
 
 All tables have `user_id` FK for multi-user isolation. Cascade delete on user deletion.
+
+## Ctxo Tooling Integration (2026-05-30)
+
+Added Ctxo MCP server for AI agents to navigate the codebase efficiently:
+- `.ctxo/index/` — Pre-built symbol graph with dependency edges, co-change data, community clusters, boundary violations
+- AI agents call Ctxo tools (e.g. `get_blast_radius`, `get_context_for_task`) instead of grepping/reading files blindly
+- Registered via `.mcp.json`, instructions in `CLAUDE.md` and `.cursor/rules/ctxo.mdc`
+- ~2446 files indexed, 166 co-changing file pairs, 149 community clusters
 
 ## Key Design Decisions
 

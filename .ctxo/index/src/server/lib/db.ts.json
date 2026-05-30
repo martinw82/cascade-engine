@@ -26,6 +26,12 @@
   "file": "src/server/lib/db.ts",
   "intent": [
     {
+      "date": "2026-05-30T20:37:12+08:00",
+      "hash": "7c3af159fc538f4bd2e6da9ba1da39c4f929129c",
+      "kind": "commit",
+      "message": "feat: API key decryption in model ops, User-Agent task detection, ctxo tooling"
+    },
+    {
       "date": "2026-05-25T16:42:04+08:00",
       "hash": "7e1c3489b383dd156bb90751f6ff147166d2d78b",
       "kind": "commit",
@@ -98,7 +104,7 @@
       "message": "feat(cascade): implement persistence, authentication, and enhanced engine"
     }
   ],
-  "lastModified": 1779995880,
+  "lastModified": 1780144675,
   "symbols": [
     {
       "endLine": 454,
